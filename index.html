@@ -189,19 +189,25 @@
     }
     .sheet.show { display: block; }
     .sheet .panel {
-      position: absolute; top: 0; bottom: 0; right: 0; width: min(22rem, 92vw);
+      position: absolute; top: 0; bottom: 0; right: 0; width: min(26rem, 92vw);
       background: var(--surface); border-left: 1px solid var(--line); display: flex; flex-direction: column;
     }
-    .sheet .hd { padding: 20px 16px 12px; border-bottom: 1px solid var(--line); }
+    .sheet .hd { padding: 20px 16px 12px; border-bottom: 1px solid var(--line); display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
     .sheet .hd h3 { margin: 0; font-size: 18px; font-weight: 500; }
     .sheet .hd p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+    .sheet .grab { display: none; justify-content: center; padding-top: 8px; }
+    .sheet .grab i { width: 40px; height: 4px; border-radius: 99px; background: var(--line); }
     .sheet .body { overflow: auto; padding: 8px 8px 24px; flex: 1; }
     .vendor { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--subtle); padding: 12px 10px 6px; }
-    .mrow { display: flex; width: 100%; text-align: left; padding: 10px; border-radius: 12px; gap: 8px; }
+    .mrow { display: flex; width: 100%; text-align: left; padding: 10px; border-radius: 12px; gap: 8px; align-items: center; min-height: 48px; }
     .mrow:hover, .mrow.sel { background: var(--elevated); }
     .mrow b { display: block; font-weight: 500; font-size: 14px; }
     .mrow em { display: block; font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--subtle); margin-top: 2px; }
+    .mrow .cost { flex-shrink: 0; text-align: right; font-family: var(--mono); }
+    .mrow .cost b { font-size: 12px; font-weight: 500; color: var(--fg); }
+    .mrow .cost small { display: block; font-size: 10px; color: var(--subtle); margin-top: 2px; }
     .ok-tag { color: var(--accent); font-size: 11px; }
+    .chip .cost { font-family: var(--mono); font-size: 11px; color: var(--subtle); }
     puter-dialog { display: none !important; visibility: hidden !important; pointer-events: none !important; }
     @keyframes pulse { 50% { opacity: .35; } }
     @media (max-width: 768px) {
@@ -211,9 +217,19 @@
       .backdrop.show { opacity: 1; pointer-events: auto; }
       .menu-btn { display: grid; place-items: center; }
       .mob-bar { display: flex; }
-      .connect, .status { display: none; }
+      .connect, .status, #usage-chip { display: none; }
       .prompts { grid-template-columns: 1fr; }
-      .chip { max-width: 11.5rem; }
+      .tools-row { padding: 8px 12px 10px; }
+      .tools { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; overflow: visible; width: 100%; }
+      .chip { max-width: none; }
+      #model-btn { width: 100%; justify-content: space-between; }
+      .sheet .grab { display: flex; }
+      .sheet .panel {
+        top: auto; left: 0; right: 0; width: 100%; height: min(88dvh, 40rem);
+        border-left: 0; border-top: 1px solid var(--line); border-radius: 20px 20px 0 0;
+      }
+      .empty { padding: 28px 16px 24px; }
+      .empty h2 { font-size: 1.45rem; }
       textarea { font-size: 16px; }
       .hint { display: none; }
     }
@@ -274,7 +290,7 @@
         </div>
         <div class="tools-row">
           <div class="tools">
-            <button type="button" class="chip" id="model-btn" aria-haspopup="dialog"><span id="model-label">Claude Fable 5.1</span></button>
+            <button type="button" class="chip" id="model-btn" aria-haspopup="dialog"><span id="model-label">Claude Fable 5.1</span><span class="cost" id="model-cost">~$0.04</span></button>
             <button type="button" class="chip on" id="think-btn" aria-pressed="true">Think <span class="led"></span></button>
             <button type="button" class="chip" id="effort-btn">High</button>
             <button type="button" class="chip" id="usage-chip">0 turns</button>
@@ -304,13 +320,19 @@
 
   <div class="sheet" id="model-sheet">
     <div class="panel">
+      <div class="grab" aria-hidden="true"><i></i></div>
       <div class="hd">
-        <h3>Models</h3>
-        <p id="model-count">Verified IDs from Puter’s live catalog.</p>
-        <div class="search-wrap" style="margin:12px 0 0">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
-          <input class="search" id="model-search" placeholder="Search verified models" />
+        <div>
+          <h3>Models</h3>
+          <p id="model-count">Estimated spend per reply. Verified IDs from Puter’s live catalog.</p>
         </div>
+        <button type="button" class="icon-btn" id="model-close" aria-label="Close models" style="width:44px;height:44px;border-radius:12px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="search-wrap" style="margin:12px 12px 0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+        <input class="search" id="model-search" placeholder="Search verified models" />
       </div>
       <div class="body" id="model-list"></div>
     </div>
@@ -318,8 +340,8 @@
 
   <div class="modal" id="effort-modal">
     <div class="card">
-      <h2>Thinking effort</h2>
-      <p>Higher effort spends more time before answering. Only used when thinking is on.</p>
+      <h2>How hard it works</h2>
+      <p>Low is faster and cheaper. Max thinks longer. Always available — thinking does not have to be on.</p>
       <div id="effort-opts"></div>
       <button class="btn btn-ghost" id="effort-close" style="width:100%;margin-top:8px">Close</button>
     </div>
@@ -942,11 +964,14 @@
     const s = current();
     const meta = modelMeta(s.model);
     $("model-label").textContent = meta.label;
+    const chars = s.messages.reduce((n, m) => n + String(m.content || "").length, 0);
+    const replyCost = estimateTurn(s.model, chars, s.thinking, s.effort);
+    if ($("model-cost")) $("model-cost").textContent = "~" + formatUsd(replyCost);
     $("think-btn").classList.toggle("on", !!s.thinking);
     $("think-btn").setAttribute("aria-pressed", s.thinking ? "true" : "false");
-    const ef = EFFORTS.find(e => e.id === s.effort) || EFFORTS[2];
+    const ef = EFFORTS.find(e => e.id === s.effort) || EFFORTS[1];
     $("effort-btn").textContent = ef.label;
-    $("effort-btn").style.display = s.thinking ? "" : "none";
+    $("effort-btn").style.display = "";
     $("mob-title").textContent = s.title;
     $("mob-sub").textContent = meta.label + (s.thinking ? " · thinking" : "");
     $("hint").textContent = s.thinking
@@ -1019,9 +1044,16 @@
       groups[v].slice(0, q ? 28 : 16).forEach(m => {
         const b = document.createElement("button");
         b.className = "mrow" + (m.id === sel ? " sel" : "");
-        b.innerHTML = "<span style='flex:1;min-width:0'><b></b><em></em></span>" + (m.verified !== false ? "<span class='ok-tag'>verified</span>" : "");
+        const s = current();
+        const chars = s.messages.reduce((n, x) => n + String(x.content || "").length, 0);
+        const cost = estimateTurn(m.id, chars, s.thinking, s.effort);
+        const w = modelWeight(m.id);
+        const tier = w <= 2 ? "light" : w <= 6 ? "mid" : "heavy";
+        b.innerHTML = "<span style='flex:1;min-width:0'><b></b><em></em></span><span class='cost'><b></b><small></small></span>";
         b.querySelector("b").textContent = m.label;
         b.querySelector("em").textContent = m.id;
+        b.querySelector(".cost b").textContent = "~" + formatUsd(cost);
+        b.querySelector(".cost small").textContent = tier + " / reply";
         b.onclick = () => {
           current().model = m.id;
           current().updatedAt = Date.now();
@@ -1040,6 +1072,7 @@
   function hideEffort() { $("effort-modal").classList.remove("show"); }
 
   $("model-btn").onclick = openModels;
+  $("model-close").onclick = closeModels;
   $("model-sheet").onclick = (e) => { if (e.target.id === "model-sheet") closeModels(); };
   $("model-search").oninput = renderModelList;
   $("think-btn").onclick = () => { current().thinking = !current().thinking; save(); render(); };
