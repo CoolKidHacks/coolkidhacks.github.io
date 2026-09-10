@@ -15,7 +15,7 @@ Each model runs **as itself** (Claude is Claude, Grok is Grok) using distilled v
 2. Click **Sign in** — allow the Puter popup.
 3. Pick a **verified model**.
 4. Toggle **Think** for slower, more careful answers. Effort: Low → Max.
-5. Type a message, press Enter.
+5. Type a message, press Enter. Replies stream live, with syntax highlighting on code.
 
 Chats stay in this browser (`localStorage`).
 
@@ -24,8 +24,10 @@ Chats stay in this browser (`localStorage`).
 - Streaming `puter.ai.chat()` — every option is a real Puter-hosted model ID
 - Per-model system prompts (Claude Fable 5.1 / Opus / Sonnet, GPT-5.6 Luna/Sol/Terra, Grok 4.6, Gemini, Kimi, DeepSeek, Qwen, Mistral, GLM)
 - Live catalog merge from Puter’s model API
-- Thinking traces + effort control
-- Multi-chat sidebar, search, delete, regenerate, copy, image attach
+- Thinking traces + effort control, shown as they stream
+- Syntax-highlighted code, tables, copy / retry
+- Recovers replies that some reasoning models only emit in the thinking channel
+- Multi-chat sidebar, search, delete, regenerate, image attach
 - Mobile-first (safe area, 44px targets)
 
 ## If this repo’s Pages 404s
