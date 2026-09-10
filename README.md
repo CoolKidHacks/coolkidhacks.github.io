@@ -4,24 +4,14 @@ Talk to **real** Claude Fable, GPT, Grok, Gemini, Kimi, DeepSeek, Qwen, and Mist
 
 Each model runs **as itself** (Claude is Claude, Grok is Grok) using distilled vendor system prompts — not a shared Omni persona.
 
-## Fix the 404 (required, one minute)
+## Live
 
-GitHub will not publish `*.github.io` until Pages is switched on **by the repo owner**. I cannot do this from an API token.
-
-1. Open **[Settings → Pages](https://github.com/CoolKidHacks/FREE-AI-CHAT-BOT/settings/pages)** while logged in as **CoolKidHacks**
-2. **Build and deployment → Source:** `Deploy from a branch`
-3. **Branch:** `main` · **Folder:** `/ (root)`
-4. **Save**
-
-Wait ~60 seconds, then hard-refresh:
-
-**https://coolkidhacks.github.io/FREE-AI-CHAT-BOT/**
-
-If GitHub still shows “There isn’t a GitHub Pages site here”, you haven’t clicked Save on that page yet.
+- **https://coolkidhacks.github.io/FREE-AI-CHAT-BOT/**
+- **https://coolkidhacks.github.io/**
 
 ## Use it
 
-1. Open the live site (after Pages is on).
+1. Open the live site.
 2. Click **Sign in** — allow the Puter popup.
 3. Pick a **verified model**.
 4. Toggle **Think** for slower, more careful answers. Effort: Low → Max.
@@ -37,6 +27,14 @@ Chats stay in this browser (`localStorage`).
 - Thinking traces + effort control
 - Multi-chat sidebar, search, delete, regenerate, copy, image attach
 - Mobile-first (safe area, 44px targets)
+
+## If this repo’s Pages 404s
+
+The working site is published from [coolkidhacks.github.io](https://github.com/CoolKidHacks/coolkidhacks.github.io). To also publish **this** repo:
+
+1. Open **[Settings → Pages](https://github.com/CoolKidHacks/FREE-AI-CHAT-BOT/settings/pages)** as CoolKidHacks
+2. Source: **Deploy from a branch**
+3. Branch: **main** · Folder: **/ (root)** · **Save**
 
 ## Credit
 
