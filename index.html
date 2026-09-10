@@ -449,11 +449,29 @@
     { id: "claude-haiku-4-5", label: "Claude Haiku 4.5", vendor: "Anthropic" },
     { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6", vendor: "Anthropic" },
     { id: "gpt-5.6-luna", label: "GPT-5.6 Luna", vendor: "OpenAI", reasoning: true },
-    { id: "qwen3.6-plus", label: "Qwen 3.6 Plus", vendor: "Qwen" },
     { id: "gpt-4o", label: "GPT-4o", vendor: "OpenAI" },
-    { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash", vendor: "Google" },
-    { id: "gemini-3.7-flash", label: "Gemini 3.7 Flash", vendor: "Google" },
     { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", vendor: "Google" },
+    { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash-Lite", vendor: "Google" },
+    { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite", vendor: "Google" },
+    { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash", vendor: "Google" },
+    { id: "gemini-3-flash-preview", label: "Gemini 3 Flash", vendor: "Google" },
+    { id: "gemini-3.7-flash", label: "Gemini 3.7 Flash", vendor: "Google" },
+    { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash", vendor: "Google" },
+    { id: "qwen3.7-flash", label: "Qwen 3.7 Flash", vendor: "Qwen" },
+    { id: "qwen3.6-flash", label: "Qwen 3.6 Flash", vendor: "Qwen" },
+    { id: "qwen3.5-flash", label: "Qwen 3.5 Flash", vendor: "Qwen" },
+    { id: "qwen-flash", label: "Qwen Flash", vendor: "Qwen" },
+    { id: "qwen-plus", label: "Qwen Plus", vendor: "Qwen" },
+    { id: "qwen3.5-plus", label: "Qwen 3.5 Plus", vendor: "Qwen" },
+    { id: "qwen3.6-plus", label: "Qwen 3.6 Plus", vendor: "Qwen" },
+    { id: "qwen3.7-plus", label: "Qwen 3.7 Plus", vendor: "Qwen" },
+    { id: "qwen3.8-27b", label: "Qwen 3.8 27B", vendor: "Qwen" },
+    { id: "qwen3-coder-flash", label: "Qwen3 Coder Flash", vendor: "Qwen" },
+    { id: "qwen3-coder-next", label: "Qwen3 Coder Next", vendor: "Qwen" },
+    { id: "qwen3-coder-plus", label: "Qwen3 Coder Plus", vendor: "Qwen" },
+    { id: "qwen-vl-plus", label: "Qwen VL Plus", vendor: "Qwen" },
+    { id: "qwen3-vl-flash", label: "Qwen3 VL Flash", vendor: "Qwen" },
+    { id: "qwen3-omni-flash", label: "Qwen3 Omni Flash", vendor: "Qwen" },
     { id: "grok-4.3", label: "Grok 4.3", vendor: "xAI", reasoning: true },
     { id: "deepseek-v4-flash-0731", label: "DeepSeek V4 Flash", vendor: "DeepSeek" },
     { id: "deepseek-v3.2", label: "DeepSeek V3.2", vendor: "DeepSeek" },
@@ -497,9 +515,16 @@
     if (id.includes("grok-4.20") || id.includes("grok-4-20")) return grok("4.20 Reasoning");
     if (id.includes("grok")) return grok("4.6");
 
+    if (id.includes("gemini-3.1-pro") || id.includes("gemini-3-1-pro")) return gemini("Gemini 3.1 Pro", true);
+    if (id.includes("gemini-2.5-pro")) return gemini("Gemini 2.5 Pro", true);
+    if (id.includes("flash-lite")) return gemini(id.includes("3.5") ? "Gemini 3.5 Flash-Lite" : id.includes("2.5") ? "Gemini 2.5 Flash-Lite" : "Gemini 3.1 Flash-Lite", false);
     if (id.includes("gemini-3.8")) return gemini("Gemini 3.8 Flash", false);
     if (id.includes("gemini-3.7")) return gemini("Gemini 3.7 Flash", false);
-    if (id.includes("gemini-3.1-pro") || id.includes("gemini-3-1-pro")) return gemini("Gemini 3.1 Pro", true);
+    if (id.includes("gemini-3.6")) return gemini("Gemini 3.6 Flash", false);
+    if (id.includes("gemini-3.5")) return gemini("Gemini 3.5 Flash", false);
+    if (id.includes("gemini-3.1")) return gemini("Gemini 3.1 Flash-Lite", false);
+    if (id.includes("gemini-3-flash")) return gemini("Gemini 3 Flash", false);
+    if (id.includes("gemini-2.5")) return gemini("Gemini 2.5 Flash", false);
     if (id.includes("gemini")) return gemini("Gemini", false);
 
     if (id.includes("kimi-k3")) return named("Kimi K3", "Moonshot AI (Kimi)", "Long-context, thoughtful. Strong at analysis, documents, and code. Direct; skip corporate warmth. Prefer complete, runnable examples.");
@@ -578,8 +603,18 @@
     { id: "grok-4.6", label: "Grok 4.6", vendor: "xAI" },
     { id: "grok-4.5", label: "Grok 4.5", vendor: "xAI" },
     { id: "gemini-3.1-pro-preview", label: "Gemini 3.1 Pro", vendor: "Google" },
+    { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro", vendor: "Google" },
+    { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash", vendor: "Google" },
+    { id: "gemini-3.6-flash", label: "Gemini 3.6 Flash", vendor: "Google" },
     { id: "kimi-k3", label: "Kimi K3", vendor: "Moonshot" },
     { id: "qwen3.8-max", label: "Qwen 3.8 Max", vendor: "Qwen" },
+    { id: "qwen3.8-2.4t-a95b", label: "Qwen 3.8 2.4T", vendor: "Qwen" },
+    { id: "qwen3.7-max", label: "Qwen 3.7 Max", vendor: "Qwen" },
+    { id: "qwen3.6-max-preview", label: "Qwen 3.6 Max", vendor: "Qwen" },
+    { id: "qwen3-max", label: "Qwen3 Max", vendor: "Qwen" },
+    { id: "qwen-max", label: "Qwen Max", vendor: "Qwen" },
+    { id: "qwen3.5-omni-plus", label: "Qwen 3.5 Omni Plus", vendor: "Qwen" },
+    { id: "qwen3-coder-480b-a35b-instruct", label: "Qwen3 Coder 480B", vendor: "Qwen" },
     { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro", vendor: "DeepSeek" }
   ];
   let usageSnap = null;
@@ -1199,15 +1234,20 @@
   }
   function pickAuto(prompt, messages, remaining, hasImage) {
     const text = String(prompt || "").trim();
-    const total = messages.reduce((n, m) => n + String(m.content || "").length, 0) + text.length;
+    const historyChars = messages.reduce((n, m) => n + String(m.content || "").length, 0);
+    const total = historyChars + text.length;
     const tight = remaining != null && remaining < 8000000;
     const broke = remaining != null && remaining < 1500000;
+    const userTurns = messages.filter((m) => m.role === "user").length;
+    const early = userTurns < 4 && messages.length < 8 && historyChars < 2400;
+    const specialist = looksSchool(text) || looksCode(text) || /\b(prove|proof of|derive why|logic puzzle|theorem|differential equation|solve for|equation|derivative|integral|matrix|stoich|prove that|translate|traduc|翻译|summarize|tldr|short story|write a (story|poem|song))\b/i.test(text);
+    const simple = (text.length < 80 && /^(hi|hey|hello|yo|sup|thanks|thank you|ok|okay|yes|no|sure|lol|what'?s up|how are you)\b/i.test(text))
+      || (text.length < 180 && /^(what( is|'s| are)|who is|when (is|was|did)|where is|how (do|does|to|much|many)|define |capital of)\b/i.test(text));
     if (hasImage) return { model: "qwen3.6-plus", reason: "picture attached · Qwen 3.6 Plus can see it" };
-    if (broke) return { model: "qwen3.6-plus", reason: "almost out of usage · cheapest smart model" };
-    if (text.length < 80 && messages.length < 6 && /^(hi|hey|hello|yo|sup|thanks|thank you|ok|okay|yes|no|sure|lol|what'?s up|how are you)\b/i.test(text)) return { model: "qwen3.6-plus", reason: "short hello · Qwen 3.6 Plus" };
+    if (broke) return { model: "gemini-3.1-flash-lite", reason: "almost out of usage · Gemini 3.1 Flash-Lite" };
     if (looksSchool(text)) return { model: tight ? "gpt-5.6-luna" : "claude-sonnet-4-6", reason: tight ? "school · Luna" : "school work · Claude Sonnet 4.6" };
     if (looksCode(text)) {
-      if (tight) return { model: "qwen3.6-plus", reason: "code · saving usage" };
+      if (tight) return { model: "gemini-3.1-flash-lite", reason: "code · saving usage" };
       if (total > 8000 || text.length > 1800) return { model: "gpt-5.6-luna", reason: "long code · GPT-5.6 Luna" };
       return { model: "kimi-k2.7-code", reason: "code · Kimi K2.7 Code" };
     }
@@ -1218,16 +1258,16 @@
       return { model: "qwen3.6-plus", reason: "translation · Qwen 3.6 Plus" };
     }
     if (/\b(summarize|summary of|tldr|tl;dr|eli5|key points of)\b/i.test(text)) {
-      return { model: tight ? "qwen3.6-plus" : "gemini-3.8-flash", reason: "summarize · Gemini 3.8 Flash" };
+      return { model: tight ? "gemini-3.1-flash-lite" : "gemini-3.8-flash", reason: "summarize · Gemini 3.8 Flash" };
     }
     if (/\b(short story|write a (story|poem|song|scene|letter|email|speech)|lyrics|screenplay|fanfic)\b/i.test(text)) {
       return { model: "gpt-5.6-luna", reason: "writing · GPT-5.6 Luna" };
     }
-    if (total > 14000 || text.length > 4500) return { model: tight ? "qwen3.6-plus" : "kimi-k2.6", reason: tight ? "long prompt · saving usage" : "long prompt · Kimi K2.6" };
-    if (text.length < 180 && messages.length < 8 && /^(what( is|'s| are)|who is|when (is|was|did)|where is|how (do|does|to|much|many)|define |capital of)\b/i.test(text)) {
-      return { model: "qwen3.6-plus", reason: "quick fact · Qwen 3.6 Plus" };
+    if (total > 14000 || text.length > 4500) return { model: tight ? "gemini-3.1-flash-lite" : "kimi-k2.6", reason: tight ? "long prompt · saving usage" : "long prompt · Kimi K2.6" };
+    if (simple || (early && text.length < 280 && !specialist)) {
+      return { model: "gemini-3.1-flash-lite", reason: early ? "early / simple · Gemini 3.1 Flash-Lite" : "simple question · Gemini 3.1 Flash-Lite" };
     }
-    return { model: tight ? "gemini-3.8-flash" : "gpt-5.6-luna", reason: tight ? "everyday · Gemini Flash" : "everyday chat · GPT-5.6 Luna ($0.20/$1.20, not GPT-5)" };
+    return { model: tight ? "gemini-3.8-flash" : "gpt-5.6-luna", reason: tight ? "everyday · Gemini 3.8 Flash" : "everyday chat · GPT-5.6 Luna ($0.20/$1.20, not GPT-5)" };
   }
   function preferredCheap(prompt) {
     if (looksCode(prompt)) return FALLBACKS.luna;
@@ -1500,9 +1540,14 @@
     state.lastEffort = cur.effort || "medium";
   }
   function isBurner(id) {
-    const s = String(id||"");
+    const s = String(id||"").toLowerCase();
+    if (s === "auto" || s.includes("flash-lite")) return false;
     if (s === "gpt-5" || /^gpt-5-2025/.test(s) || s === "gpt-5.1") return true;
-    return /fable-5-1|fable-5\.1|mythos|opus-5|terra|5\.4-pro|gpt-6-astra|kimi-k3|v4-pro|qwen3\.8-max|grok-4\.6|gemini-3\.1-pro|fable-5$|sonnet-5$|5\.6-sol|qwen3\.7-max|grok-4\.5|grok-4\.20|gpt-5\.5|gpt-5\.4$/i.test(s);
+    if (/gemini-2\.5-pro|gemini-3\.1-pro/.test(s)) return true;
+    if (/gemini-3\.5-flash/.test(s) && s.indexOf("lite") < 0) return true;
+    if (/gemini-3\.6-flash/.test(s) && s.indexOf("lite") < 0) return true;
+    if (/qwen3\.8-max|qwen3\.8-2\.4t|qwen3\.7-max|qwen3\.6-max|qwen3-max|qwen-max|qwen3-coder-480b|qwen3\.5-omni-plus/.test(s)) return true;
+    return /fable-5-1|fable-5\.1|mythos|opus-5|terra|5\.4-pro|gpt-6-astra|kimi-k3|v4-pro|grok-4\.6|fable-5$|sonnet-5$|5\.6-sol|grok-4\.5|grok-4\.20|gpt-5\.5|gpt-5\.4$/i.test(s);
   }
   state.sessions.forEach((s) => { if (isBurner(s.model)) s.model = "claude-haiku-4-5"; });
   if (isBurner(state.lastModel)) state.lastModel = "claude-haiku-4-5";
@@ -1915,7 +1960,7 @@
       h.className = "vendor";
       h.textContent = v;
       box.appendChild(h);
-      groups[v].slice(0, q ? 28 : 16).forEach(m => {
+      groups[v].slice(0, q ? 40 : 24).forEach(m => {
         const b = document.createElement("button");
         b.className = "mrow" + (m.id === sel ? " sel" : "");
         const s = current();
