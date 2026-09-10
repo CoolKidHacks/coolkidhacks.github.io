@@ -370,7 +370,7 @@
       <div class="hd">
         <div>
           <h3 id="models-title">Models</h3>
-          <p id="model-count">Estimated spend per reply. Verified IDs from Puter’s live catalog.</p>
+          <p id="model-count">Official $ input / $ output per 1M tokens from Puter’s live catalog.</p>
         </div>
         <button type="button" class="icon-btn" id="model-close" aria-label="Close models" style="width:44px;height:44px;border-radius:12px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -570,16 +570,17 @@
     { id: "claude-fable-5-1", label: "Claude Fable 5.1", vendor: "Anthropic" },
     { id: "claude-opus-5", label: "Claude Opus 5", vendor: "Anthropic" },
     { id: "claude-sonnet-5", label: "Claude Sonnet 5", vendor: "Anthropic" },
+    { id: "gpt-6-astra", label: "GPT-6 Astra", vendor: "OpenAI" },
     { id: "gpt-5.6-terra", label: "GPT-5.6 Terra", vendor: "OpenAI" },
     { id: "gpt-5.6-sol", label: "GPT-5.6 Sol", vendor: "OpenAI" },
     { id: "gpt-5.4-pro", label: "GPT-5.4 Pro", vendor: "OpenAI" },
+    { id: "gpt-5", label: "GPT-5", vendor: "OpenAI" },
     { id: "grok-4.6", label: "Grok 4.6", vendor: "xAI" },
     { id: "grok-4.5", label: "Grok 4.5", vendor: "xAI" },
-    { id: "gemini-3.1-pro", label: "Gemini 3.1 Pro", vendor: "Google" },
+    { id: "gemini-3.1-pro-preview", label: "Gemini 3.1 Pro", vendor: "Google" },
     { id: "kimi-k3", label: "Kimi K3", vendor: "Moonshot" },
     { id: "qwen3.8-max", label: "Qwen 3.8 Max", vendor: "Qwen" },
-    { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro", vendor: "DeepSeek" },
-    { id: "mistral-large", label: "Mistral Large", vendor: "Mistral" }
+    { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro", vendor: "DeepSeek" }
   ];
   let usageSnap = null;
   let sessionTurns = 0;
@@ -599,14 +600,587 @@
     return "$" + usd.toFixed(2);
   }
   const RATES = {
-    "gpt-5-nano":[5,40],"gpt-5.6-luna":[20,120],"gemini-3.1-flash-lite":[10,40],"gemini-3.7-flash":[50,250],
-    "gemini-3.8-flash":[75,375],"deepseek-v4-flash-0731":[44,132],"deepseek-v3.2":[27,110],
-    "claude-haiku-4-5":[100,500],"grok-4.3":[125,250],"glm-5.3":[140,440],"kimi-k2.6":[95,400],
-    "kimi-k2.7-code":[95,400],"qwen3.6-plus":[40,160],"gpt-4o":[250,1000],"claude-sonnet-4-6":[300,1500]
-  };
+    "MiniMax-M2":[30,120],
+    "MiniMax-M2.1":[30,120],
+    "MiniMax-M2.1-highspeed":[60,240],
+    "MiniMax-M2.5":[30,120],
+    "MiniMax-M2.5-highspeed":[60,240],
+    "MiniMax-M2.7":[30,120],
+    "MiniMax-M2.7-highspeed":[60,240],
+    "MiniMax-M3":[30,120],
+    "anthropic/claude-fable-5":[1000,5000],
+    "anthropic/claude-fable-5-1":[1000,5000],
+    "anthropic/claude-haiku-4-5":[100,500],
+    "anthropic/claude-opus-4-5":[500,2500],
+    "anthropic/claude-opus-4-6":[500,2500],
+    "anthropic/claude-opus-4-7":[500,2500],
+    "anthropic/claude-opus-4-8":[500,2500],
+    "anthropic/claude-opus-5":[500,2500],
+    "anthropic/claude-sonnet-4-5":[300,1500],
+    "anthropic/claude-sonnet-4-6":[300,1500],
+    "anthropic/claude-sonnet-5":[300,1500],
+    "byteplus/deepseek-v3-2":[28,42],
+    "byteplus/deepseek-v3-2-251201":[28,42],
+    "byteplus/deepseek-v4-flash":[14,28],
+    "byteplus/deepseek-v4-flash-260425":[14,28],
+    "byteplus/deepseek-v4-pro":[174,348],
+    "byteplus/deepseek-v4-pro-260425":[174,348],
+    "byteplus/dola-seed-2-1-turbo":[50,250],
+    "byteplus/dola-seed-2-1-turbo-260628":[50,250],
+    "byteplus/glm-4-7":[60,220],
+    "byteplus/glm-4-7-251222":[60,220],
+    "byteplus/glm-5-2":[140,440],
+    "byteplus/glm-5-2-260617":[140,440],
+    "byteplus/gpt-oss-120b":[10,50],
+    "byteplus/gpt-oss-120b-250805":[10,50],
+    "byteplus/seed-1-6":[25,200],
+    "byteplus/seed-1-6-250915":[25,200],
+    "byteplus/seed-1-6-flash":[8,30],
+    "byteplus/seed-1-6-flash-250715":[8,30],
+    "byteplus/seed-1-8":[25,200],
+    "byteplus/seed-1-8-251228":[25,200],
+    "byteplus/seed-2-0-code-preview":[50,300],
+    "byteplus/seed-2-0-code-preview-260328":[50,300],
+    "byteplus/seed-2-0-lite":[25,200],
+    "byteplus/seed-2-0-lite-260228":[25,200],
+    "byteplus/seed-2-0-lite-260428":[25,200],
+    "byteplus/seed-2-0-mini":[10,40],
+    "byteplus/seed-2-0-mini-260215":[10,40],
+    "byteplus/seed-2-0-mini-260428":[10,40],
+    "byteplus/seed-2-0-pro":[50,300],
+    "byteplus/seed-2-0-pro-260328":[50,300],
+    "chat-latest":[500,3000],
+    "claude-4-5-haiku":[100,500],
+    "claude-fable":[1000,5000],
+    "claude-fable-5":[1000,5000],
+    "claude-fable-5-1":[1000,5000],
+    "claude-fable-5-1-latest":[1000,5000],
+    "claude-fable-5-latest":[1000,5000],
+    "claude-fable-5.1":[1000,5000],
+    "claude-fable-latest":[1000,5000],
+    "claude-haiku":[100,500],
+    "claude-haiku-4-5":[100,500],
+    "claude-haiku-4-5-20251001":[100,500],
+    "claude-haiku-4.5":[100,500],
+    "claude-haiku-4.5-latest":[100,500],
+    "claude-haiku-latest":[100,500],
+    "claude-opus":[500,2500],
+    "claude-opus-4-5":[500,2500],
+    "claude-opus-4-5-20251101":[500,2500],
+    "claude-opus-4-5-latest":[500,2500],
+    "claude-opus-4-6":[500,2500],
+    "claude-opus-4-6-latest":[500,2500],
+    "claude-opus-4-7":[500,2500],
+    "claude-opus-4-7-latest":[500,2500],
+    "claude-opus-4-8":[500,2500],
+    "claude-opus-4-8-latest":[500,2500],
+    "claude-opus-4.5":[500,2500],
+    "claude-opus-4.6":[500,2500],
+    "claude-opus-4.7":[500,2500],
+    "claude-opus-4.8":[500,2500],
+    "claude-opus-5":[500,2500],
+    "claude-opus-5-latest":[500,2500],
+    "claude-opus-latest":[500,2500],
+    "claude-sonnet":[300,1500],
+    "claude-sonnet-4-5":[300,1500],
+    "claude-sonnet-4-5-20250929":[300,1500],
+    "claude-sonnet-4-6":[300,1500],
+    "claude-sonnet-4-6-latest":[300,1500],
+    "claude-sonnet-4.5":[300,1500],
+    "claude-sonnet-4.6":[300,1500],
+    "claude-sonnet-5":[300,1500],
+    "claude-sonnet-5-latest":[300,1500],
+    "claude-sonnet-latest":[300,1500],
+    "codestral-2508":[30,90],
+    "codestral-latest":[30,90],
+    "deepseek-chat":[14,28],
+    "deepseek-v3-2":[28,42],
+    "deepseek-v3-2-251201":[28,42],
+    "deepseek-v3.2":[57,171],
+    "deepseek-v4-flash":[14,28],
+    "deepseek-v4-flash-0731":[44,132],
+    "deepseek-v4-flash-260425":[14,28],
+    "deepseek-v4-flash-vision-exp":[14,28],
+    "deepseek-v4-pro":[174,348],
+    "deepseek-v4-pro-0813":[132,396],
+    "deepseek-v4-pro-260425":[174,348],
+    "deepseek/deepseek-chat":[14,28],
+    "deepseek/deepseek-reasoner":[14,28],
+    "deepseek/deepseek-v4-flash":[14,28],
+    "deepseek/deepseek-v4-flash-vision-exp":[14,28],
+    "deepseek/deepseek-v4-pro":[174,348],
+    "dola-seed-2-1-turbo":[50,250],
+    "dola-seed-2-1-turbo-260628":[50,250],
+    "gemini-2.5-flash":[30,250],
+    "gemini-2.5-flash-lite":[10,40],
+    "gemini-2.5-pro":[125,1000],
+    "gemini-3-flash-preview":[50,300],
+    "gemini-3.1-flash-lite":[25,150],
+    "gemini-3.1-flash-lite-preview":[25,150],
+    "gemini-3.1-pro":[200,1200],
+    "gemini-3.1-pro-preview":[200,1200],
+    "gemini-3.5-flash":[150,900],
+    "gemini-3.5-flash-lite":[30,250],
+    "gemini-3.6-flash":[150,750],
+    "gemini-3.7-flash":[75,375],
+    "gemini-3.8-flash":[75,375],
+    "gemini-flash-latest":[150,900],
+    "gemini-flash-lite-latest":[30,250],
+    "gemini-pro-latest":[200,1200],
+    "glm-4-7":[60,220],
+    "glm-4-7-251222":[60,220],
+    "glm-4.5":[60,220],
+    "glm-4.5-air":[20,110],
+    "glm-4.6":[60,220],
+    "glm-4.7":[60,220],
+    "glm-5":[100,320],
+    "glm-5-2":[140,440],
+    "glm-5-2-260617":[140,440],
+    "glm-5-turbo":[120,400],
+    "glm-5.1":[140,440],
+    "glm-5.2":[140,440],
+    "glm-5.2-fast-preview":[280,880],
+    "glm-5.3":[140,440],
+    "glm-5.3-flash":[15,50],
+    "google/gemini-2.5-flash":[30,250],
+    "google/gemini-2.5-flash-lite":[10,40],
+    "google/gemini-2.5-pro":[125,1000],
+    "google/gemini-3-flash-preview":[50,300],
+    "google/gemini-3.1-flash-lite":[25,150],
+    "google/gemini-3.1-flash-lite-preview":[25,150],
+    "google/gemini-3.1-pro-preview":[200,1200],
+    "google/gemini-3.5-flash":[150,900],
+    "google/gemini-3.5-flash-lite":[30,250],
+    "google/gemini-3.6-flash":[150,750],
+    "google/gemini-3.7-flash":[75,375],
+    "google/gemini-3.8-flash":[75,375],
+    "google/gemini-flash-latest":[150,900],
+    "google/gemini-flash-lite-latest":[30,250],
+    "google/gemini-pro-latest":[200,1200],
+    "gpt-4.1":[200,800],
+    "gpt-4.1-2025-04-14":[200,800],
+    "gpt-4.1-mini":[40,160],
+    "gpt-4.1-mini-2025-04-14":[40,160],
+    "gpt-4.1-nano":[10,40],
+    "gpt-4.1-nano-2025-04-14":[10,40],
+    "gpt-4o":[250,1000],
+    "gpt-4o-2024-11-20":[250,1000],
+    "gpt-4o-mini":[15,60],
+    "gpt-4o-mini-2024-07-18":[15,60],
+    "gpt-5":[125,1000],
+    "gpt-5-2025-08-07":[125,1000],
+    "gpt-5-mini":[25,200],
+    "gpt-5-mini-2025-08-07":[25,200],
+    "gpt-5-nano":[5,40],
+    "gpt-5-nano-2025-08-07":[5,40],
+    "gpt-5-pro":[1500,12000],
+    "gpt-5-pro-2025-10-06":[1500,12000],
+    "gpt-5.1":[125,1000],
+    "gpt-5.2":[175,1400],
+    "gpt-5.2-2025-12-11":[175,1400],
+    "gpt-5.2-pro":[2100,16800],
+    "gpt-5.2-pro-2025-12-11":[2100,16800],
+    "gpt-5.3-codex":[175,1400],
+    "gpt-5.4":[250,1500],
+    "gpt-5.4-2026-03-05":[250,1500],
+    "gpt-5.4-mini":[75,450],
+    "gpt-5.4-nano":[20,125],
+    "gpt-5.4-pro":[3000,18000],
+    "gpt-5.4-pro-2026-03-05":[3000,18000],
+    "gpt-5.5":[500,3000],
+    "gpt-5.5-2026-04-23":[500,3000],
+    "gpt-5.5-pro":[3000,18000],
+    "gpt-5.5-pro-2026-04-23":[3000,18000],
+    "gpt-5.6":[500,3000],
+    "gpt-5.6-luna":[20,120],
+    "gpt-5.6-sol":[500,3000],
+    "gpt-5.6-terra":[200,1200],
+    "gpt-6-astra":[1000,5000],
+    "gpt-oss-120b":[10,50],
+    "gpt-oss-120b-250805":[10,50],
+    "grok-4-1-fast-non-reasoning":[20,50],
+    "grok-4-1-fast-reasoning":[20,50],
+    "grok-4-20-non-reasoning":[125,250],
+    "grok-4-20-reasoning":[125,250],
+    "grok-4.20":[125,250],
+    "grok-4.20-0309":[125,250],
+    "grok-4.20-0309-non-reasoning":[125,250],
+    "grok-4.20-0309-reasoning":[125,250],
+    "grok-4.20-multi-agent":[125,250],
+    "grok-4.20-multi-agent-0309":[125,250],
+    "grok-4.20-multi-agent-latest":[125,250],
+    "grok-4.20-non-reasoning":[125,250],
+    "grok-4.20-non-reasoning-latest":[125,250],
+    "grok-4.20-reasoning":[125,250],
+    "grok-4.20-reasoning-latest":[125,250],
+    "grok-4.3":[125,250],
+    "grok-4.5":[200,600],
+    "grok-4.5-latest":[200,600],
+    "grok-4.6":[200,600],
+    "grok-4.6-latest":[200,600],
+    "grok-build-0.1":[100,200],
+    "grok-build-latest":[200,600],
+    "grok-code-fast":[100,200],
+    "grok-code-fast-1":[100,200],
+    "grok-code-fast-1-0825":[100,200],
+    "kimi":[95,400],
+    "kimi-k2.6":[95,400],
+    "kimi-k2.7-code":[95,400],
+    "kimi-k2.7-code-highspeed":[190,800],
+    "kimi-k26":[95,400],
+    "kimi-k3":[300,1500],
+    "magistral-small-2509":[50,150],
+    "magistral-small-latest":[50,150],
+    "minimax-m2":[30,120],
+    "minimax-m2.1":[30,120],
+    "minimax-m2.1-highspeed":[60,240],
+    "minimax-m2.5":[30,120],
+    "minimax-m2.5-highspeed":[60,240],
+    "minimax-m2.7":[30,120],
+    "minimax-m2.7-highspeed":[60,240],
+    "minimax-m3":[30,120],
+    "minimax/MiniMax-M2":[30,120],
+    "minimax/MiniMax-M2.1":[30,120],
+    "minimax/MiniMax-M2.1-highspeed":[60,240],
+    "minimax/MiniMax-M2.5":[30,120],
+    "minimax/MiniMax-M2.5-highspeed":[60,240],
+    "minimax/MiniMax-M2.7":[30,120],
+    "minimax/MiniMax-M2.7-highspeed":[60,240],
+    "minimax/MiniMax-M3":[30,120],
+    "minimax/minimax-m2":[30,120],
+    "minimax/minimax-m2.1":[30,120],
+    "minimax/minimax-m2.1-highspeed":[60,240],
+    "minimax/minimax-m2.5":[30,120],
+    "minimax/minimax-m2.5-highspeed":[60,240],
+    "minimax/minimax-m2.7":[30,120],
+    "minimax/minimax-m2.7-highspeed":[60,240],
+    "minimax/minimax-m3":[30,120],
+    "ministral-14b-2512":[20,20],
+    "ministral-14b-latest":[20,20],
+    "ministral-3b-2512":[4,4],
+    "ministral-3b-latest":[4,4],
+    "ministral-8b-2512":[10,10],
+    "ministral-8b-latest":[10,10],
+    "mistral-large":[50,150],
+    "mistral-large-2512":[50,150],
+    "mistral-large-latest":[50,150],
+    "mistral-medium":[150,750],
+    "mistral-medium-2604":[150,750],
+    "mistral-medium-3":[150,750],
+    "mistral-medium-3-5":[150,750],
+    "mistral-medium-3.5":[150,750],
+    "mistral-medium-latest":[150,750],
+    "mistral-small":[15,60],
+    "mistral-small-2603":[15,60],
+    "mistral-small-latest":[15,60],
+    "mistralai/codestral-2508":[30,90],
+    "mistralai/magistral-small-2509":[50,150],
+    "mistralai/magistral-small-latest":[50,150],
+    "mistralai/ministral-14b-2512":[20,20],
+    "mistralai/ministral-3b-2512":[4,4],
+    "mistralai/ministral-8b-2512":[10,10],
+    "mistralai/mistral-large-2512":[50,150],
+    "mistralai/mistral-large-latest":[50,150],
+    "mistralai/mistral-medium-2604":[150,750],
+    "mistralai/mistral-medium-3-5":[150,750],
+    "mistralai/mistral-small-2603":[15,60],
+    "mistralai/mistral-small-latest":[15,60],
+    "mistralai/voxtral-small-2507":[10,30],
+    "mistralai/voxtral-small-latest":[10,30],
+    "moonshot/kimi-k2.6":[95,400],
+    "moonshot/kimi-k2.7-code":[95,400],
+    "moonshot/kimi-k2.7-code-highspeed":[190,800],
+    "moonshot/kimi-k3":[300,1500],
+    "moonshotai/kimi-k2.6":[95,400],
+    "moonshotai/kimi-k2.7-code":[95,400],
+    "moonshotai/kimi-k2.7-code-highspeed":[190,800],
+    "moonshotai/kimi-k3":[300,1500],
+    "o1":[1500,6000],
+    "o3":[200,800],
+    "o3-2025-04-16":[200,800],
+    "o3-mini":[110,440],
+    "o3-pro":[2000,8000],
+    "o3-pro-2025-06-10":[2000,8000],
+    "o4-mini":[110,440],
+    "openai/chat-latest":[500,3000],
+    "openai/gpt-4.1":[200,800],
+    "openai/gpt-4.1-mini":[40,160],
+    "openai/gpt-4.1-nano":[10,40],
+    "openai/gpt-4o":[250,1000],
+    "openai/gpt-4o-2024-11-20":[250,1000],
+    "openai/gpt-4o-mini":[15,60],
+    "openai/gpt-5":[125,1000],
+    "openai/gpt-5-mini":[25,200],
+    "openai/gpt-5-nano":[5,40],
+    "openai/gpt-5-pro":[1500,12000],
+    "openai/gpt-5.1":[125,1000],
+    "openai/gpt-5.2":[175,1400],
+    "openai/gpt-5.2-pro":[2100,16800],
+    "openai/gpt-5.3-codex":[175,1400],
+    "openai/gpt-5.4":[250,1500],
+    "openai/gpt-5.4-mini":[75,450],
+    "openai/gpt-5.4-nano":[20,125],
+    "openai/gpt-5.4-pro":[3000,18000],
+    "openai/gpt-5.5":[500,3000],
+    "openai/gpt-5.5-pro":[3000,18000],
+    "openai/gpt-5.6":[500,3000],
+    "openai/gpt-5.6-luna":[20,120],
+    "openai/gpt-5.6-sol":[500,3000],
+    "openai/gpt-5.6-terra":[200,1200],
+    "openai/gpt-6-astra":[1000,5000],
+    "openai/o1":[1500,6000],
+    "openai/o3":[200,800],
+    "openai/o3-mini":[110,440],
+    "openai/o3-pro":[2000,8000],
+    "openai/o4-mini":[110,440],
+    "qvq-max":[120,480],
+    "qwen-flash":[5,40],
+    "qwen-max":[160,640],
+    "qwen-mt-flash":[16,49],
+    "qwen-mt-lite":[12,36],
+    "qwen-mt-plus":[246,737],
+    "qwen-mt-turbo":[16,49],
+    "qwen-omni-turbo":[7,27],
+    "qwen-plus":[40,120],
+    "qwen-plus-2025-01-25":[40,120],
+    "qwen-plus-2025-04-28":[40,120],
+    "qwen-plus-2025-07-14":[40,120],
+    "qwen-plus-2025-09-11":[40,120],
+    "qwen-plus-2025-12-01":[40,120],
+    "qwen-plus-latest":[40,120],
+    "qwen-turbo":[5,20],
+    "qwen-vl-max":[80,320],
+    "qwen-vl-plus":[21,63],
+    "qwen/qvq-max":[120,480],
+    "qwen/qwen-flash":[5,40],
+    "qwen/qwen-max":[160,640],
+    "qwen/qwen-mt-flash":[16,49],
+    "qwen/qwen-mt-lite":[12,36],
+    "qwen/qwen-mt-plus":[246,737],
+    "qwen/qwen-mt-turbo":[16,49],
+    "qwen/qwen-omni-turbo":[7,27],
+    "qwen/qwen-plus":[40,120],
+    "qwen/qwen-plus-2025-01-25":[40,120],
+    "qwen/qwen-plus-2025-04-28":[40,120],
+    "qwen/qwen-plus-2025-07-14":[40,120],
+    "qwen/qwen-plus-2025-09-11":[40,120],
+    "qwen/qwen-plus-2025-12-01":[40,120],
+    "qwen/qwen-turbo":[5,20],
+    "qwen/qwen-vl-max":[80,320],
+    "qwen/qwen-vl-plus":[21,63],
+    "qwen/qwen3-14b":[35,140],
+    "qwen/qwen3-235b-a22b":[70,280],
+    "qwen/qwen3-235b-a22b-instruct-2507":[23,92],
+    "qwen/qwen3-235b-a22b-thinking-2507":[23,230],
+    "qwen/qwen3-30b-a3b":[20,80],
+    "qwen/qwen3-30b-a3b-instruct-2507":[20,80],
+    "qwen/qwen3-30b-a3b-thinking-2507":[20,240],
+    "qwen/qwen3-32b":[70,280],
+    "qwen/qwen3-8b":[18,70],
+    "qwen/qwen3-coder-480b-a35b-instruct":[150,750],
+    "qwen/qwen3-coder-flash":[30,150],
+    "qwen/qwen3-coder-next":[30,150],
+    "qwen/qwen3-coder-plus":[100,500],
+    "qwen/qwen3-coder-plus-2025-07-22":[100,500],
+    "qwen/qwen3-coder-plus-2025-09-23":[100,500],
+    "qwen/qwen3-max":[120,600],
+    "qwen/qwen3-max-2025-09-23":[120,600],
+    "qwen/qwen3-max-2026-01-23":[120,600],
+    "qwen/qwen3-max-preview":[120,600],
+    "qwen/qwen3-next-80b-a3b-instruct":[50,200],
+    "qwen/qwen3-next-80b-a3b-thinking":[50,600],
+    "qwen/qwen3-omni-flash":[43,166],
+    "qwen/qwen3-omni-flash-2025-09-15":[43,166],
+    "qwen/qwen3-omni-flash-2025-12-01":[43,166],
+    "qwen/qwen3-vl-235b-a22b-instruct":[40,160],
+    "qwen/qwen3-vl-235b-a22b-thinking":[40,400],
+    "qwen/qwen3-vl-flash":[5,40],
+    "qwen/qwen3-vl-flash-2026-01-22":[5,40],
+    "qwen/qwen3-vl-plus":[20,160],
+    "qwen/qwen3-vl-plus-2025-09-23":[20,160],
+    "qwen/qwen3-vl-plus-2025-12-19":[20,160],
+    "qwen/qwen3.5-122b-a10b":[40,320],
+    "qwen/qwen3.5-27b":[30,240],
+    "qwen/qwen3.5-35b-a3b":[25,200],
+    "qwen/qwen3.5-397b-a17b":[60,360],
+    "qwen/qwen3.5-flash":[10,40],
+    "qwen/qwen3.5-omni-flash":[40,220],
+    "qwen/qwen3.5-omni-plus":[140,830],
+    "qwen/qwen3.5-plus":[40,240],
+    "qwen/qwen3.5-plus-2026-02-15":[40,240],
+    "qwen/qwen3.5-plus-2026-04-20":[40,240],
+    "qwen/qwen3.6-27b":[60,360],
+    "qwen/qwen3.6-35b-a3b":[25,148],
+    "qwen/qwen3.6-flash":[19,113],
+    "qwen/qwen3.6-max-preview":[130,780],
+    "qwen/qwen3.6-plus":[50,300],
+    "qwen/qwen3.7-flash":[3,13],
+    "qwen/qwen3.7-max":[250,750],
+    "qwen/qwen3.7-max-2026-05-20":[250,750],
+    "qwen/qwen3.7-max-2026-06-08":[250,750],
+    "qwen/qwen3.7-max-preview":[250,750],
+    "qwen/qwen3.7-plus":[50,300],
+    "qwen/qwen3.8-2.4t-a95b":[200,600],
+    "qwen/qwen3.8-27b":[50,300],
+    "qwen/qwen3.8-max":[200,600],
+    "qwen/qwq-plus":[80,240],
+    "qwen3-14b":[35,140],
+    "qwen3-235b-a22b":[70,280],
+    "qwen3-235b-a22b-instruct-2507":[23,92],
+    "qwen3-235b-a22b-thinking-2507":[23,230],
+    "qwen3-30b-a3b":[20,80],
+    "qwen3-30b-a3b-instruct-2507":[20,80],
+    "qwen3-30b-a3b-thinking-2507":[20,240],
+    "qwen3-32b":[70,280],
+    "qwen3-8b":[18,70],
+    "qwen3-coder-480b-a35b-instruct":[150,750],
+    "qwen3-coder-flash":[30,150],
+    "qwen3-coder-next":[30,150],
+    "qwen3-coder-plus":[100,500],
+    "qwen3-coder-plus-2025-07-22":[100,500],
+    "qwen3-coder-plus-2025-09-23":[100,500],
+    "qwen3-max":[120,600],
+    "qwen3-max-2025-09-23":[120,600],
+    "qwen3-max-2026-01-23":[120,600],
+    "qwen3-max-preview":[120,600],
+    "qwen3-next-80b-a3b-instruct":[50,200],
+    "qwen3-next-80b-a3b-thinking":[50,600],
+    "qwen3-omni-flash":[43,166],
+    "qwen3-omni-flash-2025-09-15":[43,166],
+    "qwen3-omni-flash-2025-12-01":[43,166],
+    "qwen3-vl-235b-a22b-instruct":[40,160],
+    "qwen3-vl-235b-a22b-thinking":[40,400],
+    "qwen3-vl-flash":[5,40],
+    "qwen3-vl-flash-2026-01-22":[5,40],
+    "qwen3-vl-plus":[20,160],
+    "qwen3-vl-plus-2025-09-23":[20,160],
+    "qwen3-vl-plus-2025-12-19":[20,160],
+    "qwen3.5-122b-a10b":[40,320],
+    "qwen3.5-27b":[30,240],
+    "qwen3.5-35b-a3b":[25,200],
+    "qwen3.5-397b-a17b":[60,360],
+    "qwen3.5-flash":[10,40],
+    "qwen3.5-flash-2026-02-23":[10,40],
+    "qwen3.5-omni-flash":[40,220],
+    "qwen3.5-omni-flash-2026-03-15":[40,220],
+    "qwen3.5-omni-plus":[140,830],
+    "qwen3.5-omni-plus-2026-03-15":[140,830],
+    "qwen3.5-plus":[40,240],
+    "qwen3.5-plus-2026-02-15":[40,240],
+    "qwen3.5-plus-2026-04-20":[40,240],
+    "qwen3.6-27b":[60,360],
+    "qwen3.6-35b-a3b":[25,148],
+    "qwen3.6-flash":[19,113],
+    "qwen3.6-flash-2026-04-16":[19,113],
+    "qwen3.6-max-preview":[130,780],
+    "qwen3.6-plus":[50,300],
+    "qwen3.6-plus-2026-04-02":[50,300],
+    "qwen3.7-flash":[3,13],
+    "qwen3.7-flash-2026-07-15":[3,13],
+    "qwen3.7-max":[250,750],
+    "qwen3.7-max-2026-05-20":[250,750],
+    "qwen3.7-max-2026-06-08":[250,750],
+    "qwen3.7-max-preview":[250,750],
+    "qwen3.7-plus":[50,300],
+    "qwen3.7-plus-2026-05-26":[50,300],
+    "qwen3.8-2.4t-a95b":[200,600],
+    "qwen3.8-27b":[50,300],
+    "qwen3.8-max":[200,600],
+    "qwq-plus":[80,240],
+    "qwq-plus-2025-03-05":[80,240],
+    "seed-1-6":[25,200],
+    "seed-1-6-250915":[25,200],
+    "seed-1-6-flash":[8,30],
+    "seed-1-6-flash-250715":[8,30],
+    "seed-1-8":[25,200],
+    "seed-1-8-251228":[25,200],
+    "seed-2-0-code-preview":[50,300],
+    "seed-2-0-code-preview-260328":[50,300],
+    "seed-2-0-lite":[25,200],
+    "seed-2-0-lite-260228":[25,200],
+    "seed-2-0-lite-260428":[25,200],
+    "seed-2-0-mini":[10,40],
+    "seed-2-0-mini-260215":[10,40],
+    "seed-2-0-mini-260428":[10,40],
+    "seed-2-0-pro":[50,300],
+    "seed-2-0-pro-260328":[50,300],
+    "voxtral-small-2507":[10,30],
+    "voxtral-small-latest":[10,30],
+    "x-ai/grok-4-1-fast-non-reasoning":[20,50],
+    "x-ai/grok-4-1-fast-reasoning":[20,50],
+    "x-ai/grok-4-20-non-reasoning":[125,250],
+    "x-ai/grok-4-20-reasoning":[125,250],
+    "x-ai/grok-4.20-multi-agent-0309":[125,250],
+    "x-ai/grok-4.20-non-reasoning":[125,250],
+    "x-ai/grok-4.20-reasoning":[125,250],
+    "x-ai/grok-4.3":[125,250],
+    "x-ai/grok-4.5":[200,600],
+    "x-ai/grok-4.6":[200,600],
+    "x-ai/grok-build-0.1":[100,200],
+    "x-ai/grok-code-fast-1":[100,200],
+    "z-ai/glm-4.5":[60,220],
+    "z-ai/glm-4.5-air":[20,110],
+    "z-ai/glm-4.6":[60,220],
+    "z-ai/glm-4.7":[60,220],
+    "z-ai/glm-5":[100,320],
+    "z-ai/glm-5-turbo":[120,400],
+    "z-ai/glm-5.1":[140,440],
+    "z-ai/glm-5.2":[140,440],
+    "z-ai/glm-5.3":[140,440],
+    "z-ai/glm-5.3-flash":[15,50],
+    "zai-glm-5-2":[140,440],
+    "zai/glm-4.5":[60,220],
+    "zai/glm-4.5-air":[20,110],
+    "zai/glm-4.6":[60,220],
+    "zai/glm-4.7":[60,220],
+    "zai/glm-5":[100,320],
+    "zai/glm-5-turbo":[120,400],
+    "zai/glm-5.1":[140,440],
+    "zai/glm-5.2":[140,440],
+    "zai/glm-5.3":[140,440],
+    "zai/glm-5.3-flash":[15,50]  };
+  function usdTok(cents) {
+    const n = Number(cents) / 100;
+    if (!n) return "$0";
+    if (Math.round(n) === n) return "$" + n;
+    return "$" + n.toFixed(2);
+  }
+  function listPrice(id) {
+    const r = ratesFor(id);
+    return usdTok(r[0]) + " / " + usdTok(r[1]);
+  }
   function ratesFor(id) {
     const s = String(id||"").toLowerCase();
-    return RATES[s] || [80, 320];
+    if (RATES[s]) return RATES[s];
+    const n = s.replace(/_/g,"-").replace(/(\d)\.(\d)/g,"$1-$2");
+    if (RATES[n]) return RATES[n];
+    if (/fable|mythos|gpt-6-astra/.test(s)) return [1000,5000];
+    if (/opus/.test(s)) return [500,2500];
+    if (/sonnet/.test(s)) return [300,1500];
+    if (/haiku/.test(s)) return [100,500];
+    if (/luna/.test(s)) return [20,120];
+    if (/terra/.test(s)) return [200,1200];
+    if (/\bsol\b/.test(s)) return [500,3000];
+    if (/nano/.test(s) && /gpt/.test(s)) return [5,40];
+    if (/gpt-5\.4-pro|5-4-pro|5\.5-pro/.test(s)) return [3000,18000];
+    if (/gpt-5\.5/.test(s)) return [500,3000];
+    if (/gpt-5\.4/.test(s)) return [250,1500];
+    if (/^gpt-5$|gpt-5-2025/.test(s)) return [125,1000];
+    if (/grok-4\.[56]/.test(s)) return [200,600];
+    if (/grok/.test(s)) return [125,250];
+    if (/gemini-3\.1-pro/.test(s)) return [200,1200];
+    if (/flash-lite/.test(s)) return [25,150];
+    if (/gemini.*flash/.test(s)) return [75,375];
+    if (/qwen3\.8-max/.test(s)) return [200,600];
+    if (/qwen3\.6-plus|qwen3\.7-plus/.test(s)) return [50,300];
+    if (/kimi-k3/.test(s)) return [300,1500];
+    if (/kimi/.test(s)) return [95,400];
+    if (/deepseek.*pro/.test(s)) return [174,348];
+    if (/deepseek.*flash/.test(s)) return [44,132];
+    if (/deepseek/.test(s)) return [57,171];
+    if (/glm/.test(s)) return [140,440];
+    if (/mistral-large/.test(s)) return [50,150];
+    return [125, 500];
   }
   function modelWeight(id) {
     const s = String(id || "").toLowerCase();
@@ -614,39 +1188,46 @@
     return Math.max(0.4, ratesFor(id)[1] / 40);
   }
   function isCheap(id) { return ratesFor(id)[1] <= 440; }
-  function looksCode(t) { return /\b(code|function|class|typescript|javascript|python|react|css|html|bug|refactor|compile|api|sql|implement|script|component)\b/i.test(t); }
-  function looksSoft(t) { return /\b(app|project|feature|backend|frontend|database|deploy|auth|refactor|continue|next step|todo|implement)\b/i.test(t); }
-  function pickAuto(prompt, messages, remaining) {
+  function looksCode(t) {
+    const text = String(t || "");
+    if (/```/.test(text)) return true;
+    if (/\.(cpp|py|ts|tsx|js|jsx|java|rs|go|html|css|c|h|kt|swift|php|rb)\b/i.test(text)) return true;
+    return /\b(write (a |me |some )?(python|javascript|typescript|java|c\+\+|rust|go|sql) |def |function\b|stack trace|leetcode|typeerror|syntax error|git diff|npm (install|run)|console\.log|public static void|fix this (bug|error|code)|implement a function|linked list|binary search|hash map)\b/i.test(text);
+  }
+  function looksSchool(t) {
+    return /\b(homework|school work|study guide|exam prep|quiz|worksheet|assignment|rubric|thesis statement|lab report|book report|essay prompt|cite sources?|citation|bibliography|for (my )?(class|teacher|professor)|english class|history class|algebra|calculus|geometry homework)\b/i.test(t);
+  }
+  function pickAuto(prompt, messages, remaining, hasImage) {
     const text = String(prompt || "").trim();
     const total = messages.reduce((n, m) => n + String(m.content || "").length, 0) + text.length;
     const tight = remaining != null && remaining < 8000000;
     const broke = remaining != null && remaining < 1500000;
-    const cost = (id) => estimateTurn(id, Math.max(total, 400), false, "low");
-    const pairIfCheaper = (versus) => {
-      const pairs = [["qwen3.6-plus","gemini-3.8-flash"],["qwen3.6-plus","claude-haiku-4-5"]];
-      const cap = cost(versus);
-      for (const p of pairs) {
-        if (cost(p[0]) + cost(p[1]) < cap * 0.85) return p;
-      }
-      return null;
-    };
-    if (broke) return { model: "qwen3.6-plus", reason: "low usage · Qwen 3.6 Plus" };
-    if (text.length < 72 && messages.length < 6 && /^(hi|hey|hello|thanks|ok|yes|no)\b/i.test(text)) return { model: "qwen3.6-plus", reason: "short chat" };
-    if (looksCode(text) || /```/.test(text)) {
-      if (tight) return { model: "qwen3.6-plus", reason: "code · Qwen, saving usage" };
-      if (total > 8000 || text.length > 1800) return { model: "gpt-5.6-luna", reason: "long code" };
-      return { model: "kimi-k2.7-code", reason: "code" };
+    if (hasImage) return { model: "qwen3.6-plus", reason: "picture attached · Qwen 3.6 Plus can see it" };
+    if (broke) return { model: "qwen3.6-plus", reason: "almost out of usage · cheapest smart model" };
+    if (text.length < 80 && messages.length < 6 && /^(hi|hey|hello|yo|sup|thanks|thank you|ok|okay|yes|no|sure|lol|what'?s up|how are you)\b/i.test(text)) return { model: "qwen3.6-plus", reason: "short hello · Qwen 3.6 Plus" };
+    if (looksSchool(text)) return { model: tight ? "gpt-5.6-luna" : "claude-sonnet-4-6", reason: tight ? "school · Luna" : "school work · Claude Sonnet 4.6" };
+    if (looksCode(text)) {
+      if (tight) return { model: "qwen3.6-plus", reason: "code · saving usage" };
+      if (total > 8000 || text.length > 1800) return { model: "gpt-5.6-luna", reason: "long code · GPT-5.6 Luna" };
+      return { model: "kimi-k2.7-code", reason: "code · Kimi K2.7 Code" };
     }
-    if (total > 14000 || text.length > 4500) return { model: tight ? "qwen3.6-plus" : "kimi-k2.6", reason: "long prompt" };
-    const deep = /\b(prove|reason|why does|math|puzzle|logic|algorithm|homework|essay|study|exam)\b/i.test(text) || text.length > 700 || looksSoft(text);
-    if (deep && !tight) {
-      const versus = /\b(prove|reason|math|puzzle|logic)\b/i.test(text) ? "grok-4.3" : "claude-sonnet-4-6";
-      const pair = pairIfCheaper(versus);
-      if (pair) return { model: pair[0], ensemble: pair, reason: "two cheap models, less than " + modelMeta(versus).label };
-      return { model: versus, reason: "longer, careful answer" };
+    if (/\b(prove|proof of|derive why|logic puzzle|theorem|differential equation|solve for|equation|derivative|integral|matrix|stoich|prove that)\b/i.test(text) || /[=∑∫√]/.test(text)) {
+      return { model: tight ? "gpt-5.6-luna" : "grok-4.3", reason: tight ? "hard question · Luna" : "hard question · Grok 4.3" };
     }
-    if (text.length < 160 && messages.length < 8) return { model: "qwen3.6-plus", reason: "quick question" };
-    return { model: tight ? "qwen3.6-plus" : "gpt-5.6-luna", reason: "everyday" };
+    if (/\b(translate|traduc|翻译|übersetz|in (spanish|french|german|chinese|japanese|korean|hindi|arabic|portuguese))\b/i.test(text)) {
+      return { model: "qwen3.6-plus", reason: "translation · Qwen 3.6 Plus" };
+    }
+    if (/\b(summarize|summary of|tldr|tl;dr|eli5|key points of)\b/i.test(text)) {
+      return { model: tight ? "qwen3.6-plus" : "gemini-3.8-flash", reason: "summarize · Gemini 3.8 Flash" };
+    }
+    if (/\b(short story|write a (story|poem|song|scene|letter|email|speech)|lyrics|screenplay|fanfic)\b/i.test(text)) {
+      return { model: "gpt-5.6-luna", reason: "writing · GPT-5.6 Luna" };
+    }
+    if (total > 14000 || text.length > 4500) return { model: tight ? "qwen3.6-plus" : "kimi-k2.6", reason: tight ? "long prompt · saving usage" : "long prompt · Kimi K2.6" };
+    if (text.length < 180 && messages.length < 8 && /^(what( is|'s| are)|who is|when (is|was|did)|where is|how (do|does|to|much|many)|define |capital of)\b/i.test(text)) {
+      return { model: "qwen3.6-plus", reason: "quick fact · Qwen 3.6 Plus" };
+    }
+    return { model: tight ? "gemini-3.8-flash" : "gpt-5.6-luna", reason: tight ? "everyday · Gemini Flash" : "everyday chat · GPT-5.6 Luna ($0.20/$1.20, not GPT-5)" };
   }
   function preferredCheap(prompt) {
     if (looksCode(prompt)) return FALLBACKS.luna;
@@ -807,7 +1388,7 @@
     if (!box) return;
     const s = current();
     const lastUser = [...s.messages].reverse().find((m) => m.role === "user");
-    const primary = s.model === "auto" ? pickAuto(lastUser ? lastUser.content : "", s.messages, usageSnap ? usageSnap.remaining : null).model : s.model;
+    const primary = s.model === "auto" ? pickAuto(lastUser ? lastUser.content : "", s.messages, usageSnap ? usageSnap.remaining : null, false).model : s.model;
     const plan = planTurn(primary, lastUser ? lastUser.content : "", s.messages, s.thinking, s.effort, usageSnap ? usageSnap.remaining : null);
     const meta = modelMeta(s.model);
     const cheap = modelMeta(plan.cheap);
@@ -867,7 +1448,7 @@
   })();
   const uid = (p) => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   let MODELS = FEATURED.slice();
-  const modelMeta = (id) => MODELS.find(m => m.id === id) || FEATURED.find(m => m.id === id) || { id, label: id, vendor: "Other" };
+  const modelMeta = (id) => MODELS.find(m => m.id === id) || FEATURED.find(m => m.id === id) || VAULT.find(m => m.id === id) || { id, label: id, vendor: "Other" };
 
   function guessVendor(id) {
     const s = String(id).toLowerCase();
@@ -894,14 +1475,14 @@
     return {
       id: uid("ses"),
       title: "New chat",
-      model: state.lastModel || "claude-haiku-4-5",
+      model: state.lastModel || "auto",
       thinking: state.lastThinking !== false,
       effort: state.lastEffort || "medium",
       messages: [],
       updatedAt: Date.now(),
     };
   }
-  let state = { sessions: [], activeId: null, lastModel: "claude-haiku-4-5", lastThinking: true, lastEffort: "medium" };
+  let state = { sessions: [], activeId: null, lastModel: "auto", lastThinking: true, lastEffort: "medium" };
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || localStorage.getItem("omni-chat-v1") || "null");
     if (raw && Array.isArray(raw.sessions)) state = raw;
@@ -914,12 +1495,14 @@
   if (!state.activeId) state.activeId = state.sessions[0].id;
   if (!state.lastModel) {
     const cur = state.sessions.find(s => s.id === state.activeId) || state.sessions[0];
-    state.lastModel = cur.model || "claude-haiku-4-5";
+    state.lastModel = cur.model || "auto";
     state.lastThinking = cur.thinking !== false;
     state.lastEffort = cur.effort || "medium";
   }
   function isBurner(id) {
-    return /fable-5-1|fable-5\.1|mythos|opus-5|terra|5\.4-pro|kimi-k3|v4-pro|qwen3\.8-max|grok-4\.6|gemini-3\.1-pro|fable-5$|sonnet-5$|5\.6-sol|mistral-large|qwen3\.7-max|grok-4\.5|grok-4\.20|gpt-5\.5|gpt-5\.4$/i.test(String(id||""));
+    const s = String(id||"");
+    if (s === "gpt-5" || /^gpt-5-2025/.test(s) || s === "gpt-5.1") return true;
+    return /fable-5-1|fable-5\.1|mythos|opus-5|terra|5\.4-pro|gpt-6-astra|kimi-k3|v4-pro|qwen3\.8-max|grok-4\.6|gemini-3\.1-pro|fable-5$|sonnet-5$|5\.6-sol|qwen3\.7-max|grok-4\.5|grok-4\.20|gpt-5\.5|gpt-5\.4$/i.test(s);
   }
   state.sessions.forEach((s) => { if (isBurner(s.model)) s.model = "claude-haiku-4-5"; });
   if (isBurner(state.lastModel)) state.lastModel = "claude-haiku-4-5";
@@ -1205,7 +1788,7 @@
     $("model-label").textContent = meta.label;
     const chars = s.messages.reduce((n, m) => n + String(m.content || "").length, 0);
     const replyCost = estimateTurn(s.model, chars, s.thinking, s.effort);
-    if ($("model-cost")) $("model-cost").textContent = s.model === "auto" ? "varies" : ("~" + formatUsd(replyCost));
+    if ($("model-cost")) $("model-cost").textContent = s.model === "auto" ? "auto" : listPrice(s.model);
     $("think-btn").classList.toggle("on", !!s.thinking);
     $("think-btn").setAttribute("aria-pressed", s.thinking ? "true" : "false");
     const ef = EFFORTS.find(e => e.id === s.effort) || EFFORTS[1];
@@ -1274,7 +1857,7 @@
     if (!q) {
       const auto = document.createElement("button");
       auto.className = "mrow" + (sel === "auto" ? " sel" : "");
-      auto.innerHTML = "<span style='flex:1;min-width:0'><b>Auto</b><em>Picks from the question and how long it is</em></span><span class='cost'><b>varies</b><small>smart / cheap</small></span>";
+      auto.innerHTML = "<span style='flex:1;min-width:0'><b>Auto</b><em>Don't know models? Auto reads the question and picks one.</em></span><span class='cost'><b>picks for you</b><small>no model skill needed</small></span>";
       auto.onclick = () => {
         current().model = "auto";
         state.lastModel = "auto";
@@ -1286,12 +1869,12 @@
     if (vault) {
       const warn = document.createElement("div");
       warn.style.cssText = "margin:8px 8px 12px;padding:10px 12px;border-radius:12px;border:1px solid color-mix(in oklab, #f87171 40%, var(--line));background:color-mix(in oklab, #f87171 12%, var(--surface));font-size:12px;line-height:1.45;color:var(--fg)";
-      warn.textContent = "Warning: these models can eat almost your whole monthly allowance in one reply. Fable 5.1 and the other flagships are not for everyday chat.";
+      warn.textContent = "Official Puter list prices ($ input / $ output per 1M). Fable 5.1 is $10 / $50. GPT-5 is $1.25 / $10. Luna is $0.20 / $1.20. GPT-5.4 Pro is $30 / $180.";
       box.appendChild(warn);
       const hh = document.createElement("div");
       hh.className = "vendor";
       hh.style.color = "#f87171";
-      hh.textContent = "Heavy — eats credits";
+      hh.textContent = "Heavy — real flagship prices";
       box.appendChild(hh);
       const heavies = [];
       const seenH = new Set();
@@ -1307,11 +1890,12 @@
         const s = current();
         const chars = s.messages.reduce((n, x) => n + String(x.content || "").length, 0);
         const cost = estimateTurn(m.id, chars, s.thinking, s.effort);
-        b.innerHTML = "<span style='flex:1;min-width:0'><b></b><em></em></span><span class='cost'><b></b><small>heavy / reply</small></span>";
+        b.innerHTML = "<span style='flex:1;min-width:0'><b></b><em></em></span><span class='cost'><b></b><small></small></span>";
         b.querySelector("b").textContent = m.label;
-        b.querySelector("em").textContent = m.id;
-        b.querySelector(".cost b").textContent = "~" + formatUsd(cost);
+        b.querySelector("em").textContent = m.id + " · " + listPrice(m.id) + " per 1M";
+        b.querySelector(".cost b").textContent = listPrice(m.id);
         b.querySelector(".cost b").style.color = "#f87171";
+        b.querySelector(".cost small").textContent = cost >= 1000000 ? ("~" + formatUsd(cost) + " / reply") : "per 1M tokens";
         b.onclick = () => {
           current().model = m.id;
           state.lastModel = m.id;
@@ -1342,8 +1926,8 @@
         b.innerHTML = "<span style='flex:1;min-width:0'><b></b><em></em></span><span class='cost'><b></b><small></small></span>";
         b.querySelector("b").textContent = m.label;
         b.querySelector("em").textContent = m.id;
-        b.querySelector(".cost b").textContent = "~" + formatUsd(cost);
-        b.querySelector(".cost small").textContent = tier + " / reply";
+        b.querySelector(".cost b").textContent = listPrice(m.id);
+        b.querySelector(".cost small").textContent = tier + " · per 1M";
         b.onclick = () => {
           current().model = m.id;
           state.lastModel = m.id;
@@ -1381,7 +1965,7 @@
         taps = 0;
         prefs.vaultUnlocked = true;
         savePrefs();
-        toast("Admin models unlocked. Fable 5.1 and the rest will eat your monthly credits almost instantly.");
+        toast("Admin models unlocked. Fable 5.1 is $10 / $50 per 1M — a short reply is about $0.04.");
         renderModelList();
         return;
       }
@@ -1452,7 +2036,7 @@
     streaming = true; aborted = false; updateSend();
     const lastUser = [...s.messages].reverse().find((m) => m.role === "user");
     const prompt = lastUser ? lastUser.content : "";
-    const autoPick = s.model === "auto" ? pickAuto(prompt, s.messages, usageSnap ? usageSnap.remaining : null) : null;
+    const autoPick = s.model === "auto" ? pickAuto(prompt, s.messages, usageSnap ? usageSnap.remaining : null, !!attachment) : null;
     let primary = autoPick ? autoPick.model : s.model;
     if (attachment) {
       const vis = pickVision(primary);
@@ -1461,9 +2045,9 @@
         primary = vis;
       }
     }
-    const plan = planTurn(primary, prompt, s.messages, s.thinking, s.effort, usageSnap ? usageSnap.remaining : null);
+    const plan = planTurn(primary, prompt, s.messages, s.thinking, s.effort, (autoPick && (!usageSnap || usageSnap.remaining > 1500000)) ? null : (usageSnap ? usageSnap.remaining : null));
     const autoNotice = autoPick
-      ? ("Auto · " + (autoPick.ensemble ? autoPick.ensemble.map((id) => modelMeta(id).label).join(" + ") : modelMeta(plan.model).label) + " · " + autoPick.reason)
+      ? ("Auto · " + modelMeta(plan.model).label + " · " + autoPick.reason)
       : null;
     const msg = {
       id: uid("msg"),
@@ -1484,51 +2068,7 @@
     try {
       if (!window.puter) throw new Error("Puter.js is not ready yet.");
       let ok = false;
-      async function collectOnce(model) {
-        const sys = systemFor(model) + "\n\n" + prefsBlock() + "\nAnswer directly.\n" + effortLine("low") + (lastUser && lastUser.school ? "\n\n" + SCHOOL : "");
-        const payload = [{ role: "system", content: sys }, ...history];
-        const opts = Object.assign({ model: model }, effortOpts("low", false, model));
-        const call = attachment
-          ? puter.ai.chat(visionPrompt(sys, history, lastUser ? lastUser.content : ""), attachment.dataUrl, opts)
-          : puter.ai.chat(payload, false, opts);
-        const raw = await withTimeout(call, 18000, "The model stalled — likely rate-limited or out of usage.");
-        let t = "", r = "";
-        if (raw && typeof raw[Symbol.asyncIterator] === "function") {
-          for await (const chunk of raw) {
-            if (aborted) break;
-            const next = ingestChunk(chunk, { text: t, reasoning: r });
-            if (next.error) throw new Error(next.error);
-            t = next.text; r = next.reasoning;
-          }
-        } else {
-          const next = ingestChunk(raw, { text: t, reasoning: r });
-          t = next.text; r = next.reasoning;
-        }
-        const rec = recoverAnswer(t, r);
-        return { model, text: rec.text, reasoning: rec.reasoning };
-      }
-      if (autoPick && autoPick.ensemble && autoPick.ensemble.length >= 2 && !attachment) {
-        const pair = await Promise.all(autoPick.ensemble.map(async (id) => {
-          try { return await collectOnce(id); }
-          catch (e) { return { model: id, text: "", reasoning: "" }; }
-        }));
-        pair.sort((a, b) => (b.text||"").length - (a.text||"").length);
-        const winner = pair[0];
-        if (winner && winner.text.trim()) {
-          const words = winner.text.trim().split(/(\s+)/);
-          let acc = "";
-          for (let i = 0; i < words.length; i++) {
-            if (aborted) break;
-            acc += words[i];
-            if (i % 2 === 0) { msg.content = acc; msg.model = winner.model; renderThread(); await sleep(14); }
-          }
-          text = winner.text.trim(); reason = winner.reasoning || "";
-          usedModel = winner.model;
-          plan.turnCost = autoPick.ensemble.reduce((n, id) => n + estimateTurn(id, prompt.length, false, "low"), 0);
-          ok = true;
-        }
-      }
-      if (!ok) for (let i = 0; i < plan.chain.length; i++) {
+      for (let i = 0; i < plan.chain.length; i++) {
         if (aborted) break;
         const model = plan.chain[i];
         if (i > 0) {
@@ -1807,9 +2347,20 @@
 
   async function loadLiveModels() {
     const ingest = (list) => {
-      const seen = new Set(FEATURED.map(m => m.id));
-      const live = FEATURED.map(m => Object.assign({ verified: true }, m));
+      const seen = new Set([...FEATURED, ...VAULT].map(m => m.id));
+      const live = FEATURED.concat(VAULT).map(m => Object.assign({ verified: true }, m));
       list.forEach(item => {
+        if (item && typeof item === "object") {
+          const costs = item.costs || {};
+          const ick = item.input_cost_key;
+          const ock = item.output_cost_key;
+          const inn = (ick && costs[ick] != null) ? costs[ick] : costs.prompt_tokens;
+          const out = (ock && costs[ock] != null) ? costs[ock] : costs.completion_tokens;
+          const rid = item.id || item.name;
+          if (rid && inn != null && out != null && Number(inn) + Number(out) > 0 && !String(rid).includes(":")) {
+            if (!RATES[rid]) RATES[rid] = [Number(inn), Number(out)];
+          }
+        }
         const id = typeof item === "string" ? item : (item && (item.id || item.name));
         if (!id || seen.has(id) || isNoise(id)) return;
         seen.add(id);
@@ -1817,7 +2368,7 @@
         live.push({ id, label, vendor: guessVendor(id), verified: true, vault: isBurner(id) });
       });
       MODELS = live;
-      $("model-count").textContent = live.length + " verified IDs from Puter’s live catalog.";
+      $("model-count").textContent = live.length + " verified IDs · official $ input / $ output per 1M tokens.";
     };
     try {
       const res = await fetch("https://api.puter.com/puterai/chat/models/details");
