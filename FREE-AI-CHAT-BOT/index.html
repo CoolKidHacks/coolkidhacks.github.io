@@ -168,6 +168,13 @@
     .tok-type, .tok-tag { color: var(--accent); }
     .tok-attr, .tok-punct { color: var(--muted); }
     .caret { display: inline-block; width: 2px; height: 0.95em; margin-left: 2px; background: var(--accent); vertical-align: -2px; animation: blink 1.05s steps(1) infinite; }
+    .gen-dots { display: inline-flex; gap: 3px; align-items: center; height: 1em; }
+    .gen-dots i { width: 4px; height: 4px; border-radius: 99px; background: var(--accent); animation: gen-bounce 0.9s ease-in-out infinite; }
+    .gen-dots i:nth-child(2) { animation-delay: .12s; }
+    .gen-dots i:nth-child(3) { animation-delay: .24s; }
+    @keyframes gen-bounce { 0%,80%,100% { transform: translateY(0); opacity:.4 } 40% { transform: translateY(-3px); opacity:1 } }
+    .msg-enter { animation: msg-in .28s var(--ease); }
+    @keyframes msg-in { from { opacity:0; transform: translateY(6px) } to { opacity:1; transform: none } }
     @keyframes blink { 50% { opacity: 0; } }
     .stream-in { animation: token-in .22s ease-out; }
     @keyframes token-in { from { opacity: .4; } to { opacity: 1; } }
@@ -569,24 +576,22 @@
     if (usd < 1) return "$" + usd.toFixed(3);
     return "$" + usd.toFixed(2);
   }
+  const RATES = {
+    "gpt-5-nano":[5,40],"gpt-5.6-luna":[20,120],"gemini-3.1-flash-lite":[10,40],"gemini-3.7-flash":[50,250],
+    "gemini-3.8-flash":[75,375],"deepseek-v4-flash-0731":[44,132],"deepseek-v3.2":[27,110],
+    "claude-haiku-4-5":[100,500],"grok-4.3":[125,250],"glm-5.3":[140,440],"kimi-k2.6":[95,400],
+    "kimi-k2.7-code":[95,400],"qwen3.6-plus":[40,160],"gpt-4o":[250,1000],"claude-sonnet-4-6":[300,1500]
+  };
+  function ratesFor(id) {
+    const s = String(id||"").toLowerCase();
+    return RATES[s] || [80, 320];
+  }
   function modelWeight(id) {
     const s = String(id || "").toLowerCase();
-    if (s === "auto") return 4;
-    if (/fable-5-1|fable-5\.1|mythos/.test(s)) return 14;
-    if (/opus-5$|claude-opus-5/.test(s) && !/4-8|4\.8/.test(s)) return 12;
-    if (/gpt-5\.6-terra/.test(s)) return 10;
-    if (/qwen3\.8-max|kimi-k3|deepseek-v4-pro|grok-4\.6/.test(s)) return 11;
-    if (/opus/.test(s)) return 10;
-    if (/sonnet-5$|claude-sonnet-5/.test(s) && !/4-6/.test(s)) return 6;
-    if (/gpt-5\.6-luna/.test(s)) return 4;
-    if (/gpt-5\.6-sol|gpt-5\.4|gpt-5\.5|grok-4\.5|gemini-3\.1-pro/.test(s)) return 6;
-    if (/fable-5$/.test(s)) return 8;
-    if (/glm-5|mistral-large|gpt-4o|kimi-k2/.test(s)) return 3;
-    if (/haiku|nano|flash-lite|v3\.2|deepseek-v4-flash|gemini-3\.[178]-flash/.test(s)) return 1;
-    if (/flash/.test(s)) return 1.4;
-    return 5;
+    if (s === "auto") return 2;
+    return Math.max(0.4, ratesFor(id)[1] / 40);
   }
-  function isCheap(id) { return modelWeight(id) <= 3.5; }
+  function isCheap(id) { return ratesFor(id)[1] <= 440; }
   function looksCode(t) { return /\b(code|function|class|typescript|javascript|python|react|css|html|bug|refactor|compile|api|sql|implement|script|component)\b/i.test(t); }
   function looksSoft(t) { return /\b(app|project|feature|backend|frontend|database|deploy|auth|refactor|continue|next step|todo|implement)\b/i.test(t); }
   function pickAuto(prompt, messages, remaining) {
@@ -594,19 +599,32 @@
     const total = messages.reduce((n, m) => n + String(m.content || "").length, 0) + text.length;
     const tight = remaining != null && remaining < 8000000;
     const broke = remaining != null && remaining < 1500000;
-    if (broke) return { model: "claude-haiku-4-5", reason: "low usage" };
-    if (text.length < 72 && messages.length < 6 && /^(hi|hey|hello|thanks|ok|yes|no)\b/i.test(text)) return { model: "claude-haiku-4-5", reason: "short chat" };
+    const cost = (id) => estimateTurn(id, Math.max(total, 400), false, "low");
+    const pairIfCheaper = (versus) => {
+      const pairs = [["gpt-5-nano","gemini-3.8-flash"],["gpt-5-nano","claude-haiku-4-5"]];
+      const cap = cost(versus);
+      for (const p of pairs) {
+        if (cost(p[0]) + cost(p[1]) < cap * 0.85) return p;
+      }
+      return null;
+    };
+    if (broke) return { model: "gpt-5-nano", reason: "low usage" };
+    if (text.length < 72 && messages.length < 6 && /^(hi|hey|hello|thanks|ok|yes|no)\b/i.test(text)) return { model: "gpt-5-nano", reason: "short chat" };
     if (looksCode(text) || /```/.test(text)) {
-      if (tight) return { model: "glm-5.3", reason: "code · saving usage" };
+      if (tight) return { model: "gpt-5-nano", reason: "code · saving usage" };
       if (total > 8000 || text.length > 1800) return { model: "gpt-5.6-luna", reason: "long code" };
       return { model: "kimi-k2.7-code", reason: "code" };
     }
-    if (total > 14000 || text.length > 4500) return { model: tight ? "glm-5.3" : "kimi-k2.6", reason: "long prompt" };
-    if (/\b(prove|reason|why does|math|puzzle|logic|algorithm)\b/i.test(text)) return { model: tight ? "gpt-5.6-luna" : "grok-4.3", reason: "needs a stronger model" };
-    if (/\b(homework|essay|study|exam|algebra)\b/i.test(text) || text.length > 700) return { model: tight ? "gpt-5.6-luna" : "claude-sonnet-4-6", reason: "longer, careful answer" };
-    if (looksSoft(text)) return { model: tight ? "glm-5.3" : "gpt-5.6-luna", reason: "project work" };
-    if (text.length < 160 && messages.length < 8) return { model: "claude-haiku-4-5", reason: "quick question" };
-    return { model: tight ? "claude-haiku-4-5" : "claude-sonnet-4-6", reason: "everyday" };
+    if (total > 14000 || text.length > 4500) return { model: tight ? "gemini-3.8-flash" : "kimi-k2.6", reason: "long prompt" };
+    const deep = /\b(prove|reason|why does|math|puzzle|logic|algorithm|homework|essay|study|exam)\b/i.test(text) || text.length > 700 || looksSoft(text);
+    if (deep && !tight) {
+      const versus = /\b(prove|reason|math|puzzle|logic)\b/i.test(text) ? "grok-4.3" : "claude-sonnet-4-6";
+      const pair = pairIfCheaper(versus);
+      if (pair) return { model: pair[0], ensemble: pair, reason: "two cheap models, less than " + modelMeta(versus).label };
+      return { model: versus, reason: "longer, careful answer" };
+    }
+    if (text.length < 160 && messages.length < 8) return { model: "gpt-5-nano", reason: "quick question" };
+    return { model: tight ? "gemini-3.8-flash" : "gpt-5.6-luna", reason: "everyday" };
   }
   function preferredCheap(prompt) {
     if (looksCode(prompt)) return FALLBACKS.luna;
@@ -614,15 +632,16 @@
     return FALLBACKS.glm;
   }
   function estimateTurn(model, inputChars, thinking, effort) {
-    const tokensIn = Math.max(32, Math.ceil(inputChars / 4));
-    let tokensOut = 700;
+    const tokensIn = Math.max(24, Math.ceil(inputChars / 4));
+    let tokensOut = 650;
     if (thinking) {
-      if (effort === "max" || effort === "xhigh") tokensOut = 2800;
-      else if (effort === "high") tokensOut = 1800;
-      else if (effort === "low") tokensOut = 900;
-      else tokensOut = 1400;
+      if (effort === "max" || effort === "xhigh") tokensOut = 2600;
+      else if (effort === "high") tokensOut = 1700;
+      else if (effort === "low") tokensOut = 850;
+      else tokensOut = 1300;
     }
-    return Math.round((tokensIn * 0.28 + tokensOut) * modelWeight(model) * 120);
+    const r = ratesFor(model);
+    return Math.round(r[0] * tokensIn + r[1] * tokensOut);
   }
   function uniq(ids) {
     const s = new Set(); const o = [];
@@ -1313,7 +1332,9 @@
     const prompt = lastUser ? lastUser.content : "";
     const autoPick = s.model === "auto" ? pickAuto(prompt, s.messages, usageSnap ? usageSnap.remaining : null) : null;
     const plan = planTurn(autoPick ? autoPick.model : s.model, prompt, s.messages, s.thinking, s.effort, usageSnap ? usageSnap.remaining : null);
-    const autoNotice = autoPick ? ("Auto · " + modelMeta(plan.model).label + " · " + autoPick.reason) : null;
+    const autoNotice = autoPick
+      ? ("Auto · " + (autoPick.ensemble ? autoPick.ensemble.map((id) => modelMeta(id).label).join(" + ") : modelMeta(plan.model).label) + " · " + autoPick.reason)
+      : null;
     const msg = {
       id: uid("msg"),
       role: "assistant",
@@ -1333,7 +1354,51 @@
     try {
       if (!window.puter) throw new Error("Puter.js is not ready yet.");
       let ok = false;
-      for (let i = 0; i < plan.chain.length; i++) {
+      async function collectOnce(model) {
+        const sys = systemFor(model) + "\n\n" + prefsBlock() + "\nAnswer directly." + (lastUser && lastUser.school ? "\n\n" + SCHOOL : "");
+        const payload = [{ role: "system", content: sys }, ...history];
+        const opts = Object.assign({ model: model }, effortOpts("low", false, model));
+        const call = attachment
+          ? puter.ai.chat(payload, [attachment.dataUrl], false, opts)
+          : puter.ai.chat(payload, false, opts);
+        const raw = await withTimeout(call, 18000, "The model stalled — likely rate-limited or out of usage.");
+        let t = "", r = "";
+        if (raw && typeof raw[Symbol.asyncIterator] === "function") {
+          for await (const chunk of raw) {
+            if (aborted) break;
+            const next = ingestChunk(chunk, { text: t, reasoning: r });
+            if (next.error) throw new Error(next.error);
+            t = next.text; r = next.reasoning;
+          }
+        } else {
+          const next = ingestChunk(raw, { text: t, reasoning: r });
+          t = next.text; r = next.reasoning;
+        }
+        const rec = recoverAnswer(t, r);
+        return { model, text: rec.text, reasoning: rec.reasoning };
+      }
+      if (autoPick && autoPick.ensemble && autoPick.ensemble.length >= 2) {
+        const pair = await Promise.all(autoPick.ensemble.map(async (id) => {
+          try { return await collectOnce(id); }
+          catch (e) { return { model: id, text: "", reasoning: "" }; }
+        }));
+        pair.sort((a, b) => (b.text||"").length - (a.text||"").length);
+        const winner = pair[0];
+        if (winner && winner.text.trim()) {
+          const words = winner.text.trim().split(/(\s+)/);
+          let acc = "";
+          for (let i = 0; i < words.length; i++) {
+            if (aborted) break;
+            acc += words[i];
+            if (i % 2 === 0) { msg.content = acc; msg.model = winner.model; renderThread(); await sleep(14); }
+          }
+          text = winner.text.trim(); reason = winner.reasoning || "";
+          usedModel = winner.model;
+          plan.turnCost = autoPick.ensemble.reduce((n, id) => n + estimateTurn(id, prompt.length, false, "low"), 0);
+          ok = true;
+        }
+      }
+      if (!ok) for (let i = 0; i < plan.chain.length; i++) {
         if (aborted) break;
         const model = plan.chain[i];
         if (i > 0) {
