@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
   <title>Omni — Free AI Chat</title>
   <meta name="description" content="Free multi-model AI chat. Real Claude, GPT, Grok, Gemini via Puter.js — no API keys." />
   <meta name="theme-color" content="#08080a" />
@@ -34,12 +34,16 @@
       --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
     * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); -webkit-font-smoothing: antialiased; overflow: hidden; overscroll-behavior: none; }
+    html.scroll-lock, html.scroll-lock body { overflow: hidden !important; touch-action: none; }
     button, [role="button"] { cursor: pointer; font-family: inherit; }
     button:disabled { cursor: default; opacity: .4; }
     button { background: none; border: 0; color: inherit; }
     a { color: inherit; }
-    #app { display: flex; height: var(--app-h, 100dvh); min-height: 0; }
+    #app {
+      display: flex; position: fixed; left: 0; right: 0;
+      top: var(--app-top, 0px); height: var(--app-h, 100dvh); min-height: 0;
+    }
     .sidebar {
       width: 18rem; flex-shrink: 0; display: flex; flex-direction: column;
       background: var(--surface); border-right: 1px solid var(--line); min-height: 0; overflow: hidden;
@@ -125,7 +129,7 @@
     .chip.on .led { background: var(--ok); }
     .connect { height: 40px; padding: 0 16px; border-radius: 999px; background: var(--primary); color: var(--primary-fg); font-size: 13px; font-weight: 500; margin-left: auto; flex-shrink: 0; }
     .status { margin-left: auto; font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--subtle); flex-shrink: 0; }
-    .thread { flex: 1; min-height: 0; overflow: auto; }
+    .thread { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
     .empty { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px; max-width: 36rem; margin: 0 auto; }
     .empty .mark { width: 52px; height: 52px; border-radius: 16px; }
     .empty h2 { margin: 22px 0 10px; font-family: var(--font); font-size: clamp(22px, 4.5vw, 32px); font-weight: 500; font-style: normal; letter-spacing: -.03em; line-height: 1.2; }
@@ -173,7 +177,13 @@
     .acts { margin-top: 6px; display: flex; gap: 4px; }
     .acts button { min-width: 44px; height: 36px; border-radius: 10px; color: var(--subtle); font-size: 12px; }
     .acts button:hover { color: var(--fg); background: var(--elevated); }
-    .composer-wrap { padding: 8px 16px max(14px, env(safe-area-inset-bottom)); }
+    .composer-wrap { padding: 8px 16px max(14px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--bg); flex-shrink: 0; }
+    .modes { max-width: 48rem; margin: 0 auto 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .mode-btn {
+      height: 44px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface);
+      display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; color: var(--muted);
+    }
+    .mode-btn.on { border-color: color-mix(in oklab, var(--accent) 50%, var(--line)); background: var(--elevated); color: var(--fg); }
     .composer { max-width: 48rem; margin: 0 auto; display: flex; align-items: flex-end; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 24px; padding: 8px; box-shadow: 0 18px 50px -28px rgba(0,0,0,.85); }
     .composer:focus-within { border-color: color-mix(in oklab, var(--accent) 40%, var(--line)); }
     textarea { flex: 1; resize: none; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 16px; line-height: 1.5; max-height: 168px; outline: none; padding: 10px 4px; }
@@ -188,19 +198,23 @@
     .modal h2 { margin: 0 0 8px; font-size: 18px; font-weight: 500; }
     .modal p { margin: 0 0 12px; color: var(--muted); font-size: 14px; line-height: 1.55; }
     .sheet {
-      display: none; position: fixed; inset: 0; z-index: 55; background: color-mix(in oklab, var(--bg) 55%, transparent);
+      display: none; position: fixed; z-index: 55;
+      top: var(--app-top, 0px); left: 0; width: 100%; height: var(--app-h, 100dvh);
+      background: color-mix(in oklab, var(--bg) 55%, transparent);
+      overflow: hidden; overscroll-behavior: none;
     }
     .sheet.show { display: block; }
     .sheet .panel {
       position: absolute; top: 0; bottom: 0; right: 0; width: min(26rem, 92vw);
       background: var(--surface); border-left: 1px solid var(--line); display: flex; flex-direction: column;
+      min-height: 0; max-height: 100%; overscroll-behavior: contain;
     }
     .sheet .hd { padding: 20px 16px 12px; border-bottom: 1px solid var(--line); display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
     .sheet .hd h3 { margin: 0; font-size: 18px; font-weight: 500; }
     .sheet .hd p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
     .sheet .grab { display: none; justify-content: center; padding-top: 8px; }
     .sheet .grab i { width: 40px; height: 4px; border-radius: 99px; background: var(--line); }
-    .sheet .body { overflow: auto; padding: 8px 8px 24px; flex: 1; }
+    .sheet .body { overflow: auto; padding: 8px 8px 24px; flex: 1; min-height: 0; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
     .vendor { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--subtle); padding: 12px 10px 6px; }
     .mrow { display: flex; width: 100%; text-align: left; padding: 10px; border-radius: 12px; gap: 8px; align-items: center; min-height: 48px; }
     .mrow:hover, .mrow.sel { background: var(--elevated); }
@@ -229,7 +243,7 @@
       #model-btn { width: 100%; justify-content: space-between; }
       .sheet .grab { display: flex; }
       .sheet .panel {
-        top: auto; left: 0; right: 0; width: 100%; height: min(88dvh, 40rem);
+        top: auto; left: 0; right: 0; width: 100%; height: min(88dvh, 100%);
         border-left: 0; border-top: 1px solid var(--line); border-radius: 20px 20px 0 0;
       }
       .brand { padding: 14px 12px 8px; }
@@ -313,16 +327,23 @@
       </header>
       <div class="thread" id="thread"></div>
       <div class="composer-wrap">
+        <div class="modes">
+          <button type="button" class="mode-btn" id="image-mode" aria-pressed="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            Image
+          </button>
+          <button type="button" class="mode-btn" id="school-mode" aria-pressed="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10L12 4 2 10l10 6 10-6z"/><path d="M6 12v5c0 1 3 3 6 3s6-2 6-3v-5"/></svg>
+            School
+          </button>
+        </div>
         <div id="preview-img"></div>
         <form class="composer" id="form">
           <button type="button" class="icon-btn" id="attach" aria-label="Attach image">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.4 11.6l-9.2 9.2a6 6 0 01-8.5-8.5l9.2-9.2a4 4 0 015.7 5.7L9.4 18.1a2 2 0 01-2.8-2.8l8.5-8.5"/></svg>
           </button>
-          <button type="button" class="icon-btn" id="imagine" aria-label="Generate image">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          </button>
           <input type="file" id="file" accept="image/*" hidden />
-          <textarea id="input" rows="1" placeholder="Message · /imagine a scene"></textarea>
+          <textarea id="input" rows="1" placeholder="Message"></textarea>
           <button type="submit" class="icon-btn send" id="send" aria-label="Send" disabled>
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
           </button>
@@ -451,6 +472,7 @@
     if (id.includes("glm") || id.includes("zhipu") || id.includes("zai")) return named("GLM 5.3", "Zhipu (Z.ai)", "Strong in Chinese and English, solid at code. Clear and practical.");
     return `You are a capable assistant provided through Omni via Puter. Be clear, useful, and direct. Prefer working code and concrete answers. Match the user's language.\n\n${CHANNEL}`;
   }
+  const SCHOOL = "The person is doing school work — homework, essays, study guides, math, science, language, or exam prep. Help them learn. Show steps, not just the answer. Use short headings and numbered steps. For essays: outline first, then draft if they asked. Do not write a full assignment as if it were theirs unless they explicitly asked you to draft it.";
   const EFFORTS = [
     { id: "low", label: "Low", hint: "Fast" },
     { id: "medium", label: "Medium", hint: "Balanced" },
@@ -673,10 +695,10 @@
   }
   function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
   const PROMPTS = [
+    { k: "School", t: "Walk me through this algebra problem step by step: 3(x - 4) = 2x + 5", mode: "school" },
+    { k: "Image", t: "A quiet editorial studio desk at night, steel lamp, warm paper", mode: "image" },
     { k: "Code", t: "Explain how a hash map works, with a tiny JS example." },
-    { k: "Plan", t: "Draft a weekend itinerary for Tokyo on a modest budget." },
-    { k: "Image", t: "/imagine A quiet editorial studio desk at night, steel lamp, warm paper" },
-    { k: "File", t: "Write a Python script that watches a folder and logs new files. Put the full file in a code block." }
+    { k: "Plan", t: "Draft a weekend itinerary for Tokyo on a modest budget." }
   ];
   const VENDOR_ORDER = ["Anthropic","OpenAI","xAI","Google","Moonshot","DeepSeek","Qwen","Mistral","Zhipu","Other"];
 
@@ -685,7 +707,9 @@
     const apply = () => {
       const vv = window.visualViewport;
       const h = vv ? Math.round(vv.height) : window.innerHeight;
+      const top = vv ? Math.round(vv.offsetTop) : 0;
       document.documentElement.style.setProperty("--app-h", h + "px");
+      document.documentElement.style.setProperty("--app-top", top + "px");
     };
     apply();
     window.visualViewport?.addEventListener("resize", apply);
@@ -951,7 +975,7 @@
       PROMPTS.forEach((p, i) => {
         const b = document.createElement("button");
         b.innerHTML = "<small><span>" + p.k + "</span><span>0" + (i + 1) + "</span></small>" + esc(p.t);
-        b.onclick = () => send(p.t);
+        b.onclick = () => send(p.t, null, p.mode);
         $("prompts").appendChild(b);
       });
       return;
@@ -1033,7 +1057,7 @@
     paintUsage();
   }
 
-  function closeSide() { $("sidebar").classList.remove("open"); $("backdrop").classList.remove("show"); }
+  function closeSide() { lockPage(false); $("sidebar").classList.remove("open"); $("backdrop").classList.remove("show"); }
   function updateSend() {
     if (streaming) {
       $("send").disabled = false;
@@ -1113,8 +1137,11 @@
     });
   }
 
-  function openModels() { $("model-sheet").classList.add("show"); $("model-search").value = ""; renderModelList(); $("model-search").focus(); }
-  function closeModels() { $("model-sheet").classList.remove("show"); }
+  function lockPage(on) {
+    document.documentElement.classList.toggle("scroll-lock", !!on);
+  }
+  function openModels() { lockPage(true); $("model-sheet").classList.add("show"); $("model-search").value = ""; renderModelList(); }
+  function closeModels() { lockPage(false); $("model-sheet").classList.remove("show"); }
   function showEffort() { $("effort-modal").classList.add("show"); }
   function hideEffort() { $("effort-modal").classList.remove("show"); }
 
@@ -1141,7 +1168,7 @@
     render();
   };
   $("search").oninput = renderList;
-  $("menu-btn").onclick = () => { $("sidebar").classList.add("open"); $("backdrop").classList.add("show"); };
+  $("menu-btn").onclick = () => { lockPage(true); $("sidebar").classList.add("open"); $("backdrop").classList.add("show"); };
   $("side-close").onclick = closeSide;
   $("backdrop").onclick = closeSide;
   $("clear-all").onclick = () => {
@@ -1213,7 +1240,7 @@
           renderThread();
           if (isRate(lastErr)) await sleep(900);
         }
-        const sys = systemFor(model) + (s.thinking && model === s.model ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.");
+        const sys = systemFor(model) + (s.thinking && model === s.model ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + (s.messages.some(m => m.school) ? "\n\n" + SCHOOL : "");
         const payload = [{ role: "system", content: sys }, ...history];
         const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking && model === s.model, model));
         try {
@@ -1292,15 +1319,22 @@
     return signIn();
   }
 
-  async function send(text, file) {
+  async function send(text, file, mode) {
     const t = (text || "").trim();
     if ((!t && !file) || streaming) return;
     try { await ensureSignedIn(); } catch (e) { return; }
     const s = current();
-    if (!s.messages.length) s.title = t.slice(0, 42) || "Image";
-    s.messages.push({ id: uid("msg"), role: "user", content: t || "Describe this image.", createdAt: Date.now() });
+    const asImage = mode === "image" || (looksImg(t) && !file);
+    if (!s.messages.length) s.title = t.slice(0, 42) || (asImage ? "Image" : "New chat");
+    s.messages.push({
+      id: uid("msg"),
+      role: "user",
+      content: asImage ? String(t).replace(/^\/(imagine|image|img|draw|picture)\s*/i, "").trim() || t : (t || "Describe this image."),
+      createdAt: Date.now(),
+      school: mode === "school" || undefined
+    });
     save(); $("input").value = ""; $("input").style.height = "auto"; render();
-    if (looksImg(t) && !file) { await runImage(t); return; }
+    if (asImage) { await runImage(t); return; }
     await runAssistant();
   }
   function looksImg(t) {
@@ -1334,22 +1368,29 @@
   $("form").onsubmit = (e) => {
     e.preventDefault();
     if (streaming) { aborted = true; return; }
-    send($("input").value, attachment);
+    send($("input").value, attachment, composerMode);
   };
   $("input").oninput = function () {
     this.style.height = "auto";
-    this.style.height = Math.min(this.scrollHeight, 160) + "px";
+    this.style.height = Math.min(this.scrollHeight, 120) + "px";
     updateSend();
   };
   $("input").onkeydown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!streaming) send($("input").value, attachment); }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!streaming) send($("input").value, attachment, composerMode); }
   };
   $("attach").onclick = () => $("file").click();
-  $("imagine").onclick = () => {
-    const t = $("input").value.trim();
-    if (!t) { toast("Describe an image first."); return; }
-    send("/imagine " + t);
-  };
+  let composerMode = "chat";
+  function setMode(next) {
+    composerMode = composerMode === next ? "chat" : next;
+    $("image-mode").classList.toggle("on", composerMode === "image");
+    $("school-mode").classList.toggle("on", composerMode === "school");
+    $("image-mode").setAttribute("aria-pressed", composerMode === "image" ? "true" : "false");
+    $("school-mode").setAttribute("aria-pressed", composerMode === "school" ? "true" : "false");
+    $("input").placeholder = composerMode === "image" ? "Describe the image to generate" : composerMode === "school" ? "Homework, essay, study question…" : "Message";
+    $("input").focus();
+  }
+  $("image-mode").onclick = () => setMode("image");
+  $("school-mode").onclick = () => setMode("school");
   $("file").onchange = () => {
     const f = $("file").files[0]; $("file").value = "";
     if (!f) return;
