@@ -521,7 +521,13 @@
   };
   let prefs = { botName:"Omni", personality:"", theme:"gemini", accent:"", memory:"", learnedMemory:"", importedMemory:"", importedFrom:"", vaultUnlocked:false };
   try { Object.assign(prefs, JSON.parse(localStorage.getItem("omni-prefs-v1") || "{}")); } catch (e) {}
-  function savePrefs() { localStorage.setItem("omni-prefs-v1", JSON.stringify(prefs)); applyPrefsTheme(); }
+  prefs.vaultUnlocked = false;
+  function savePrefs() {
+    const copy = Object.assign({}, prefs);
+    delete copy.vaultUnlocked;
+    localStorage.setItem("omni-prefs-v1", JSON.stringify(copy));
+    applyPrefsTheme();
+  }
   function applyPrefsTheme() {
     const t = THEMES[prefs.theme] || THEMES.gemini;
     const acc = /^#[0-9a-f]{6}$/i.test(prefs.accent) ? prefs.accent : t.accent;
@@ -544,7 +550,7 @@
     { id: "low", label: "Low", hint: "Fast" },
     { id: "medium", label: "Medium", hint: "Balanced" },
     { id: "high", label: "High", hint: "Careful" },
-    { id: "xhigh", label: "Extra", hint: "Deep" },
+    { id: "xhigh", label: "UltraX", hint: "Deep" },
     { id: "max", label: "Max", hint: "Slowest" }
   ];
   const KEY = "omni-chat-v2";
@@ -648,13 +654,12 @@
   }
   function estimateTurn(model, inputChars, thinking, effort) {
     const tokensIn = Math.max(24, Math.ceil(inputChars / 4));
-    let tokensOut = 650;
-    if (thinking) {
-      if (effort === "max" || effort === "xhigh") tokensOut = 2600;
-      else if (effort === "high") tokensOut = 1700;
-      else if (effort === "low") tokensOut = 850;
-      else tokensOut = 1300;
-    }
+    let tokensOut = 700;
+    if (effort === "low") tokensOut = 380;
+    else if (effort === "high") tokensOut = 1200;
+    else if (effort === "xhigh") tokensOut = 2100;
+    else if (effort === "max") tokensOut = 2800;
+    if (thinking) tokensOut = Math.round(tokensOut * 1.35);
     const r = ratesFor(model);
     return Math.round(r[0] * tokensIn + r[1] * tokensOut);
   }
@@ -1356,7 +1361,11 @@
     document.documentElement.classList.toggle("scroll-lock", !!on);
   }
   function openModels() { lockPage(true); $("model-sheet").classList.add("show"); $("model-search").value = ""; renderModelList(); }
-  function closeModels() { lockPage(false); $("model-sheet").classList.remove("show"); }
+  function closeModels() {
+    lockPage(false);
+    $("model-sheet").classList.remove("show");
+    prefs.vaultUnlocked = false;
+  }
   function showEffort() { $("effort-modal").classList.add("show"); }
   function hideEffort() { $("effort-modal").classList.remove("show"); }
 
@@ -1411,15 +1420,29 @@
   let aborted = false;
   let attachment = null;
 
+  function effortMaxTokens(effort) {
+    if (effort === "low") return 700;
+    if (effort === "high") return 3200;
+    if (effort === "xhigh") return 6000;
+    if (effort === "max") return 8192;
+    return 1600;
+  }
+  function effortLine(effort) {
+    if (effort === "low") return "Effort: Low. Short, direct answer. Skip extra analysis.";
+    if (effort === "high") return "Effort: High. Be careful. Check edge cases. Show working.";
+    if (effort === "xhigh") return "Effort: UltraX. Deep pass. Reason thoroughly, then a tight final answer.";
+    if (effort === "max") return "Effort: Max. Slow and thorough. Full working. Do not cut corners.";
+    return "Effort: Medium. Clear complete answer. Enough detail, no padding.";
+  }
   function effortOpts(effort, thinking, model) {
-    const o = { stream: true, normalize: true };
+    const o = { stream: true, normalize: true, max_tokens: effortMaxTokens(effort) };
     const id = String(model || "").toLowerCase();
     const supports = id.includes("gpt") || id.includes("openai") || id.includes("muse") || /^o[1-4]/.test(id);
     if (supports) {
-      if (!thinking) o.reasoning_effort = "none";
-      else if (effort === "max") { o.reasoning_effort = "xhigh"; o.verbosity = "high"; }
-      else if (effort === "xhigh") o.reasoning_effort = "xhigh";
-      else o.reasoning_effort = effort;
+      if (effort === "max" || effort === "xhigh") { o.reasoning_effort = "xhigh"; o.verbosity = "high"; }
+      else if (effort === "high") o.reasoning_effort = "high";
+      else if (effort === "low") { o.reasoning_effort = "low"; o.verbosity = "low"; }
+      else o.reasoning_effort = "medium";
     }
     return o;
   }
@@ -1462,7 +1485,7 @@
       if (!window.puter) throw new Error("Puter.js is not ready yet.");
       let ok = false;
       async function collectOnce(model) {
-        const sys = systemFor(model) + "\n\n" + prefsBlock() + "\nAnswer directly." + (lastUser && lastUser.school ? "\n\n" + SCHOOL : "");
+        const sys = systemFor(model) + "\n\n" + prefsBlock() + "\nAnswer directly.\n" + effortLine("low") + (lastUser && lastUser.school ? "\n\n" + SCHOOL : "");
         const payload = [{ role: "system", content: sys }, ...history];
         const opts = Object.assign({ model: model }, effortOpts("low", false, model));
         const call = attachment
@@ -1528,9 +1551,9 @@
           renderThread();
           if (isRate(lastErr)) await sleep(900);
         }
-        const sys = systemFor(model) + "\n\n" + prefsBlock() + (s.thinking && model === plan.model ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + (lastUser && lastUser.school ? "\n\n" + SCHOOL : "");
+        const sys = systemFor(model) + "\n\n" + prefsBlock() + (s.thinking ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + "\n" + effortLine(s.effort) + (lastUser && lastUser.school ? "\n\n" + SCHOOL : "");
         const payload = [{ role: "system", content: sys }, ...history];
-        const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking && model === plan.model && !attachment, model));
+        const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking, model));
         try {
           const call = attachment
             ? puter.ai.chat(visionPrompt(sys, history, lastUser ? lastUser.content : ""), attachment.dataUrl, opts)
