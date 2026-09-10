@@ -392,8 +392,9 @@
       <p>Name, look, personality, and memory from other AIs.</p>
       <label class="stat">Name</label>
       <input class="search" id="set-name" style="padding-left:12px;margin:6px 0 12px" maxlength="32" />
-      <label class="stat">Personality</label>
-      <textarea id="set-persona" rows="3" style="width:100%;margin:6px 0 12px;border:1px solid var(--line);border-radius:12px;background:var(--elevated);color:var(--fg);padding:10px;font:inherit"></textarea>
+      <label class="stat">Custom instructions</label>
+      <p style="font-size:13px;color:var(--muted);margin:6px 0">Always sent with every chat. Tone, format, rules — not a character.</p>
+      <textarea id="set-persona" rows="4" placeholder="e.g. Short bullets. Show working for math. Prefer TypeScript." style="width:100%;margin:6px 0 12px;border:1px solid var(--line);border-radius:12px;background:var(--elevated);color:var(--fg);padding:10px;font:inherit"></textarea>
       <label class="stat">Look</label>
       <div id="theme-opts" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 12px"></div>
       <label class="stat">Accent</label>
@@ -436,14 +437,18 @@
 
   <script>
   const FEATURED = [
+    { id: "auto", label: "Auto", vendor: "Other" },
     { id: "claude-haiku-4-5", label: "Claude Haiku 4.5", vendor: "Anthropic" },
     { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6", vendor: "Anthropic" },
+    { id: "claude-sonnet-5", label: "Claude Sonnet 5", vendor: "Anthropic" },
     { id: "gpt-5.6-luna", label: "GPT-5.6 Luna", vendor: "OpenAI", reasoning: true },
+    { id: "gpt-5.6-sol", label: "GPT-5.6 Sol", vendor: "OpenAI", reasoning: true },
     { id: "gpt-5-nano", label: "GPT-5 Nano", vendor: "OpenAI" },
     { id: "gpt-4o", label: "GPT-4o", vendor: "OpenAI" },
     { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash", vendor: "Google" },
     { id: "gemini-3.7-flash", label: "Gemini 3.7 Flash", vendor: "Google" },
     { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", vendor: "Google" },
+    { id: "grok-4.5", label: "Grok 4.5", vendor: "xAI", reasoning: true },
     { id: "grok-4.3", label: "Grok 4.3", vendor: "xAI", reasoning: true },
     { id: "deepseek-v4-flash-0731", label: "DeepSeek V4 Flash", vendor: "DeepSeek" },
     { id: "deepseek-v3.2", label: "DeepSeek V3.2", vendor: "DeepSeek" },
@@ -525,7 +530,7 @@
   applyPrefsTheme();
   function prefsBlock() {
     let s = "The assistant's display name is " + (prefs.botName || "Omni") + ".";
-    if (prefs.personality) s += "\nPersonality:\n" + prefs.personality;
+    if (prefs.personality) s += "\nCustom instructions (always follow):\n" + prefs.personality;
     const mem = [prefs.memory, prefs.importedMemory].filter(Boolean).join("\n\n");
     if (mem) s += "\nMemory about the user:\n" + mem;
     s += "\nWhen writing a downloadable file, use a fenced block like ```cpp main.cpp";
@@ -569,6 +574,7 @@
   }
   function modelWeight(id) {
     const s = String(id || "").toLowerCase();
+    if (s === "auto") return 4;
     if (/fable-5-1|fable-5\.1|mythos/.test(s)) return 14;
     if (/opus-5$|claude-opus-5/.test(s) && !/4-8|4\.8/.test(s)) return 12;
     if (/gpt-5\.6-terra/.test(s)) return 10;
@@ -586,6 +592,25 @@
   function isCheap(id) { return modelWeight(id) <= 3.5; }
   function looksCode(t) { return /\b(code|function|class|typescript|javascript|python|react|css|html|bug|refactor|compile|api|sql|implement|script|component)\b/i.test(t); }
   function looksSoft(t) { return /\b(app|project|feature|backend|frontend|database|deploy|auth|refactor|continue|next step|todo|implement)\b/i.test(t); }
+  function pickAuto(prompt, messages, remaining) {
+    const text = String(prompt || "").trim();
+    const total = messages.reduce((n, m) => n + String(m.content || "").length, 0) + text.length;
+    const tight = remaining != null && remaining < 8000000;
+    const broke = remaining != null && remaining < 1500000;
+    if (broke) return { model: "claude-haiku-4-5", reason: "low usage" };
+    if (text.length < 72 && messages.length < 6 && /^(hi|hey|hello|thanks|ok|yes|no)\b/i.test(text)) return { model: "claude-haiku-4-5", reason: "short chat" };
+    if (looksCode(text) || /```/.test(text)) {
+      if (tight) return { model: "glm-5.3", reason: "code · saving usage" };
+      if (total > 8000 || text.length > 1800) return { model: "gpt-5.6-luna", reason: "long code" };
+      return { model: "kimi-k2.7-code", reason: "code" };
+    }
+    if (total > 14000 || text.length > 4500) return { model: tight ? "glm-5.3" : "kimi-k2.6", reason: "long prompt" };
+    if (/\b(prove|reason|why does|math|puzzle|logic|algorithm)\b/i.test(text)) return { model: tight ? "gpt-5.6-luna" : "grok-4.5", reason: "needs a stronger model" };
+    if (/\b(homework|essay|study|exam|algebra)\b/i.test(text) || text.length > 700) return { model: tight ? "gpt-5.6-luna" : "claude-sonnet-5", reason: "longer, careful answer" };
+    if (looksSoft(text)) return { model: tight ? "glm-5.3" : "gpt-5.6-luna", reason: "project work" };
+    if (text.length < 160 && messages.length < 8) return { model: "claude-haiku-4-5", reason: "quick question" };
+    return { model: tight ? "claude-haiku-4-5" : "claude-sonnet-5", reason: "everyday" };
+  }
   function preferredCheap(prompt) {
     if (looksCode(prompt)) return FALLBACKS.luna;
     if (looksSoft(prompt)) return FALLBACKS.terra;
@@ -717,7 +742,8 @@
     if (!box) return;
     const s = current();
     const lastUser = [...s.messages].reverse().find((m) => m.role === "user");
-    const plan = planTurn(s.model, lastUser ? lastUser.content : "", s.messages, s.thinking, s.effort, usageSnap ? usageSnap.remaining : null);
+    const primary = s.model === "auto" ? pickAuto(lastUser ? lastUser.content : "", s.messages, usageSnap ? usageSnap.remaining : null).model : s.model;
+    const plan = planTurn(primary, lastUser ? lastUser.content : "", s.messages, s.thinking, s.effort, usageSnap ? usageSnap.remaining : null);
     const meta = modelMeta(s.model);
     const cheap = modelMeta(plan.cheap);
     let html = "";
@@ -1114,7 +1140,7 @@
     $("model-label").textContent = meta.label;
     const chars = s.messages.reduce((n, m) => n + String(m.content || "").length, 0);
     const replyCost = estimateTurn(s.model, chars, s.thinking, s.effort);
-    if ($("model-cost")) $("model-cost").textContent = "~" + formatUsd(replyCost);
+    if ($("model-cost")) $("model-cost").textContent = s.model === "auto" ? "varies" : ("~" + formatUsd(replyCost));
     $("think-btn").classList.toggle("on", !!s.thinking);
     $("think-btn").setAttribute("aria-pressed", s.thinking ? "true" : "false");
     const ef = EFFORTS.find(e => e.id === s.effort) || EFFORTS[1];
@@ -1170,8 +1196,8 @@
     const q = $("model-search").value.trim().toLowerCase();
     const sel = current().model;
     const source = q
-      ? MODELS.filter(m => (m.label + " " + m.id + " " + (m.vendor || "")).toLowerCase().includes(q))
-      : MODELS.filter(m => FEATURED.some(f => f.id === m.id));
+      ? MODELS.filter(m => m.id !== "auto" && (m.label + " " + m.id + " " + (m.vendor || "")).toLowerCase().includes(q))
+      : MODELS.filter(m => m.id !== "auto" && FEATURED.some(f => f.id === m.id));
     const groups = {};
     source.forEach(m => {
       const v = m.vendor || guessVendor(m.id);
@@ -1179,8 +1205,20 @@
     });
     const box = $("model-list");
     box.innerHTML = "";
+    if (!q) {
+      const auto = document.createElement("button");
+      auto.className = "mrow" + (sel === "auto" ? " sel" : "");
+      auto.innerHTML = "<span style='flex:1;min-width:0'><b>Auto</b><em>Picks from the question and how long it is</em></span><span class='cost'><b>varies</b><small>smart / cheap</small></span>";
+      auto.onclick = () => {
+        current().model = "auto";
+        state.lastModel = "auto";
+        current().updatedAt = Date.now();
+        save(); closeModels(); render();
+      };
+      box.appendChild(auto);
+    }
     const order = VENDOR_ORDER.filter(v => groups[v] && groups[v].length);
-    if (!order.length) {
+    if (!order.length && q) {
       box.innerHTML = "<p style='padding:24px;text-align:center;color:var(--subtle);font-size:13px'>No models match.</p>";
       return;
     }
@@ -1276,7 +1314,9 @@
     streaming = true; aborted = false; updateSend();
     const lastUser = [...s.messages].reverse().find((m) => m.role === "user");
     const prompt = lastUser ? lastUser.content : "";
-    const plan = planTurn(s.model, prompt, s.messages, s.thinking, s.effort, usageSnap ? usageSnap.remaining : null);
+    const autoPick = s.model === "auto" ? pickAuto(prompt, s.messages, usageSnap ? usageSnap.remaining : null) : null;
+    const plan = planTurn(autoPick ? autoPick.model : s.model, prompt, s.messages, s.thinking, s.effort, usageSnap ? usageSnap.remaining : null);
+    const autoNotice = autoPick ? ("Auto · " + modelMeta(plan.model).label + " · " + autoPick.reason) : null;
     const msg = {
       id: uid("msg"),
       role: "assistant",
@@ -1285,11 +1325,12 @@
       createdAt: Date.now(),
       model: plan.model,
       streaming: true,
-      fallbackFrom: plan.model !== s.model ? s.model : undefined,
-      fallbackNotice: plan.notice || undefined
+      fallbackFrom: autoPick ? undefined : (plan.model !== s.model ? s.model : undefined),
+      fallbackNotice: autoNotice || plan.notice || undefined
     };
     s.messages.push(msg); save(); render();
-    if (plan.notice) toast(plan.notice);
+    if (autoNotice) toast(autoNotice);
+    else if (plan.notice) toast(plan.notice);
     const history = s.messages.filter(m => m.role === "user" || (m.role === "assistant" && m.content && !m.error && m.id !== msg.id)).map(m => ({ role: m.role, content: m.content }));
     let text = "", reason = "", usedModel = plan.model, lastErr = "";
     try {
@@ -1318,9 +1359,9 @@
           renderThread();
           if (isRate(lastErr)) await sleep(900);
         }
-        const sys = systemFor(model) + "\n\n" + prefsBlock() + (s.thinking && model === s.model ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + (s.messages.some(m => m.school) ? "\n\n" + SCHOOL : "");
+        const sys = systemFor(model) + "\n\n" + prefsBlock() + (s.thinking && model === plan.model ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + (s.messages.some(m => m.school) ? "\n\n" + SCHOOL : "");
         const payload = [{ role: "system", content: sys }, ...history];
-        const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking && model === s.model, model));
+        const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking && model === plan.model, model));
         try {
           const call = attachment
             ? puter.ai.chat(payload, [attachment.dataUrl], false, opts)
