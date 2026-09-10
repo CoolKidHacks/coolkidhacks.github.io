@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Omni — Free AI Chat</title>
+  <meta name="description" content="Free multi-model AI chat. Real Claude, GPT, Grok, Gemini via Puter.js — no API keys." />
+  <meta name="theme-color" content="#08080a" />
+  <meta property="og:title" content="Omni — Free AI Chat" />
+  <meta property="og:description" content="Talk to verified Claude, GPT, Grok, and Gemini models. No API key." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2308080a'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23c5ccd6' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='2.6' fill='%23c5ccd6'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,500;1,6..72,600&display=swap" rel="stylesheet" />
+  <script src="https://js.puter.com/v2/"></script>
+  <style>
+    :root {
+      --bg: #08080a;
+      --surface: #101014;
+      --elevated: #19191e;
+      --fg: #f3f2ee;
+      --muted: #9a9aa3;
+      --subtle: #6d6d76;
+      --line: #26262c;
+      --primary: #eceae4;
+      --primary-fg: #0c0c0e;
+      --accent: #c5ccd6;
+      --danger: #e11d48;
+      --ok: #5ee9a3;
+      --font: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+      --display: "Newsreader", "Times New Roman", serif;
+      --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+    button, [role="button"] { cursor: pointer; font-family: inherit; }
+    button:disabled { cursor: default; opacity: .4; }
+    button { background: none; border: 0; color: inherit; }
+    a { color: inherit; }
+    #app { display: flex; height: 100dvh; min-height: 0; }
+    .sidebar {
+      width: 18rem; flex-shrink: 0; display: flex; flex-direction: column;
+      background: var(--surface); border-right: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 24px 16px 16px; }
+    .mark {
+      width: 36px; height: 36px; display: grid; place-items: center;
+      border: 1px solid var(--line); border-radius: 10px; background: var(--elevated); color: var(--accent);
+    }
+    .mark svg { width: 18px; height: 18px; }
+    .brand h1 { margin: 0; font-family: var(--display); font-size: 22px; font-weight: 500; font-style: italic; letter-spacing: -0.02em; line-height: 1; }
+    .brand p { margin: 4px 0 0; font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--subtle); }
+    .pad { padding: 0 12px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 14px; font-size: 13px; font-weight: 500; }
+    .btn-primary { background: var(--primary); color: var(--primary-fg); width: 100%; min-height: 44px; border-radius: 16px; }
+    .btn-ghost { color: var(--subtle); }
+    .btn-outline { border: 1px solid var(--line); background: var(--elevated); }
+    .search { width: 100%; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); padding: 0 12px 0 32px; font: inherit; font-size: 13px; outline: none; }
+    .search-wrap { position: relative; margin: 12px; }
+    .search-wrap svg { position: absolute; left: 10px; top: 12px; color: var(--subtle); }
+    .chats { flex: 1; overflow: auto; padding: 0 8px 12px; }
+    .chat-item { display: flex; align-items: center; gap: 4px; border-radius: 12px; }
+    .chat-item.active { background: var(--elevated); }
+    .chat-item button.title { flex: 1; min-width: 0; text-align: left; padding: 10px 12px; min-height: 44px; font-size: 13px; color: var(--muted); }
+    .chat-item.active button.title { color: var(--fg); }
+    .chat-item .ttl { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-item .ago { display: block; font-family: var(--mono); font-size: 10px; color: var(--subtle); margin-top: 2px; }
+    .chat-item .del { width: 40px; height: 40px; border-radius: 10px; color: var(--subtle); flex-shrink: 0; }
+    .chat-item .del:hover { color: var(--danger); }
+    .side-foot { border-top: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .puter-card { border: 1px solid var(--line); background: var(--bg); border-radius: 16px; padding: 12px; }
+    .puter-card .row { display: flex; align-items: center; justify-content: space-between; }
+    .puter-card small { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--subtle); }
+    .dot { width: 6px; height: 6px; border-radius: 99px; background: var(--subtle); }
+    .dot.on { background: var(--ok); }
+    .dot.wait { background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
+    .puter-card p { margin: 6px 0 10px; font-size: 13px; }
+    .credit { font-size: 11px; color: var(--subtle); padding: 0 4px; }
+    .credit a { text-decoration: underline; text-underline-offset: 2px; }
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; background:
+      linear-gradient(180deg, color-mix(in oklab, var(--elevated) 45%, transparent), transparent 38%), var(--bg); }
+    header.top { border-bottom: 1px solid var(--line); }
+    .mob-bar { display: none; align-items: center; gap: 8px; padding: 8px 12px; }
+    .mob-bar .titles { min-width: 0; flex: 1; }
+    .mob-bar strong { display: block; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mob-bar span { display: block; font-family: var(--mono); font-size: 10px; color: var(--subtle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tools-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+    .menu-btn { display: none; width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; }
+    .tools { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; overflow-x: auto; scrollbar-width: none; }
+    .tools::-webkit-scrollbar { display: none; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px;
+      border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
+      font-size: 13px; color: var(--fg); white-space: nowrap; max-width: 16rem;
+    }
+    .chip span { overflow: hidden; text-overflow: ellipsis; }
+    .chip.on { border-color: color-mix(in oklab, var(--accent) 35%, var(--line)); background: var(--elevated); }
+    .chip .led { width: 6px; height: 6px; border-radius: 99px; background: var(--subtle); }
+    .chip.on .led { background: var(--ok); }
+    .connect { height: 40px; padding: 0 16px; border-radius: 999px; background: var(--primary); color: var(--primary-fg); font-size: 13px; font-weight: 500; margin-left: auto; flex-shrink: 0; }
+    .status { margin-left: auto; font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--subtle); flex-shrink: 0; }
+    .thread { flex: 1; min-height: 0; overflow: auto; }
+    .empty { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px; max-width: 36rem; margin: 0 auto; }
+    .empty .mark { width: 52px; height: 52px; border-radius: 16px; }
+    .empty h2 { margin: 22px 0 10px; font-family: var(--display); font-size: clamp(28px, 6vw, 48px); font-weight: 500; font-style: italic; letter-spacing: -.03em; line-height: 1.1; }
+    .empty p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.55; max-width: 28rem; }
+    .prompts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 32px; width: 100%; }
+    .prompts button { text-align: left; min-height: 72px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--muted); font-size: 13px; line-height: 1.4; }
+    .prompts button:hover { background: var(--elevated); color: var(--fg); }
+    .prompts small { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--subtle); margin-bottom: 6px; }
+    .msgs { max-width: 48rem; margin: 0 auto; padding: 32px 20px 16px; display: flex; flex-direction: column; gap: 28px; }
+    .bubble-user { display: flex; justify-content: flex-end; }
+    .bubble-user .body { max-width: min(42rem, 88%); background: var(--elevated); border-radius: 18px 18px 6px 18px; padding: 12px 16px; font-size: 15px; line-height: 1.55; white-space: pre-wrap; }
+    .bubble-ai { display: flex; gap: 12px; }
+    .ai-mark { width: 32px; height: 32px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--elevated); color: var(--accent); margin-top: 2px; }
+    .ai-body { min-width: 0; flex: 1; max-width: 46rem; }
+    .ai-meta { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--subtle); margin-bottom: 8px; display: flex; gap: 8px; align-items: center; }
+    .ai-meta .v { color: var(--accent); text-transform: none; letter-spacing: 0; }
+    .think-box { border: 1px solid var(--line); border-radius: 14px; background: color-mix(in oklab, var(--elevated) 70%, transparent); margin-bottom: 12px; overflow: hidden; }
+    .think-box summary { padding: 10px 12px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); cursor: pointer; min-height: 40px; }
+    .think-box pre { margin: 0; padding: 10px 12px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: pre-wrap; max-height: 14rem; overflow: auto; }
+    .md { font-size: 15px; line-height: 1.65; color: color-mix(in oklab, var(--fg) 92%, transparent); }
+    .md pre { background: var(--elevated); border: 1px solid var(--line); border-radius: 14px; padding: 12px; overflow: auto; font-family: var(--mono); font-size: 12.5px; }
+    .md code { font-family: var(--mono); font-size: .85em; background: var(--elevated); padding: 1px 6px; border-radius: 4px; color: var(--accent); }
+    .md pre code { background: none; padding: 0; color: inherit; }
+    .error { display: flex; gap: 8px; border: 1px solid color-mix(in oklab, var(--danger) 30%, transparent); background: color-mix(in oklab, var(--danger) 10%, transparent); border-radius: 14px; padding: 10px 12px; font-size: 14px; white-space: pre-wrap; }
+    .acts { margin-top: 6px; display: flex; gap: 4px; }
+    .acts button { min-width: 44px; height: 36px; border-radius: 10px; color: var(--subtle); font-size: 12px; }
+    .acts button:hover { color: var(--fg); background: var(--elevated); }
+    .composer-wrap { padding: 8px 16px max(14px, env(safe-area-inset-bottom)); }
+    .composer { max-width: 48rem; margin: 0 auto; display: flex; align-items: flex-end; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 24px; padding: 8px; box-shadow: 0 18px 50px -28px rgba(0,0,0,.85); }
+    .composer:focus-within { border-color: color-mix(in oklab, var(--accent) 40%, var(--line)); }
+    textarea { flex: 1; resize: none; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 16px; line-height: 1.5; max-height: 168px; outline: none; padding: 10px 4px; }
+    .icon-btn { width: 44px; height: 44px; border-radius: 16px; display: grid; place-items: center; flex-shrink: 0; color: var(--muted); }
+    .send { background: var(--primary); color: var(--primary-fg); }
+    .stop { background: var(--elevated); color: var(--fg); border: 1px solid var(--line); }
+    .hint { text-align: center; margin: 8px 0 0; font-family: var(--mono); font-size: 10px; letter-spacing: .04em; color: var(--subtle); }
+    .backdrop { display: none; }
+    .modal { display: none; position: fixed; inset: 0; z-index: 60; background: color-mix(in oklab, var(--bg) 80%, transparent); place-items: center; padding: 16px; }
+    .modal.show { display: grid; }
+    .modal .card { width: min(26rem, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 22px; }
+    .modal h2 { margin: 0 0 8px; font-family: var(--display); font-size: 22px; font-weight: 500; font-style: italic; }
+    .modal p { margin: 0 0 12px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .sheet {
+      display: none; position: fixed; inset: 0; z-index: 55; background: color-mix(in oklab, var(--bg) 55%, transparent);
+    }
+    .sheet.show { display: block; }
+    .sheet .panel {
+      position: absolute; top: 0; bottom: 0; right: 0; width: min(22rem, 92vw);
+      background: var(--surface); border-left: 1px solid var(--line); display: flex; flex-direction: column;
+    }
+    .sheet .hd { padding: 20px 16px 12px; border-bottom: 1px solid var(--line); }
+    .sheet .hd h3 { margin: 0; font-family: var(--display); font-size: 22px; font-style: italic; font-weight: 500; }
+    .sheet .hd p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+    .sheet .body { overflow: auto; padding: 8px 8px 24px; flex: 1; }
+    .vendor { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--subtle); padding: 12px 10px 6px; }
+    .mrow { display: flex; width: 100%; text-align: left; padding: 10px; border-radius: 12px; gap: 8px; }
+    .mrow:hover, .mrow.sel { background: var(--elevated); }
+    .mrow b { display: block; font-weight: 500; font-size: 14px; }
+    .mrow em { display: block; font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--subtle); margin-top: 2px; }
+    .ok-tag { color: var(--accent); font-size: 11px; }
+    puter-dialog { display: none !important; visibility: hidden !important; pointer-events: none !important; }
+    @keyframes pulse { 50% { opacity: .35; } }
+    @media (max-width: 768px) {
+      .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 40; transform: translateX(-105%); transition: transform .25s var(--ease); width: min(18rem, 86vw); }
+      .sidebar.open { transform: none; }
+      .backdrop { display: block; position: fixed; inset: 0; background: color-mix(in oklab, var(--bg) 70%, transparent); z-index: 30; opacity: 0; pointer-events: none; transition: opacity .2s var(--ease); }
+      .backdrop.show { opacity: 1; pointer-events: auto; }
+      .menu-btn { display: grid; place-items: center; }
+      .mob-bar { display: flex; }
+      .connect, .status { display: none; }
+      .prompts { grid-template-columns: 1fr; }
+      .chip { max-width: 11.5rem; }
+      textarea { font-size: 16px; }
+      .hint { display: none; }
+    }
+    @media (min-width: 769px) {
+      textarea { font-size: 14px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="backdrop" id="backdrop"></div>
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="9" stroke="currentColor" stroke-width="2.2"/><circle cx="16" cy="16" r="3.2" fill="currentColor"/></svg>
+        </div>
+        <div>
+          <h1>Omni</h1>
+          <p>Free AI studio</p>
+        </div>
+      </div>
+      <div class="pad"><button class="btn btn-primary" id="new-chat">New chat</button></div>
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+        <input class="search" id="search" placeholder="Search chats" />
+      </div>
+      <div class="chats" id="chat-list"></div>
+      <div class="side-foot">
+        <div class="puter-card">
+          <div class="row"><small>Puter</small><span class="dot wait" id="auth-dot"></span></div>
+          <p id="puter-status">Connecting…</p>
+          <button class="btn btn-outline" id="auth-btn" style="height:36px;font-size:12px;border-radius:12px">Sign in free</button>
+        </div>
+        <button class="btn btn-ghost" id="clear-all" style="justify-content:flex-start">Clear all chats</button>
+        <div class="credit">Powered by <a href="https://developer.puter.com" target="_blank" rel="noopener">Puter.js</a></div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="top">
+        <div class="mob-bar">
+          <button class="menu-btn" id="menu-btn" aria-label="Open chats">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div class="titles">
+            <strong id="mob-title">New chat</strong>
+            <span id="mob-sub">Claude Fable 5.1</span>
+          </div>
+          <button class="btn btn-primary" id="mob-connect" style="width:auto;min-height:40px;padding:0 14px;border-radius:999px;font-size:12px">Sign in</button>
+        </div>
+        <div class="tools-row">
+          <div class="tools">
+            <button type="button" class="chip" id="model-btn" aria-haspopup="dialog"><span id="model-label">Claude Fable 5.1</span></button>
+            <button type="button" class="chip on" id="think-btn" aria-pressed="true">Think <span class="led"></span></button>
+            <button type="button" class="chip" id="effort-btn">High</button>
+          </div>
+          <button class="connect" id="connect-btn">Sign in</button>
+          <span class="status" id="desk-status">Loading</span>
+        </div>
+      </header>
+      <div class="thread" id="thread"></div>
+      <div class="composer-wrap">
+        <div id="preview-img"></div>
+        <form class="composer" id="form">
+          <button type="button" class="icon-btn" id="attach" aria-label="Attach image">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.4 11.6l-9.2 9.2a6 6 0 01-8.5-8.5l9.2-9.2a4 4 0 015.7 5.7L9.4 18.1a2 2 0 01-2.8-2.8l8.5-8.5"/></svg>
+          </button>
+          <input type="file" id="file" accept="image/*" hidden />
+          <textarea id="input" rows="1" placeholder="Message Omni…"></textarea>
+          <button type="submit" class="icon-btn send" id="send" aria-label="Send" disabled>
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
+        </form>
+        <p class="hint" id="hint">Enter to send · Shift+Enter for a new line · Thinking is on</p>
+      </div>
+    </main>
+  </div>
+
+  <div class="sheet" id="model-sheet">
+    <div class="panel">
+      <div class="hd">
+        <h3>Models</h3>
+        <p id="model-count">Verified IDs from Puter’s live catalog.</p>
+        <div class="search-wrap" style="margin:12px 0 0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+          <input class="search" id="model-search" placeholder="Search verified models" />
+        </div>
+      </div>
+      <div class="body" id="model-list"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="effort-modal">
+    <div class="card">
+      <h2>Thinking effort</h2>
+      <p>Higher effort spends more time before answering. Only used when thinking is on.</p>
+      <div id="effort-opts"></div>
+      <button class="btn btn-ghost" id="effort-close" style="width:100%;margin-top:8px">Close</button>
+    </div>
+  </div>
+
+  <div class="modal" id="popup-modal">
+    <div class="card">
+      <h2>Allow the sign-in popup</h2>
+      <p>Puter opens a small window to sign you in — free, no API key. Your browser blocked it, which is why a blank page appeared before.</p>
+      <p>Allow popups for this site, then try again.</p>
+      <button class="btn btn-primary" id="popup-retry">Try sign-in again</button>
+      <button class="btn btn-ghost" id="popup-close" style="width:100%;margin-top:8px">Close</button>
+    </div>
+  </div>
+
+  <script>
+  const FEATURED = [
+    { id: "claude-fable-5-1", label: "Claude Fable 5.1", vendor: "Anthropic", reasoning: true },
+    { id: "claude-opus-5", label: "Claude Opus 5", vendor: "Anthropic", reasoning: true },
+    { id: "claude-sonnet-5", label: "Claude Sonnet 5", vendor: "Anthropic" },
+    { id: "claude-fable-5", label: "Claude Fable 5", vendor: "Anthropic", reasoning: true },
+    { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6", vendor: "Anthropic" },
+    { id: "claude-opus-4-8", label: "Claude Opus 4.8", vendor: "Anthropic", reasoning: true },
+    { id: "claude-haiku-4-5", label: "Claude Haiku 4.5", vendor: "Anthropic" },
+    { id: "gpt-5.6-luna", label: "GPT-5.6 Luna", vendor: "OpenAI", reasoning: true },
+    { id: "gpt-5.6-sol", label: "GPT-5.6 Sol", vendor: "OpenAI", reasoning: true },
+    { id: "gpt-5.6-terra", label: "GPT-5.6 Terra", vendor: "OpenAI", reasoning: true },
+    { id: "gpt-5.4-pro", label: "GPT-5.4 Pro", vendor: "OpenAI", reasoning: true },
+    { id: "gpt-5.4", label: "GPT-5.4", vendor: "OpenAI", reasoning: true },
+    { id: "gpt-5.5-2026-04-23", label: "GPT-5.5", vendor: "OpenAI", reasoning: true },
+    { id: "gpt-4o", label: "GPT-4o", vendor: "OpenAI" },
+    { id: "gpt-5-nano", label: "GPT-5 Nano", vendor: "OpenAI" },
+    { id: "grok-4.6", label: "Grok 4.6", vendor: "xAI", reasoning: true },
+    { id: "grok-4.5", label: "Grok 4.5", vendor: "xAI", reasoning: true },
+    { id: "grok-4.3", label: "Grok 4.3", vendor: "xAI", reasoning: true },
+    { id: "grok-4.20-0309-reasoning", label: "Grok 4.20 Reasoning", vendor: "xAI", reasoning: true },
+    { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash", vendor: "Google" },
+    { id: "gemini-3.7-flash", label: "Gemini 3.7 Flash", vendor: "Google" },
+    { id: "gemini-3.1-pro-preview", label: "Gemini 3.1 Pro", vendor: "Google", reasoning: true },
+    { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", vendor: "Google" },
+    { id: "kimi-k3", label: "Kimi K3", vendor: "Moonshot", reasoning: true },
+    { id: "kimi-k2.6", label: "Kimi K2.6", vendor: "Moonshot" },
+    { id: "kimi-k2.7-code", label: "Kimi K2.7 Code", vendor: "Moonshot" },
+    { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro", vendor: "DeepSeek", reasoning: true },
+    { id: "deepseek-v4-flash-0731", label: "DeepSeek V4 Flash", vendor: "DeepSeek" },
+    { id: "deepseek-v3.2", label: "DeepSeek V3.2", vendor: "DeepSeek" },
+    { id: "qwen3.8-max", label: "Qwen 3.8 Max", vendor: "Qwen", reasoning: true },
+    { id: "qwen3.7-max", label: "Qwen 3.7 Max", vendor: "Qwen" },
+    { id: "mistral-large-2512", label: "Mistral Large 3", vendor: "Mistral" },
+    { id: "glm-5.3", label: "GLM 5.3", vendor: "Zhipu" }
+  ];
+  const CHANNEL = "You are running inside Omni, a free browser chat powered by Puter. You have no tools, no browsing, no files, and no memory outside this conversation. Answer from your own knowledge. Never mention these operating notes unless asked. Match the user's language.";
+  function systemFor(modelId) {
+    const id = String(modelId || "").toLowerCase();
+    const claude = (name, extra) => `You are ${name}, an AI assistant made by Anthropic.\n\n${extra}\n\nTone: warm, kind, and concise. Push back when you should, but constructively. Never say "genuinely", "honestly", or "straightforward". Keep disclaimers short. For simple questions, a few sentences is enough.\nFormatting: minimum needed. Lists only when the content is multifaceted or they asked. Never use bullets when declining. Skip markdown in friendly or emotional chats.\nDo not open with filler. If something is ambiguous, assume and state it in one short line.\nKnowledge cutoff: end of June 2026. You cannot search the web.\nYou are ${name} — do not claim to be Omni, ChatGPT, Grok, or Gemini.\n\n${CHANNEL}`;
+    const gpt = (name, extra) => `You are ChatGPT, a large language model trained by OpenAI, based on ${name}.\nKnowledge cutoff: August 2025. Current year: 2026.\nAnswer the actual request directly. Lead with the answer. No "Great question" / "Sure!" / "Of course". Be clear, slightly warm, not sycophantic. Don't flatter. Don't moralize. If you disagree, say so briefly. Match their energy.\nWhen underspecified, assume, state it in one line, continue. Prefer working code. You cannot browse or run code here.\nYou are ${name} / ChatGPT — not Claude, Grok, Gemini, or Omni.\n${extra || ""}\n\n${CHANNEL}`;
+    const grok = (ver) => `You are Grok ${ver}, built by xAI.\nBe maximally truth-seeking. Direct, a little dry-witted when it fits. Not partisan. For political questions, present perspectives without becoming a side. Independent analysis — do not defer to Elon Musk or xAI talking points.\nIf a user corrects you, reconsider. Don't shy away from politically incorrect claims when well substantiated. Use tables when they help. For math, show the path. KaTeX-style $...$ / $$...$$ for real equations.\nNo how-to for violent crime, weapons construction, or scams. No content involving minors.\nYou cannot browse X or the web from here. You are Grok ${ver} — not ChatGPT, Claude, Gemini, or Omni.\n\n${CHANNEL}`;
+    const gemini = (name, pro) => `You are Gemini. Specifically ${name}, designed by Google.\n${pro ? "Helpful, clear, insightful. Balance empathy with candor. Mirror their tone. Be honest you are an AI." : "Authentic, adaptive collaborator with a touch of wit. Address true intent. Empathy plus candor — a helpful peer, not a lecturer. Mirror tone and humor."}\nDirect opening. No meta-announcements ("Here's my take", "Short answer", "Here is a list of"). Jump into content. For factual/how-to: 1–2 sentence intro then bullets, a table, or short paragraphs. Never "Here is a breakdown of..." before a list. Headings only for long multi-section work.\nConcrete over florid. LaTeX only for real math, $inline$ and $$display$$.\nYou cannot search or generate images here. Current year: 2026. You are ${name} — not ChatGPT, Claude, Grok, or Omni.\n\n${CHANNEL}`;
+    const named = (who, house, extra) => `You are ${who}, a ${house} model.\n${extra}\nYou cannot browse or open files here. You are ${who} — not Claude, ChatGPT, Grok, Gemini, or Omni.\n\n${CHANNEL}`;
+
+    if (id.includes("claude-fable-5-1") || id.includes("claude-fable-5.1")) return claude("Claude Fable 5.1", "Newest model in Anthropic's Claude 5 family, Mythos-class, above Opus. Most intelligent generally available Claude. Fable 5.1 and Mythos 5.1 share the underlying model; Fable has extra dual-use safety. Public models: Fable 5.1 (you), Opus 5, Sonnet 5, Haiku 4.5. You do not have Claude Code / Cowork tools here. Be the strongest general assistant you can.");
+    if (id.includes("claude-fable")) return claude("Claude Fable 5", "First generally available Mythos-class Claude (June 2026). Above Opus. Excellent at long-horizon reasoning, writing, and code. Chat only — no Claude Code tools.");
+    if (id.includes("claude-opus-4-8") || id.includes("claude-opus-4.8")) return claude("Claude Opus 4.8", "Prior Anthropic Opus. Deep, careful, strong at hard reasoning.");
+    if (id.includes("claude-opus")) return claude("Claude Opus 5", "High-capability Claude for complex challenges. Mythos (Fable) sits above you. Thorough on hard problems. No computer-use tools here.");
+    if (id.includes("claude-sonnet-4")) return claude("Claude Sonnet 4.6", "Prior Anthropic Sonnet. Reliable at coding, writing, analysis.");
+    if (id.includes("claude-sonnet")) return claude("Claude Sonnet 5", "Fast, sharp everyday Claude — especially strong at coding and documents. Quick, structured, practical. Skip ceremony.");
+    if (id.includes("claude-haiku")) return claude("Claude Haiku 4.5", "Fastest Claude. Snappy. Default short. Expand only when needed.");
+    if (id.includes("claude") || id.includes("anthropic")) return claude("Claude", "A Claude model from Anthropic. Warm, precise, useful.");
+
+    if (id.includes("gpt-5.6") || id.includes("gpt-5-6")) {
+      if (id.includes("luna")) return gpt("GPT-5.6 Luna");
+      if (id.includes("sol")) return gpt("GPT-5.6 Sol");
+      if (id.includes("terra")) return gpt("GPT-5.6 Terra");
+      return gpt("GPT-5.6");
+    }
+    if (id.includes("gpt-5.5") || id.includes("gpt-5-5")) return gpt("GPT-5.5");
+    if (id.includes("gpt-5.4") || id.includes("gpt-5-4")) return gpt("GPT-5.4", "You are a professional reasoning model. Be careful on hard questions.");
+    if (id.includes("gpt-5-nano")) return gpt("GPT-5 Nano", "Keep replies short. Expand only when needed.");
+    if (id.includes("gpt-4o")) return gpt("GPT-4o");
+    if (id.includes("gpt-5") || id.includes("gpt-4") || id.includes("openai")) return gpt("GPT-5");
+
+    if (id.includes("grok-4.6") || id.includes("grok-4-6")) return grok("4.6");
+    if (id.includes("grok-4.5") || id.includes("grok-4-5")) return grok("4.5");
+    if (id.includes("grok-4.3") || id.includes("grok-4-3")) return grok("4.3");
+    if (id.includes("grok-4.20") || id.includes("grok-4-20")) return grok("4.20 Reasoning");
+    if (id.includes("grok")) return grok("4.6");
+
+    if (id.includes("gemini-3.8")) return gemini("Gemini 3.8 Flash", false);
+    if (id.includes("gemini-3.7")) return gemini("Gemini 3.7 Flash", false);
+    if (id.includes("gemini-3.1-pro") || id.includes("gemini-3-1-pro")) return gemini("Gemini 3.1 Pro", true);
+    if (id.includes("gemini")) return gemini("Gemini", false);
+
+    if (id.includes("kimi-k3")) return named("Kimi K3", "Moonshot AI (Kimi)", "Long-context, thoughtful. Strong at analysis, documents, and code. Direct; skip corporate warmth. Prefer complete, runnable examples.");
+    if (id.includes("kimi")) return named("Kimi", "Moonshot AI", "Long-context chat. Direct, complete answers.");
+    if (id.includes("deepseek-v4-pro")) return named("DeepSeek V4 Pro", "DeepSeek", "Reasoning-first. Hard problems: think, then a tight answer. Excellent at math and code. Show working. Working code, not pseudocode.");
+    if (id.includes("deepseek")) return named("DeepSeek", "DeepSeek", "Reasoning-first. Math, code, technical explanation. Don't pad.");
+    if (id.includes("qwen")) return named("Qwen", "Alibaba Qwen", "Strong at coding, Chinese and English, long context. Precise, structured. Complete solutions.");
+    if (id.includes("mistral") || id.includes("mixtral")) return named("Mistral", "Mistral AI", "Direct, good at code and multilingual chat. No fluff. Deliver the thing they asked for.");
+    if (id.includes("glm") || id.includes("zhipu") || id.includes("zai")) return named("GLM 5.3", "Zhipu (Z.ai)", "Strong in Chinese and English, solid at code. Clear and practical.");
+    return `You are a capable assistant provided through Omni via Puter. Be clear, useful, and direct. Prefer working code and concrete answers. Match the user's language.\n\n${CHANNEL}`;
+  }
+  const EFFORTS = [
+    { id: "low", label: "Low", hint: "Fast" },
+    { id: "medium", label: "Medium", hint: "Balanced" },
+    { id: "high", label: "High", hint: "Careful" },
+    { id: "xhigh", label: "Extra", hint: "Deep" },
+    { id: "max", label: "Max", hint: "Slowest" }
+  ];
+  const KEY = "omni-chat-v2";
+  const PROMPTS = [
+    { k: "Code", t: "Explain how a hash map works, with a tiny JS example." },
+    { k: "Plan", t: "Draft a weekend itinerary for Tokyo on a modest budget." },
+    { k: "Review", t: "Review this idea: a local-first notes app with CRDTs." },
+    { k: "Build", t: "Write a Python script that watches a folder and logs new files." }
+  ];
+  const VENDOR_ORDER = ["Anthropic","OpenAI","xAI","Google","Moonshot","DeepSeek","Qwen","Mistral","Zhipu","Other"];
+
+  const $ = (id) => document.getElementById(id);
+  const uid = (p) => p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  let MODELS = FEATURED.slice();
+  const modelMeta = (id) => MODELS.find(m => m.id === id) || FEATURED.find(m => m.id === id) || { id, label: id, vendor: "Other" };
+
+  function guessVendor(id) {
+    const s = String(id).toLowerCase();
+    if (s.includes("claude") || s.includes("anthropic")) return "Anthropic";
+    if (s.includes("gpt") || s.includes("openai")) return "OpenAI";
+    if (s.includes("grok") || s.includes("x-ai") || s.includes("xai")) return "xAI";
+    if (s.includes("gemini") || s.includes("gemma") || s.includes("google")) return "Google";
+    if (s.includes("kimi") || s.includes("moonshot")) return "Moonshot";
+    if (s.includes("deepseek")) return "DeepSeek";
+    if (s.includes("qwen") || s.includes("qwq")) return "Qwen";
+    if (s.includes("mistral") || s.includes("mixtral") || s.includes("magistral")) return "Mistral";
+    if (s.includes("glm") || s.includes("zhipu") || s.includes("zai")) return "Zhipu";
+    return "Other";
+  }
+  function pretty(id) {
+    return String(id).split("/").pop().replace(/[-_]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  }
+  function isNoise(id) {
+    const s = String(id).toLowerCase();
+    return s.startsWith("openrouter:") || s.startsWith("infron:") || s.startsWith("togetherai:") || s.includes(":batch") || s.includes("~");
+  }
+
+  function blank() {
+    return { id: uid("ses"), title: "New chat", model: "claude-fable-5-1", thinking: true, effort: "high", messages: [], updatedAt: Date.now() };
+  }
+  let state = { sessions: [], activeId: null };
+  try {
+    const raw = JSON.parse(localStorage.getItem(KEY) || localStorage.getItem("omni-chat-v1") || "null");
+    if (raw && Array.isArray(raw.sessions)) state = raw;
+  } catch (e) {}
+  if (!state.sessions.length) {
+    const s = blank();
+    state.sessions = [s];
+    state.activeId = s.id;
+  }
+  if (!state.activeId) state.activeId = state.sessions[0].id;
+
+  function save() {
+    localStorage.setItem(KEY, JSON.stringify({ sessions: state.sessions.slice(0, 80), activeId: state.activeId }));
+  }
+  function current() { return state.sessions.find(s => s.id === state.activeId) || state.sessions[0]; }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, "&" + "amp;")
+      .replace(/</g, "&" + "lt;")
+      .replace(/>/g, "&" + "gt;")
+      .replace(/"/g, "&" + "quot;");
+  }
+  function md(text) {
+    let s = esc(text);
+    s = s.replace(/```([\s\S]*?)```/g, (_, code) => "<pre><code>" + code.trim() + "</code></pre>");
+    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/\n/g, "<br/>");
+    return s;
+  }
+  function timeAgo(ts) {
+    const d = Date.now() - ts;
+    if (d < 60000) return "Just now";
+    if (d < 3600000) return Math.floor(d / 60000) + "m";
+    if (d < 86400000) return Math.floor(d / 3600000) + "h";
+    return Math.floor(d / 86400000) + "d";
+  }
+
+  function renderList() {
+    const q = $("search").value.trim().toLowerCase();
+    const list = $("chat-list");
+    list.innerHTML = "";
+    state.sessions.filter(s => !q || s.title.toLowerCase().includes(q)).forEach(s => {
+      const row = document.createElement("div");
+      row.className = "chat-item" + (s.id === state.activeId ? " active" : "");
+      row.innerHTML = "<button class='title'><span class='ttl'></span><span class='ago'></span></button><button class='del' aria-label='Delete'>×</button>";
+      row.querySelector(".ttl").textContent = s.title;
+      row.querySelector(".ago").textContent = timeAgo(s.updatedAt);
+      row.querySelector(".title").onclick = () => { state.activeId = s.id; save(); closeSide(); render(); };
+      row.querySelector(".del").onclick = () => {
+        state.sessions = state.sessions.filter(x => x.id !== s.id);
+        if (!state.sessions.length) { const n = blank(); state.sessions = [n]; state.activeId = n.id; }
+        else if (state.activeId === s.id) state.activeId = state.sessions[0].id;
+        save(); render();
+      };
+      list.appendChild(row);
+    });
+  }
+
+  function renderThread() {
+    const s = current();
+    const el = $("thread");
+    if (!s.messages.length) {
+      const meta = modelMeta(s.model);
+      el.innerHTML = "<div class='empty'><div class='mark'><svg viewBox='0 0 32 32' width='22' height='22' fill='none'><circle cx='16' cy='16' r='9' stroke='currentColor' stroke-width='2.2'/><circle cx='16' cy='16' r='3.2' fill='currentColor'/></svg></div><h2>Ask anything.</h2><p><b style='color:var(--fg);font-weight:500'>" + esc(meta.label) + "</b> · verified on Puter. Runs as itself — real model identity, not a wrapper. Sign in free, no API key. Toggle thinking for slower, more careful answers.</p><div class='prompts' id='prompts'></div></div>";
+      PROMPTS.forEach((p, i) => {
+        const b = document.createElement("button");
+        b.innerHTML = "<small><span>" + p.k + "</span><span>0" + (i + 1) + "</span></small>" + esc(p.t);
+        b.onclick = () => send(p.t);
+        $("prompts").appendChild(b);
+      });
+      return;
+    }
+    el.innerHTML = "<div class='msgs'></div>";
+    const box = el.firstChild;
+    s.messages.forEach((m) => {
+      const lastA = [...s.messages].reverse().find(x => x.role === "assistant");
+      if (m.role === "user") {
+        const d = document.createElement("article");
+        d.className = "bubble-user";
+        d.innerHTML = "<div class='body'></div>";
+        d.firstChild.textContent = m.content;
+        box.appendChild(d);
+      } else {
+        const d = document.createElement("article");
+        d.className = "bubble-ai";
+        const think = (s.thinking && m.reasoning) ? "<div class='think-box'><details open><summary>Thinking</summary><pre>" + esc(m.reasoning) + "</pre></details></div>" : "";
+        const body = m.error ? "<div class='error'>" + esc(m.content) + "</div>" : "<div class='md'>" + md(m.content || (m.streaming ? "Waiting for tokens…" : "")) + "</div>";
+        const meta = modelMeta(m.model || s.model);
+        d.innerHTML = "<div class='ai-mark'><svg viewBox='0 0 32 32' width='16' height='16' fill='none'><circle cx='16' cy='16' r='9' stroke='currentColor' stroke-width='2.2'/><circle cx='16' cy='16' r='3.2' fill='currentColor'/></svg></div><div class='ai-body'><div class='ai-meta'>" + esc(meta.label) + "<span class='v'>verified</span>" + (m.streaming ? " · streaming" : "") + "</div>" + think + body + "<div class='acts'><button data-copy='1'>Copy</button>" + (lastA && lastA.id === m.id && !streaming ? "<button data-regen='1'>Retry</button>" : "") + "</div></div>";
+        d.querySelector("[data-copy]")?.addEventListener("click", () => navigator.clipboard.writeText(m.content || ""));
+        d.querySelector("[data-regen]")?.addEventListener("click", regenerate);
+        box.appendChild(d);
+      }
+    });
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function syncChrome() {
+    const s = current();
+    const meta = modelMeta(s.model);
+    $("model-label").textContent = meta.label;
+    $("think-btn").classList.toggle("on", !!s.thinking);
+    $("think-btn").setAttribute("aria-pressed", s.thinking ? "true" : "false");
+    const ef = EFFORTS.find(e => e.id === s.effort) || EFFORTS[2];
+    $("effort-btn").textContent = ef.label;
+    $("effort-btn").style.display = s.thinking ? "" : "none";
+    $("mob-title").textContent = s.title;
+    $("mob-sub").textContent = meta.label + (s.thinking ? " · thinking" : "");
+    $("hint").textContent = s.thinking
+      ? (meta.label + " · thinking " + ef.label + " · Enter to send")
+      : (meta.label + " · thinking off · Enter to send");
+  }
+
+  function render() {
+    syncChrome();
+    renderList();
+    renderThread();
+    updateSend();
+  }
+
+  function closeSide() { $("sidebar").classList.remove("open"); $("backdrop").classList.remove("show"); }
+  function updateSend() {
+    if (streaming) {
+      $("send").disabled = false;
+      $("send").classList.add("stop");
+      $("send").classList.remove("send");
+      $("send").innerHTML = "<svg width='12' height='12' viewBox='0 0 12 12'><rect width='12' height='12' rx='2' fill='currentColor'/></svg>";
+      $("send").setAttribute("aria-label", "Stop");
+    } else {
+      $("send").disabled = !$("input").value.trim() && !attachment;
+      $("send").classList.add("send");
+      $("send").classList.remove("stop");
+      $("send").innerHTML = "<svg width='16' height='16' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 19V5M5 12l7-7 7 7'/></svg>";
+      $("send").setAttribute("aria-label", "Send");
+    }
+  }
+
+  function fillEffortOpts() {
+    const box = $("effort-opts");
+    box.innerHTML = "";
+    EFFORTS.forEach(e => {
+      const b = document.createElement("button");
+      b.className = "btn btn-outline";
+      b.style.cssText = "width:100%;justify-content:space-between;margin-bottom:6px;border-radius:12px";
+      b.innerHTML = "<span>" + e.label + "</span><span style='color:var(--subtle);font-family:var(--mono);font-size:11px'>" + e.hint + "</span>";
+      b.onclick = () => { current().effort = e.id; current().updatedAt = Date.now(); save(); hideEffort(); render(); };
+      box.appendChild(b);
+    });
+  }
+  fillEffortOpts();
+
+  function renderModelList() {
+    const q = $("model-search").value.trim().toLowerCase();
+    const sel = current().model;
+    const source = q
+      ? MODELS.filter(m => (m.label + " " + m.id + " " + (m.vendor || "")).toLowerCase().includes(q))
+      : MODELS.filter(m => FEATURED.some(f => f.id === m.id));
+    const groups = {};
+    source.forEach(m => {
+      const v = m.vendor || guessVendor(m.id);
+      (groups[v] || (groups[v] = [])).push(m);
+    });
+    const box = $("model-list");
+    box.innerHTML = "";
+    const order = VENDOR_ORDER.filter(v => groups[v] && groups[v].length);
+    if (!order.length) {
+      box.innerHTML = "<p style='padding:24px;text-align:center;color:var(--subtle);font-size:13px'>No models match.</p>";
+      return;
+    }
+    order.forEach(v => {
+      const h = document.createElement("div");
+      h.className = "vendor";
+      h.textContent = v;
+      box.appendChild(h);
+      groups[v].slice(0, q ? 28 : 16).forEach(m => {
+        const b = document.createElement("button");
+        b.className = "mrow" + (m.id === sel ? " sel" : "");
+        b.innerHTML = "<span style='flex:1;min-width:0'><b></b><em></em></span>" + (m.verified !== false ? "<span class='ok-tag'>verified</span>" : "");
+        b.querySelector("b").textContent = m.label;
+        b.querySelector("em").textContent = m.id;
+        b.onclick = () => {
+          current().model = m.id;
+          current().updatedAt = Date.now();
+          save();
+          closeModels();
+          render();
+        };
+        box.appendChild(b);
+      });
+    });
+  }
+
+  function openModels() { $("model-sheet").classList.add("show"); $("model-search").value = ""; renderModelList(); $("model-search").focus(); }
+  function closeModels() { $("model-sheet").classList.remove("show"); }
+  function showEffort() { $("effort-modal").classList.add("show"); }
+  function hideEffort() { $("effort-modal").classList.remove("show"); }
+
+  $("model-btn").onclick = openModels;
+  $("model-sheet").onclick = (e) => { if (e.target.id === "model-sheet") closeModels(); };
+  $("model-search").oninput = renderModelList;
+  $("think-btn").onclick = () => { current().thinking = !current().thinking; save(); render(); };
+  $("effort-btn").onclick = showEffort;
+  $("effort-close").onclick = hideEffort;
+  $("effort-modal").onclick = (e) => { if (e.target.id === "effort-modal") hideEffort(); };
+  $("new-chat").onclick = () => { const s = blank(); state.sessions.unshift(s); state.activeId = s.id; save(); closeSide(); render(); };
+  $("search").oninput = renderList;
+  $("menu-btn").onclick = () => { $("sidebar").classList.add("open"); $("backdrop").classList.add("show"); };
+  $("backdrop").onclick = closeSide;
+  $("clear-all").onclick = () => {
+    if (!confirm("Clear every chat in this browser?")) return;
+    const s = blank(); state.sessions = [s]; state.activeId = s.id; save(); render();
+  };
+
+  let streaming = false;
+  let aborted = false;
+  let attachment = null;
+
+  function effortOpts(effort, thinking) {
+    const o = { stream: true, normalize: true };
+    if (!thinking) o.reasoning_effort = "none";
+    else if (effort === "max") { o.reasoning_effort = "xhigh"; o.verbosity = "high"; }
+    else if (effort === "xhigh") o.reasoning_effort = "xhigh";
+    else o.reasoning_effort = effort;
+    return o;
+  }
+  function extractText(part) {
+    if (!part) return "";
+    if (typeof part === "string") return part;
+    if (typeof part.text === "string") return part.text;
+    if (part.message && typeof part.message.content === "string") return part.message.content;
+    if (typeof part.content === "string") return part.content;
+    if (part.delta && typeof part.delta === "object") {
+      if (typeof part.delta.text === "string") return part.delta.text;
+      if (typeof part.delta.content === "string") return part.delta.content;
+    }
+    return "";
+  }
+  function extractReason(part) {
+    if (!part || typeof part !== "object") return "";
+    if (typeof part.reasoning === "string") return part.reasoning;
+    if (part.message && typeof part.message.reasoning === "string") return part.message.reasoning;
+    return "";
+  }
+
+  async function runAssistant() {
+    const s = current();
+    streaming = true; aborted = false; updateSend();
+    const msg = { id: uid("msg"), role: "assistant", content: "", reasoning: "", createdAt: Date.now(), model: s.model, streaming: true };
+    s.messages.push(msg); save(); render();
+    const sys = systemFor(s.model) + (s.thinking ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.");
+    const history = s.messages.filter(m => m.role === "user" || (m.role === "assistant" && m.content && !m.error && m.id !== msg.id)).map(m => ({ role: m.role, content: m.content }));
+    const payload = [{ role: "system", content: sys }, ...history];
+    try {
+      if (!window.puter) throw new Error("Puter.js is not ready yet.");
+      const opts = Object.assign({ model: s.model }, effortOpts(s.effort, s.thinking));
+      const raw = attachment
+        ? await puter.ai.chat(payload, [attachment.dataUrl], false, opts)
+        : await puter.ai.chat(payload, false, opts);
+      let text = "", reason = "";
+      if (raw && typeof raw[Symbol.asyncIterator] === "function") {
+        for await (const part of raw) {
+          if (aborted) break;
+          const t = extractText(part);
+          const r = extractReason(part);
+          if (t) text += t;
+          if (r) reason = r.length >= reason.length ? r : reason + r;
+          msg.content = text; msg.reasoning = reason; renderThread();
+        }
+      } else {
+        text = extractText(raw); reason = extractReason(raw);
+      }
+      msg.content = aborted && !text.trim() ? "Generation stopped." : (text.trim() || "The model returned an empty reply.");
+      msg.reasoning = reason || undefined;
+      msg.streaming = false;
+      if (!text.trim() && !aborted) msg.error = true;
+    } catch (err) {
+      const m = (err && (err.msg || err.message)) || "The model request failed.";
+      msg.content = /sign|auth|login|unauthorized/i.test(String(m))
+        ? String(m) + "\n\nSign in with Puter (free) to run this model. No API key needed."
+        : String(m);
+      msg.error = true;
+      msg.streaming = false;
+    } finally {
+      streaming = false; attachment = null; $("preview-img").innerHTML = "";
+      save(); render();
+    }
+  }
+
+  async function ensureSignedIn() {
+    if (!window.puter) throw new Error("Puter.js is not ready yet.");
+    if (puter.auth.isSignedIn()) return true;
+    return signIn();
+  }
+
+  async function send(text, file) {
+    const t = (text || "").trim();
+    if ((!t && !file) || streaming) return;
+    try { await ensureSignedIn(); } catch (e) { return; }
+    const s = current();
+    if (!s.messages.length) s.title = t.slice(0, 42) || "Image";
+    s.messages.push({ id: uid("msg"), role: "user", content: t || "Describe this image.", createdAt: Date.now() });
+    save(); $("input").value = ""; $("input").style.height = "auto"; render();
+    await runAssistant();
+  }
+  async function regenerate() {
+    const s = current();
+    const last = s.messages[s.messages.length - 1];
+    if (last && last.role === "assistant") s.messages.pop();
+    save(); await runAssistant();
+  }
+
+  $("form").onsubmit = (e) => {
+    e.preventDefault();
+    if (streaming) { aborted = true; return; }
+    send($("input").value, attachment);
+  };
+  $("input").oninput = function () {
+    this.style.height = "auto";
+    this.style.height = Math.min(this.scrollHeight, 160) + "px";
+    updateSend();
+  };
+  $("input").onkeydown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!streaming) send($("input").value, attachment); }
+  };
+  $("attach").onclick = () => $("file").click();
+  $("file").onchange = () => {
+    const f = $("file").files[0]; $("file").value = "";
+    if (!f) return;
+    if (f.size > 4 * 1024 * 1024) { alert("Image is over 4 MB. Try a smaller file."); return; }
+    const r = new FileReader();
+    r.onload = () => {
+      attachment = { name: f.name, dataUrl: String(r.result) };
+      $("preview-img").innerHTML = "<div style='max-width:48rem;margin:0 auto 8px;display:flex;align-items:center;gap:8px'><img src='" + attachment.dataUrl + "' style='height:32px;width:32px;object-fit:cover;border-radius:8px' alt=''/><span style='font-size:12px;color:var(--muted)'>" + esc(f.name) + "</span></div>";
+      updateSend();
+    };
+    r.readAsDataURL(f);
+  };
+
+  function killPuterDialogs() {
+    document.querySelectorAll("puter-dialog").forEach((node) => {
+      try { node.shadowRoot?.querySelector("dialog")?.close(); } catch (e) {}
+      node.remove();
+    });
+  }
+  new MutationObserver(killPuterDialogs).observe(document.documentElement, { childList: true, subtree: true });
+
+  function showPopupHelp() { $("popup-modal").classList.add("show"); }
+  function hidePopupHelp() { $("popup-modal").classList.remove("show"); }
+
+  async function signIn() {
+    if (!window.puter) throw new Error("Puter.js is not ready yet.");
+    if (puter.auth.isSignedIn()) { await refreshAuth(); return true; }
+    const origin = puter.defaultGUIOrigin || "https://puter.com";
+    const url = origin + "/action/sign-in?embedded_in_popup=true&msg_id=" + Date.now() + "&attempt_temp_user_creation=true";
+    const popup = window.open(url, "PuterSignIn", "popup=yes,width=480,height=720");
+    if (!popup) { showPopupHelp(); throw new Error("POPUP_BLOCKED"); }
+    hidePopupHelp();
+    return new Promise((resolve, reject) => {
+      let done = false;
+      const finish = (fn) => { if (done) return; done = true; window.removeEventListener("message", onMsg); clearInterval(poll); fn(); };
+      const onMsg = (e) => {
+        const d = e.data;
+        if (!d || typeof d !== "object") return;
+        const token = d.token;
+        if ((d.msg === "puter.token" || d.success) && typeof token === "string") {
+          try { puter.setAuthToken(token); } catch (err) {}
+          try { popup.close(); } catch (err) {}
+          finish(async () => { await refreshAuth(); resolve(true); });
+        }
+      };
+      const poll = setInterval(() => {
+        if (!popup.closed) return;
+        setTimeout(async () => {
+          if (puter.auth.isSignedIn()) finish(async () => { await refreshAuth(); resolve(true); });
+          else finish(() => reject(new Error("Sign-in window closed before finishing.")));
+        }, 250);
+      }, 350);
+      window.addEventListener("message", onMsg);
+    });
+  }
+
+  async function refreshAuth() {
+    const st = $("puter-status");
+    const btn = $("auth-btn");
+    const dot = $("auth-dot");
+    try {
+      if (!window.puter) { st.textContent = "Connecting…"; return; }
+      const on = !!puter.auth.isSignedIn();
+      dot.className = "dot" + (on ? " on" : "");
+      if (on) {
+        let name = "Signed in";
+        try { const u = await puter.auth.getUser(); if (u && u.username) name = "@" + u.username; } catch (e) {}
+        st.textContent = name;
+        btn.textContent = "Sign out";
+        $("connect-btn").textContent = "Connected";
+        $("connect-btn").style.display = "none";
+        $("desk-status").textContent = "Connected";
+        $("mob-connect").style.display = "none";
+      } else {
+        st.textContent = "Not signed in";
+        btn.textContent = "Sign in free";
+        $("connect-btn").textContent = "Sign in";
+        $("connect-btn").style.display = "";
+        $("desk-status").textContent = "Ready";
+        $("mob-connect").style.display = "";
+      }
+    } catch (e) { st.textContent = "Puter error"; }
+  }
+
+  $("auth-btn").onclick = async () => {
+    if (window.puter && puter.auth.isSignedIn()) { await puter.auth.signOut(); await refreshAuth(); }
+    else { try { await signIn(); } catch (e) {} }
+  };
+  $("connect-btn").onclick = async () => { try { await signIn(); } catch (e) {} };
+  $("mob-connect").onclick = async () => { try { await signIn(); } catch (e) {} };
+  $("popup-retry").onclick = async () => { try { await signIn(); } catch (e) {} };
+  $("popup-close").onclick = hidePopupHelp;
+
+  async function loadLiveModels() {
+    const ingest = (list) => {
+      const seen = new Set(FEATURED.map(m => m.id));
+      const live = FEATURED.map(m => Object.assign({ verified: true }, m));
+      list.forEach(item => {
+        const id = typeof item === "string" ? item : (item && (item.id || item.name));
+        if (!id || seen.has(id) || isNoise(id)) return;
+        seen.add(id);
+        const label = (item && item.name && item.name !== id) ? item.name : pretty(id);
+        live.push({ id, label, vendor: guessVendor(id), verified: true });
+      });
+      MODELS = live;
+      $("model-count").textContent = live.length + " verified IDs from Puter’s live catalog.";
+    };
+    try {
+      const res = await fetch("https://api.puter.com/puterai/chat/models/details");
+      if (res.ok) {
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data && data.models) || [];
+        if (list.length) ingest(list);
+      }
+    } catch (e) {}
+    if (window.puter && puter.ai.listModels) {
+      try {
+        const raw = await puter.ai.listModels();
+        const list = Array.isArray(raw) ? raw : [];
+        if (list.length) ingest(list.concat(MODELS));
+      } catch (e) {}
+    }
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "n") {
+      e.preventDefault();
+      $("new-chat").click();
+    }
+    if (e.key === "Escape") {
+      closeModels(); hideEffort(); closeSide(); hidePopupHelp();
+      if (streaming) aborted = true;
+    }
+  });
+
+  const waitPuter = setInterval(() => {
+    if (window.puter) {
+      clearInterval(waitPuter);
+      refreshAuth();
+      loadLiveModels();
+    }
+  }, 200);
+  loadLiveModels();
+  render();
+  </script>
+</body>
+</html>
