@@ -27,6 +27,7 @@
       --accent: #c5ccd6;
       --danger: #e11d48;
       --ok: #5ee9a3;
+      --warn: #c9a27a;
       --font: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
       --display: "Newsreader", "Times New Roman", serif;
       --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -78,6 +79,29 @@
     .puter-card p { margin: 6px 0 10px; font-size: 13px; }
     .credit { font-size: 11px; color: var(--subtle); padding: 0 4px; }
     .credit a { text-decoration: underline; text-underline-offset: 2px; }
+    .usage-card { width: 100%; text-align: left; border: 1px solid var(--line); background: var(--bg); border-radius: 16px; padding: 12px; }
+    .usage-card .row { display: flex; align-items: center; justify-content: space-between; }
+    .usage-card strong { display: block; margin-top: 6px; font-size: 14px; font-weight: 500; }
+    .bar { height: 6px; background: var(--elevated); border-radius: 99px; overflow: hidden; margin-top: 8px; }
+    .bar > i { display: block; height: 100%; width: 0; background: var(--ok); border-radius: 99px; }
+    .bar.low > i { background: var(--warn); }
+    .bar.empty > i { background: var(--danger); }
+    .usage-meta { font-family: var(--mono); font-size: 10px; color: var(--subtle); margin-top: 6px; }
+    .reroute { border: 1px solid var(--line); background: var(--elevated); border-radius: 12px; padding: 8px 12px; font-size: 12px; color: var(--muted); margin: 0 0 10px; line-height: 1.45; }
+    .toast {
+      position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-12px);
+      z-index: 80; max-width: min(28rem, calc(100vw - 24px));
+      background: var(--elevated); color: var(--fg); border: 1px solid var(--line);
+      border-radius: 14px; padding: 10px 14px; font-size: 13px; line-height: 1.45;
+      opacity: 0; pointer-events: none; transition: opacity .2s var(--ease), transform .2s var(--ease);
+      box-shadow: 0 18px 40px -24px rgba(0,0,0,.8);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .byline { text-align: center; font-family: var(--mono); font-size: 10px; letter-spacing: .04em; color: color-mix(in oklab, var(--subtle) 80%, transparent); margin: 8px 0 0; }
+    .usage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+    .usage-grid div { border: 1px solid var(--line); background: var(--bg); border-radius: 14px; padding: 12px; }
+    .usage-grid b { display: block; font-family: var(--mono); font-size: 18px; font-weight: 500; margin-top: 4px; }
+    .stat { color: var(--subtle); font-size: 11px; }
     .main { flex: 1; min-width: 0; display: flex; flex-direction: column; background:
       linear-gradient(180deg, color-mix(in oklab, var(--elevated) 45%, transparent), transparent 38%), var(--bg); }
     header.top { border-bottom: 1px solid var(--line); }
@@ -221,6 +245,12 @@
       </div>
       <div class="chats" id="chat-list"></div>
       <div class="side-foot">
+        <button type="button" class="usage-card" id="usage-card" aria-label="Open usage">
+          <div class="row"><small style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--subtle)">Usage</small><span class="usage-meta" id="turn-count">0 turns</span></div>
+          <strong id="usage-left">Sign in to see allowance</strong>
+          <div class="bar" id="usage-bar"><i id="usage-bar-fill"></i></div>
+          <div class="usage-meta" id="usage-sub">Puter monthly meter</div>
+        </button>
         <div class="puter-card">
           <div class="row"><small>Puter</small><span class="dot wait" id="auth-dot"></span></div>
           <p id="puter-status">Connecting…</p>
@@ -247,6 +277,7 @@
             <button type="button" class="chip" id="model-btn" aria-haspopup="dialog"><span id="model-label">Claude Fable 5.1</span></button>
             <button type="button" class="chip on" id="think-btn" aria-pressed="true">Think <span class="led"></span></button>
             <button type="button" class="chip" id="effort-btn">High</button>
+            <button type="button" class="chip" id="usage-chip">0 turns</button>
           </div>
           <button class="connect" id="connect-btn">Sign in</button>
           <span class="status" id="desk-status">Loading</span>
@@ -266,6 +297,7 @@
           </button>
         </form>
         <p class="hint" id="hint">Enter to send · Shift+Enter for a new line · Thinking is on</p>
+        <p class="byline">made by Adrian In Ur Class Rn</p>
       </div>
     </main>
   </div>
@@ -292,6 +324,17 @@
       <button class="btn btn-ghost" id="effort-close" style="width:100%;margin-top:8px">Close</button>
     </div>
   </div>
+
+  <div class="modal" id="usage-modal">
+    <div class="card" style="width:min(26rem,100%)">
+      <h2>AI usage</h2>
+      <p>Puter allowance for this account. Heavy models cost more; fallbacks finish the job.</p>
+      <div id="usage-detail"></div>
+      <button class="btn btn-outline" id="usage-close" style="width:100%;margin-top:12px;border-radius:12px">Close</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
 
   <div class="modal" id="popup-modal">
     <div class="card">
@@ -397,6 +440,213 @@
     { id: "max", label: "Max", hint: "Slowest" }
   ];
   const KEY = "omni-chat-v2";
+  const USAGE_KEY = "omni-usage-v1";
+  const MICROS_PER_DOLLAR = 100000000;
+  const FALLBACKS = {
+    glm: "glm-5.3",
+    luna: "gpt-5.6-luna",
+    terra: "gpt-5.6-terra",
+    nano: "gpt-5-nano",
+    flash: "gemini-3.8-flash",
+    ds: "deepseek-v4-flash-0731",
+    haiku: "claude-haiku-4-5"
+  };
+  let usageSnap = null;
+  let sessionTurns = 0;
+  let sessionEstimated = 0;
+  try {
+    const u = JSON.parse(localStorage.getItem(USAGE_KEY) || "null");
+    if (u) { sessionTurns = u.sessionTurns || 0; sessionEstimated = u.sessionEstimated || 0; }
+  } catch (e) {}
+  function saveUsageLocal() {
+    localStorage.setItem(USAGE_KEY, JSON.stringify({ sessionTurns, sessionEstimated }));
+  }
+  function formatUsd(micro) {
+    const usd = (Number(micro) || 0) / MICROS_PER_DOLLAR;
+    if (usd <= 0) return "$0.00";
+    if (usd < 0.01) return "$" + usd.toFixed(4);
+    if (usd < 1) return "$" + usd.toFixed(3);
+    return "$" + usd.toFixed(2);
+  }
+  function modelWeight(id) {
+    const s = String(id || "").toLowerCase();
+    if (/fable-5-1|fable-5\.1|mythos/.test(s)) return 14;
+    if (/opus-5$|claude-opus-5/.test(s) && !/4-8|4\.8/.test(s)) return 12;
+    if (/gpt-5\.6-terra/.test(s)) return 10;
+    if (/qwen3\.8-max|kimi-k3|deepseek-v4-pro|grok-4\.6/.test(s)) return 11;
+    if (/opus/.test(s)) return 10;
+    if (/sonnet-5$|claude-sonnet-5/.test(s) && !/4-6/.test(s)) return 6;
+    if (/gpt-5\.6-luna/.test(s)) return 4;
+    if (/gpt-5\.6-sol|gpt-5\.4|gpt-5\.5|grok-4\.5|gemini-3\.1-pro/.test(s)) return 6;
+    if (/fable-5$/.test(s)) return 8;
+    if (/glm-5|mistral-large|gpt-4o|kimi-k2/.test(s)) return 3;
+    if (/haiku|nano|flash-lite|v3\.2|deepseek-v4-flash|gemini-3\.[178]-flash/.test(s)) return 1;
+    if (/flash/.test(s)) return 1.4;
+    return 5;
+  }
+  function isCheap(id) { return modelWeight(id) <= 3.5; }
+  function looksCode(t) { return /\b(code|function|class|typescript|javascript|python|react|css|html|bug|refactor|compile|api|sql|implement|script|component)\b/i.test(t); }
+  function looksSoft(t) { return /\b(app|project|feature|backend|frontend|database|deploy|auth|refactor|continue|next step|todo|implement)\b/i.test(t); }
+  function preferredCheap(prompt) {
+    if (looksCode(prompt)) return FALLBACKS.luna;
+    if (looksSoft(prompt)) return FALLBACKS.terra;
+    return FALLBACKS.glm;
+  }
+  function estimateTurn(model, inputChars, thinking, effort) {
+    const tokensIn = Math.max(32, Math.ceil(inputChars / 4));
+    let tokensOut = 700;
+    if (thinking) {
+      if (effort === "max" || effort === "xhigh") tokensOut = 2800;
+      else if (effort === "high") tokensOut = 1800;
+      else if (effort === "low") tokensOut = 900;
+      else tokensOut = 1400;
+    }
+    return Math.round((tokensIn * 0.28 + tokensOut) * modelWeight(model) * 120);
+  }
+  function uniq(ids) {
+    const s = new Set(); const o = [];
+    ids.forEach((id) => { if (id && !s.has(id)) { s.add(id); o.push(id); } });
+    return o;
+  }
+  function ladder(primary, prompt) {
+    const head = preferredCheap(prompt);
+    return uniq([head, FALLBACKS.glm, FALLBACKS.luna, FALLBACKS.flash, FALLBACKS.nano, FALLBACKS.ds, FALLBACKS.haiku]).filter((id) => id !== primary);
+  }
+  function planTurn(primary, prompt, messages, thinking, effort, remaining) {
+    const inputChars = messages.reduce((n, m) => n + String(m.content || "").length, 0) + prompt.length;
+    const turnCost = estimateTurn(primary, inputChars, thinking, effort);
+    const cheap = preferredCheap(prompt);
+    const cheapCost = estimateTurn(cheap, inputChars, false, "low");
+    const userTurns = Math.max(1, messages.filter((m) => m.role === "user").length);
+    const projectedLeft = Math.max(3, Math.min(10, 12 - userTurns));
+    const projectCost = turnCost * projectedLeft;
+    const remainTurns = remaining == null || turnCost <= 0 ? 99 : Math.max(0, Math.floor(remaining / turnCost));
+    const cheapTurns = remaining == null || cheapCost <= 0 ? 99 : Math.max(0, Math.floor(remaining / cheapCost));
+    let model = primary, notice = null, reason = "primary";
+    if (remaining != null && remaining <= 0) {
+      model = isCheap(primary) ? primary : cheap;
+      notice = "No usage left on the heavy model. Finishing on " + modelMeta(model).label + ".";
+      reason = "empty";
+    } else if (remaining != null && projectCost > remaining * 0.92 && !isCheap(primary)) {
+      model = cheap;
+      notice = "Not enough usage to finish this chat on " + modelMeta(primary).label + ". Switching to " + modelMeta(model).label + " so you can complete it.";
+      reason = "budget";
+    } else if (remaining != null && turnCost > remaining && !isCheap(primary)) {
+      model = cheap;
+      notice = "This turn would exhaust " + modelMeta(primary).label + ". Using " + modelMeta(model).label + " instead.";
+      reason = "budget";
+    }
+    return {
+      model, chain: uniq([model].concat(ladder(model, prompt))), notice, reason, turnCost, projectCost, remainTurns, cheapTurns,
+      canFinish: remaining == null || projectCost <= remaining, cheap, inputChars
+    };
+  }
+  function parseUsage(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    const info = raw.allowanceInfo || raw.allowance_info || raw;
+    const n = (v) => (typeof v === "number" && isFinite(v) ? v : (typeof v === "string" && isFinite(Number(v)) ? Number(v) : null));
+    const allowance = n(info.monthUsageAllowance || info.month_usage_allowance || info.allowance || raw.allowance);
+    let remaining = n(info.remaining || raw.remaining || raw.remainingAllowance);
+    let used = n(info.used || raw.used || raw.consumed);
+    if (allowance != null && remaining == null && used != null) remaining = Math.max(0, allowance - used);
+    if (allowance != null && used == null && remaining != null) used = Math.max(0, allowance - remaining);
+    if (allowance == null && remaining == null && used == null) return null;
+    const a = allowance != null ? allowance : (used || 0) + (remaining || 0);
+    const rem = remaining != null ? remaining : Math.max(0, a - (used || 0));
+    const u = used != null ? used : Math.max(0, a - rem);
+    let apiCalls = 0;
+    const usage = raw.usage;
+    if (usage && typeof usage === "object") {
+      Object.values(usage).forEach((v) => { if (v && typeof v === "object" && v.count) apiCalls += Number(v.count) || 0; });
+    }
+    return { allowance: a, remaining: rem, used: u, apiCalls, fetchedAt: Date.now() };
+  }
+  function isQuota(m) { return /no usage left|usage limit|insufficient[_ ]funds|out of credit|not enough (usage|credit)|allowance|usage[- ]limited|quota|402|payment required/i.test(m); }
+  function isRate(m) { return /429|too many requests|rate[- ]limit|throttl|try again later|overloaded|capacity|busy|stalled|rate_limit/i.test(m); }
+  function isAuthErr(m) { return /not authenticated|unauthori[sz]ed|sign[- ]?in|invalid (access )?token/i.test(m); }
+  function canReroute(m) {
+    if (!m) return true;
+    if (isAuthErr(m)) return false;
+    return isQuota(m) || isRate(m) || /model (not|is not) (found|available)|unavailable|temporarily|timeout|timed out|empty response|no response|failed to fetch|network|503|502|500/i.test(m);
+  }
+  function toast(text) {
+    const el = $("toast");
+    if (!el) return;
+    el.textContent = text;
+    el.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.classList.remove("show"), 4200);
+  }
+  function paintUsage() {
+    const left = $("usage-left");
+    const sub = $("usage-sub");
+    const bar = $("usage-bar");
+    const fill = $("usage-bar-fill");
+    const chip = $("usage-chip");
+    const turns = $("turn-count");
+    if (turns) turns.textContent = sessionTurns + " turns";
+    if (chip) chip.textContent = usageSnap ? (formatUsd(usageSnap.remaining) + " · " + sessionTurns) : (sessionTurns + " turns");
+    if (!left) return;
+    if (!window.puter || !puter.auth || !puter.auth.isSignedIn()) {
+      left.textContent = "Sign in to see allowance";
+      if (sub) sub.textContent = "Puter monthly meter";
+      if (fill) fill.style.width = "0%";
+      return;
+    }
+    if (!usageSnap) {
+      left.textContent = "Metering after first reply";
+      if (sub) sub.textContent = sessionTurns + " local turns this session";
+      return;
+    }
+    const pct = usageSnap.allowance > 0 ? Math.round((usageSnap.remaining / usageSnap.allowance) * 100) : 0;
+    left.textContent = formatUsd(usageSnap.remaining) + " left";
+    if (sub) sub.textContent = pct + "% of " + formatUsd(usageSnap.allowance) + " this month";
+    if (fill) fill.style.width = Math.max(0, Math.min(100, pct)) + "%";
+    if (bar) {
+      bar.classList.toggle("low", pct < 28 && pct >= 12);
+      bar.classList.toggle("empty", pct < 12);
+    }
+  }
+  function fillUsageDetail() {
+    const box = $("usage-detail");
+    if (!box) return;
+    const s = current();
+    const lastUser = [...s.messages].reverse().find((m) => m.role === "user");
+    const plan = planTurn(s.model, lastUser ? lastUser.content : "", s.messages, s.thinking, s.effort, usageSnap ? usageSnap.remaining : null);
+    const meta = modelMeta(s.model);
+    const cheap = modelMeta(plan.cheap);
+    let html = "";
+    if (usageSnap) {
+      html += "<div style='border:1px solid var(--line);background:var(--bg);border-radius:16px;padding:14px'><div class='stat'>This month</div><div style='font-size:28px;font-family:var(--display);margin-top:4px'>" + formatUsd(usageSnap.remaining) + "</div><div class='stat'>remaining of " + formatUsd(usageSnap.allowance) + "</div><div class='bar' style='margin-top:10px'><i style='width:" + Math.round((usageSnap.remaining / Math.max(1, usageSnap.allowance)) * 100) + "%'></i></div><div class='usage-meta'>Used " + formatUsd(usageSnap.used) + (usageSnap.apiCalls ? " · " + usageSnap.apiCalls + " API calls" : "") + "</div></div>";
+    } else {
+      html += "<p style='color:var(--muted);font-size:14px'>Sign in with Puter to load the live meter.</p>";
+    }
+    html += "<div class='usage-grid'><div><div class='stat'>Session</div><b>" + sessionTurns + "</b><div class='stat'>turns</div></div><div><div class='stat'>This chat</div><b>" + meta.label.replace(/^(.{14}).+$/, "$1…") + "</b><div class='stat'>~" + Math.round(plan.inputChars / 4).toLocaleString() + " tokens</div></div></div>";
+    html += "<div style='border:1px solid var(--line);background:var(--bg);border-radius:16px;padding:14px;font-size:13px;color:var(--muted);line-height:1.5'>";
+    html += "<div class='stat' style='margin-bottom:6px'>Projection</div>";
+    html += "<p>Next turn on " + esc(meta.label) + ": ~" + formatUsd(plan.turnCost) + "</p>";
+    html += "<p>" + (plan.remainTurns >= 99 ? "Enough usage for this chat on the current model." : "About " + plan.remainTurns + " more " + esc(meta.label) + " turns left.") + "</p>";
+    html += "<p>On " + esc(cheap.label) + " / GLM 5.3: about " + (plan.cheapTurns >= 99 ? "plenty of" : plan.cheapTurns) + " turns.</p>";
+    if (!plan.canFinish) html += "<p style='color:var(--warn)'>Not enough to finish a longer project on " + esc(meta.label) + ". The next reply will reroute to " + esc(modelMeta(plan.model).label) + ".</p>";
+    html += "<p style='margin-top:8px;color:var(--subtle);font-size:12px'>If a flagship model hits a rate limit or runs out of usage, Omni retries on a lighter verified model and labels the reroute in the thread.</p></div>";
+    box.innerHTML = html;
+  }
+  async function loadUsage() {
+    try {
+      if (!window.puter || !puter.auth.isSignedIn() || !puter.auth.getMonthlyUsage) { paintUsage(); return; }
+      const raw = await puter.auth.getMonthlyUsage();
+      const parsed = parseUsage(raw);
+      if (parsed) usageSnap = parsed;
+    } catch (e) {}
+    paintUsage();
+  }
+  function withTimeout(promise, ms, message) {
+    return new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error(message)), ms);
+      Promise.resolve(promise).then((v) => { clearTimeout(t); resolve(v); }, (e) => { clearTimeout(t); reject(e); });
+    });
+  }
+  function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
   const PROMPTS = [
     { k: "Code", t: "Explain how a hash map works, with a tiny JS example." },
     { k: "Plan", t: "Draft a weekend itinerary for Tokyo on a modest budget." },
@@ -671,7 +921,8 @@
         else body = "";
         const meta = modelMeta(m.model || s.model);
         const live = m.streaming ? "<span class='live'><span class='dot on'></span>" + (thinkingNow ? "Thinking" : "Writing") + "</span>" : "";
-        d.innerHTML = "<div class='ai-mark'><svg viewBox='0 0 32 32' width='16' height='16' fill='none'><circle cx='16' cy='16' r='9' stroke='currentColor' stroke-width='2.2'/><circle cx='16' cy='16' r='3.2' fill='currentColor'/></svg></div><div class='ai-body'><div class='ai-meta'>" + esc(meta.label) + "<span class='v'>verified</span>" + live + "</div>" + think + body + "<div class='acts'><button data-copy='1'>Copy</button>" + (lastA && lastA.id === m.id && !streaming ? "<button data-regen='1'>Retry</button>" : "") + "</div></div>";
+        const reroute = m.fallbackNotice ? "<div class='reroute'>" + esc(m.fallbackNotice) + "</div>" : "";
+        d.innerHTML = "<div class='ai-mark'><svg viewBox='0 0 32 32' width='16' height='16' fill='none'><circle cx='16' cy='16' r='9' stroke='currentColor' stroke-width='2.2'/><circle cx='16' cy='16' r='3.2' fill='currentColor'/></svg></div><div class='ai-body'><div class='ai-meta'>" + esc(meta.label) + "<span class='v'>verified</span>" + live + "</div>" + reroute + think + body + "<div class='acts'><button data-copy='1'>Copy</button>" + (lastA && lastA.id === m.id && !streaming ? "<button data-regen='1'>Retry</button>" : "") + "</div></div>";
         d.querySelector("[data-copy]")?.addEventListener("click", () => navigator.clipboard.writeText(m.content || ""));
         d.querySelector("[data-regen]")?.addEventListener("click", regenerate);
         d.querySelectorAll("[data-copy-code]").forEach((btn) => {
@@ -708,6 +959,7 @@
     renderList();
     renderThread();
     updateSend();
+    paintUsage();
   }
 
   function closeSide() { $("sidebar").classList.remove("open"); $("backdrop").classList.remove("show"); }
@@ -823,36 +1075,109 @@
   async function runAssistant() {
     const s = current();
     streaming = true; aborted = false; updateSend();
-    const msg = { id: uid("msg"), role: "assistant", content: "", reasoning: "", createdAt: Date.now(), model: s.model, streaming: true };
+    const lastUser = [...s.messages].reverse().find((m) => m.role === "user");
+    const prompt = lastUser ? lastUser.content : "";
+    const plan = planTurn(s.model, prompt, s.messages, s.thinking, s.effort, usageSnap ? usageSnap.remaining : null);
+    const msg = {
+      id: uid("msg"),
+      role: "assistant",
+      content: "",
+      reasoning: "",
+      createdAt: Date.now(),
+      model: plan.model,
+      streaming: true,
+      fallbackFrom: plan.model !== s.model ? s.model : undefined,
+      fallbackNotice: plan.notice || undefined
+    };
     s.messages.push(msg); save(); render();
-    const sys = systemFor(s.model) + (s.thinking ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.");
+    if (plan.notice) toast(plan.notice);
     const history = s.messages.filter(m => m.role === "user" || (m.role === "assistant" && m.content && !m.error && m.id !== msg.id)).map(m => ({ role: m.role, content: m.content }));
-    const payload = [{ role: "system", content: sys }, ...history];
+    let text = "", reason = "", usedModel = plan.model, lastErr = "";
     try {
       if (!window.puter) throw new Error("Puter.js is not ready yet.");
-      const opts = Object.assign({ model: s.model }, effortOpts(s.effort, s.thinking, s.model));
-      const raw = attachment
-        ? await puter.ai.chat(payload, [attachment.dataUrl], false, opts)
-        : await puter.ai.chat(payload, false, opts);
-      let text = "", reason = "";
-      if (raw && typeof raw[Symbol.asyncIterator] === "function") {
-        for await (const part of raw) {
-          if (aborted) break;
-          const next = ingestChunk(part, { text, reasoning: reason });
-          if (next.error) throw new Error(next.error);
-          text = next.text; reason = next.reasoning;
-          msg.content = text; msg.reasoning = reason; renderThread();
+      let ok = false;
+      for (let i = 0; i < plan.chain.length; i++) {
+        if (aborted) break;
+        const model = plan.chain[i];
+        if (i > 0) {
+          const cause = isQuota(lastErr) ? "quota" : isRate(lastErr) ? "rate" : "error";
+          const from = modelMeta(usedModel || s.model).label;
+          const to = modelMeta(model).label;
+          const notice = cause === "quota"
+            ? "Primary model out of usage. Successfully rerouted to " + to + "."
+            : cause === "rate"
+              ? "Primary model rate-limited. Successfully rerouted to " + to + "."
+              : from + " failed. Successfully rerouted to " + to + ".";
+          toast(notice);
+          usedModel = model;
+          msg.model = model;
+          msg.fallbackFrom = s.model;
+          msg.fallbackNotice = notice;
+          msg.content = "";
+          msg.reasoning = "";
+          text = ""; reason = "";
+          renderThread();
+          if (isRate(lastErr)) await sleep(900);
         }
-      } else {
-        const next = ingestChunk(raw, { text, reasoning: reason });
-        text = next.text; reason = next.reasoning;
+        const sys = systemFor(model) + (s.thinking && model === s.model ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.");
+        const payload = [{ role: "system", content: sys }, ...history];
+        const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking && model === s.model, model));
+        try {
+          const call = attachment
+            ? puter.ai.chat(payload, [attachment.dataUrl], false, opts)
+            : puter.ai.chat(payload, false, opts);
+          const raw = await withTimeout(call, s.thinking ? 35000 : 18000, "The model stalled — likely rate-limited or out of usage.");
+          if (raw && typeof raw[Symbol.asyncIterator] === "function") {
+            let first = true;
+            const iter = raw[Symbol.asyncIterator]();
+            for (;;) {
+              if (aborted) break;
+              const raced = await Promise.race([
+                iter.next().then((n) => ({ k: "n", n })),
+                sleep(first ? 22000 : 120000).then(() => ({ k: "t" }))
+              ]);
+              if (raced.k === "t") {
+                if (first) throw new Error("The model stalled — likely rate-limited or out of usage.");
+                break;
+              }
+              if (raced.n.done) break;
+              first = false;
+              const next = ingestChunk(raced.n.value, { text, reasoning: reason });
+              if (next.error) throw new Error(next.error);
+              text = next.text; reason = next.reasoning;
+              msg.content = text; msg.reasoning = reason; renderThread();
+            }
+          } else {
+            const next = ingestChunk(raw, { text, reasoning: reason });
+            text = next.text; reason = next.reasoning;
+          }
+          usedModel = model;
+          ok = true;
+          break;
+        } catch (err) {
+          lastErr = (err && (err.msg || err.message)) || "The model request failed.";
+          if (aborted) break;
+          if (isAuthErr(lastErr) || !canReroute(lastErr) || i === plan.chain.length - 1) throw err;
+        }
       }
       const recovered = recoverAnswer(text, reason);
       const finalText = recovered.text.trim();
+      if (!ok && !aborted && !finalText) throw new Error(lastErr || "The model request failed.");
       msg.content = aborted && !finalText ? "Stopped." : (finalText || "No response came back. Try again, turn thinking off, or pick another model.");
       msg.reasoning = recovered.reasoning || undefined;
       msg.streaming = false;
+      msg.model = usedModel;
       if (!finalText && !aborted) msg.error = true;
+      if (finalText && !aborted) {
+        sessionTurns += 1;
+        sessionEstimated += plan.turnCost;
+        if (usageSnap) {
+          usageSnap.used += plan.turnCost;
+          usageSnap.remaining = Math.max(0, usageSnap.remaining - plan.turnCost);
+        }
+        saveUsageLocal();
+        loadUsage();
+      }
     } catch (err) {
       const m = (err && (err.msg || err.message)) || "The model request failed.";
       msg.content = /sign|auth|login|unauthorized/i.test(String(m))
@@ -860,6 +1185,7 @@
         : String(m);
       msg.error = true;
       msg.streaming = false;
+      msg.model = usedModel;
     } finally {
       streaming = false; attachment = null; $("preview-img").innerHTML = "";
       save(); render();
@@ -976,6 +1302,7 @@
         $("connect-btn").style.display = "none";
         $("desk-status").textContent = "Connected";
         $("mob-connect").style.display = "none";
+        loadUsage();
       } else {
         st.textContent = "Not signed in";
         btn.textContent = "Sign in free";
@@ -995,6 +1322,13 @@
   $("mob-connect").onclick = async () => { try { await signIn(); } catch (e) {} };
   $("popup-retry").onclick = async () => { try { await signIn(); } catch (e) {} };
   $("popup-close").onclick = hidePopupHelp;
+
+  function showUsage() { fillUsageDetail(); $("usage-modal").classList.add("show"); }
+  function hideUsage() { $("usage-modal").classList.remove("show"); }
+  $("usage-card").onclick = showUsage;
+  $("usage-chip").onclick = showUsage;
+  $("usage-close").onclick = hideUsage;
+  $("usage-modal").onclick = (e) => { if (e.target.id === "usage-modal") hideUsage(); };
 
   async function loadLiveModels() {
     const ingest = (list) => {
@@ -1033,7 +1367,7 @@
       $("new-chat").click();
     }
     if (e.key === "Escape") {
-      closeModels(); hideEffort(); closeSide(); hidePopupHelp();
+      closeModels(); hideEffort(); closeSide(); hidePopupHelp(); hideUsage();
       if (streaming) aborted = true;
     }
   });
@@ -1043,9 +1377,11 @@
       clearInterval(waitPuter);
       refreshAuth();
       loadLiveModels();
+      loadUsage();
     }
   }, 200);
   loadLiveModels();
+  paintUsage();
   render();
   </script>
 </body>
