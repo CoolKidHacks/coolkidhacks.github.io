@@ -11,25 +11,25 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2308080a'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23c5ccd6' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='2.6' fill='%23c5ccd6'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,500;1,6..72,600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://js.puter.com/v2/"></script>
   <style>
     :root {
-      --bg: #08080a;
-      --surface: #101014;
-      --elevated: #19191e;
-      --fg: #f3f2ee;
-      --muted: #9a9aa3;
-      --subtle: #6d6d76;
-      --line: #26262c;
-      --primary: #eceae4;
-      --primary-fg: #0c0c0e;
-      --accent: #c5ccd6;
+      --bg: #131314;
+      --surface: #1e1f20;
+      --elevated: #2b2c2d;
+      --fg: #e3e3e3;
+      --muted: #c4c7c5;
+      --subtle: #8e918f;
+      --line: #3c4043;
+      --primary: #a8c7fa;
+      --primary-fg: #062e6f;
+      --accent: #a8c7fa;
       --danger: #e11d48;
       --ok: #5ee9a3;
       --warn: #c9a27a;
-      --font: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-      --display: "Newsreader", "Times New Roman", serif;
+      --font: "Outfit", ui-sans-serif, system-ui, sans-serif;
+      --display: "Outfit", ui-sans-serif, system-ui, sans-serif;
       --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
       --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
@@ -180,11 +180,11 @@
     .composer-wrap { padding: 8px 16px max(14px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--bg); flex-shrink: 0; }
     .modes { max-width: 48rem; margin: 0 auto 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .mode-btn {
-      height: 44px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface);
+      height: 44px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
       display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; color: var(--muted);
     }
     .mode-btn.on { border-color: color-mix(in oklab, var(--accent) 50%, var(--line)); background: var(--elevated); color: var(--fg); }
-    .composer { max-width: 48rem; margin: 0 auto; display: flex; align-items: flex-end; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 24px; padding: 8px; box-shadow: 0 18px 50px -28px rgba(0,0,0,.85); }
+    .composer { max-width: 48rem; margin: 0 auto; display: flex; align-items: flex-end; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 28px; padding: 6px; box-shadow: 0 8px 30px -18px rgba(0,0,0,.55); }
     .composer:focus-within { border-color: color-mix(in oklab, var(--accent) 40%, var(--line)); }
     textarea { flex: 1; resize: none; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 16px; line-height: 1.5; max-height: 168px; outline: none; padding: 10px 4px; }
     .icon-btn { width: 44px; height: 44px; border-radius: 16px; display: grid; place-items: center; flex-shrink: 0; color: var(--muted); }
@@ -277,7 +277,7 @@
     <aside class="sidebar" id="sidebar">
       <div class="brand">
         <div class="mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="9" stroke="currentColor" stroke-width="2.2"/><circle cx="16" cy="16" r="3.2" fill="currentColor"/></svg>
+          <svg viewBox="0 0 32 32" fill="currentColor"><path d="M16 2.4c.4 0 .7.24.84.6l2.52 6.62a1 1 0 0 0 .56.56l6.62 2.52a.9.9 0 0 1 0 1.68l-6.62 2.52a1 1 0 0 0-.56.56l-2.52 6.62a.9.9 0 0 1-1.68 0l-2.52-6.62a1 1 0 0 0-.56-.56L4.46 14.38a.9.9 0 0 1 0-1.68l6.62-2.52a1 1 0 0 0 .56-.56L14.16 3a.9.9 0 0 1 .84-.6z"/></svg>
         </div>
         <div>
           <h1>Omni</h1>
@@ -323,6 +323,9 @@
           </div>
           <button class="connect" id="connect-btn">Sign in</button>
           <span class="status" id="desk-status">Loading</span>
+          <button type="button" class="icon-btn" id="settings-btn" aria-label="Settings" style="width:44px;height:44px;border-radius:999px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c.1.7.6 1.2 1.3 1.4H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.1z"/></svg>
+          </button>
         </div>
       </header>
       <div class="thread" id="thread"></div>
@@ -380,6 +383,33 @@
       <p>Low is faster and cheaper. Max thinks longer. Always available — thinking does not have to be on.</p>
       <div id="effort-opts"></div>
       <button class="btn btn-ghost" id="effort-close" style="width:100%;margin-top:8px">Close</button>
+    </div>
+  </div>
+
+  <div class="modal" id="settings-modal">
+    <div class="card" style="width:min(28rem,100%);max-height:88dvh;overflow:auto">
+      <h2>Settings</h2>
+      <p>Name, look, personality, and memory from other AIs.</p>
+      <label class="stat">Name</label>
+      <input class="search" id="set-name" style="padding-left:12px;margin:6px 0 12px" maxlength="32" />
+      <label class="stat">Personality</label>
+      <textarea id="set-persona" rows="3" style="width:100%;margin:6px 0 12px;border:1px solid var(--line);border-radius:12px;background:var(--elevated);color:var(--fg);padding:10px;font:inherit"></textarea>
+      <label class="stat">Look</label>
+      <div id="theme-opts" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 12px"></div>
+      <label class="stat">Accent</label>
+      <input type="color" id="set-accent" style="margin:6px 0 12px;height:40px;width:72px;border:0;background:none" />
+      <label class="stat">Memory</label>
+      <textarea id="set-memory" rows="3" placeholder="Preferred name, school, projects…" style="width:100%;margin:6px 0 12px;border:1px solid var(--line);border-radius:12px;background:var(--elevated);color:var(--fg);padding:10px;font:inherit"></textarea>
+      <label class="stat">Import from another AI</label>
+      <p style="font-size:13px;color:var(--muted);margin:6px 0">Copy the import prompt, paste it into ChatGPT / Claude / Grok / Gemini, then paste the reply here.</p>
+      <button class="btn btn-outline" id="copy-import" style="width:100%;margin-bottom:8px">Copy import prompt</button>
+      <textarea id="set-import" rows="5" placeholder="Paste imported memory…" style="width:100%;margin:6px 0 8px;border:1px solid var(--line);border-radius:12px;background:var(--elevated);color:var(--fg);padding:10px;font:inherit"></textarea>
+      <select id="set-from" style="width:100%;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--elevated);color:var(--fg);margin-bottom:8px">
+        <option>ChatGPT</option><option>Claude</option><option>Grok</option><option>Gemini</option><option>Other</option>
+      </select>
+      <button class="btn btn-primary" id="save-import" style="margin-bottom:8px">Save import</button>
+      <p class="stat" id="import-status"></p>
+      <button class="btn btn-ghost" id="settings-close" style="width:100%;margin-top:8px">Done</button>
     </div>
   </div>
 
@@ -473,6 +503,34 @@
     return `You are a capable assistant provided through Omni via Puter. Be clear, useful, and direct. Prefer working code and concrete answers. Match the user's language.\n\n${CHANNEL}`;
   }
   const SCHOOL = "The person is doing school work — homework, essays, study guides, math, science, language, or exam prep. Help them learn. Show steps, not just the answer. Use short headings and numbered steps. For essays: outline first, then draft if they asked. Do not write a full assignment as if it were theirs unless they explicitly asked you to draft it.";
+  const IMPORT_PROMPT = "You are helping me import context from one AI assistant to another. Your job is to go through our past conversations and sum up what you know about me.\n\nIn the output, please avoid using any first-person pronouns (I, my, me, mine) and any second-person pronouns (you, your, yours). Instead, refer to the individual you have learned about as \"the user\" or use neutral phrasing.\n\nPreserve the user's words verbatim where possible, especially for instructions and preferences.\n\nCategories (output in this order):\n1. Demographics Information\n2. Interests & Preferences\n3. Relationships\n4. Dated Events, Projects & Plans\n5. Instructions\n\nOutput ONLY the requested information.\n\nFinally, complete the sentence \"Imported from: <name>\".";
+  const THEMES = {
+    gemini: { bg:"#131314", surface:"#1e1f20", elevated:"#2b2c2d", fg:"#e3e3e3", muted:"#c4c7c5", subtle:"#8e918f", line:"#3c4043", primary:"#a8c7fa", pfg:"#062e6f", accent:"#a8c7fa" },
+    day: { bg:"#f0f4f9", surface:"#ffffff", elevated:"#e9eef6", fg:"#1f1f1f", muted:"#444746", subtle:"#747775", line:"#d3e3fd", primary:"#0b57d0", pfg:"#fff", accent:"#0b57d0" },
+    ink: { bg:"#08080a", surface:"#101014", elevated:"#19191e", fg:"#f3f2ee", muted:"#9a9aa3", subtle:"#6d6d76", line:"#26262c", primary:"#eceae4", pfg:"#0c0c0e", accent:"#c5ccd6" },
+    dusk: { bg:"#10151c", surface:"#171e27", elevated:"#222b36", fg:"#e8eef4", muted:"#9aa8b6", subtle:"#6d7b88", line:"#2c3844", primary:"#8fbfa8", pfg:"#0c1612", accent:"#8fbfa8" }
+  };
+  let prefs = { botName:"Omni", personality:"", theme:"gemini", accent:"", memory:"", importedMemory:"", importedFrom:"" };
+  try { Object.assign(prefs, JSON.parse(localStorage.getItem("omni-prefs-v1") || "{}")); } catch (e) {}
+  function savePrefs() { localStorage.setItem("omni-prefs-v1", JSON.stringify(prefs)); applyPrefsTheme(); }
+  function applyPrefsTheme() {
+    const t = THEMES[prefs.theme] || THEMES.gemini;
+    const acc = /^#[0-9a-f]{6}$/i.test(prefs.accent) ? prefs.accent : t.accent;
+    const r = document.documentElement.style;
+    r.setProperty("--bg", t.bg); r.setProperty("--surface", t.surface); r.setProperty("--elevated", t.elevated);
+    r.setProperty("--fg", t.fg); r.setProperty("--muted", t.muted); r.setProperty("--subtle", t.subtle);
+    r.setProperty("--line", t.line); r.setProperty("--primary", t.primary); r.setProperty("--primary-fg", t.pfg); r.setProperty("--accent", acc);
+    document.body.style.background = t.bg; document.body.style.color = t.fg;
+  }
+  applyPrefsTheme();
+  function prefsBlock() {
+    let s = "The assistant's display name is " + (prefs.botName || "Omni") + ".";
+    if (prefs.personality) s += "\nPersonality:\n" + prefs.personality;
+    const mem = [prefs.memory, prefs.importedMemory].filter(Boolean).join("\n\n");
+    if (mem) s += "\nMemory about the user:\n" + mem;
+    s += "\nWhen writing a downloadable file, use a fenced block like ```cpp main.cpp";
+    return s;
+  }
   const EFFORTS = [
     { id: "low", label: "Low", hint: "Fast" },
     { id: "medium", label: "Medium", hint: "Balanced" },
@@ -930,8 +988,13 @@
     let html = "";
     parts.forEach((p, i) => {
       if (p.t === "code") {
-        const lang = p.lang || "code";
-        html += "<pre><div class='code-hd'><span>" + esc(lang) + "</span><button type='button' data-copy-code='1'>Copy</button></div><code>" + hl(p.v, p.lang) + "</code></pre>";
+        const info = (p.lang || "").trim();
+        const bits = info.split(/\s+/);
+        let lang = bits[0] || "code";
+        let fname = bits.slice(1).join(" ").replace(/^[:]/,"");
+        if (lang.includes(".")) { fname = lang; lang = (lang.split(".").pop() || "txt"); }
+        if (!fname) fname = "main." + (lang === "python" ? "py" : lang === "javascript" ? "js" : lang === "typescript" ? "ts" : lang === "cpp" ? "cpp" : lang);
+        html += "<pre><div class='code-hd'><span>" + esc(fname) + "</span><span><button type='button' data-dl='" + esc(fname).replace(/'/g,"") + "'>Download</button><button type='button' data-copy-code='1'>Copy</button></span></div><code>" + hl(p.v, lang) + "</code></pre>";
       } else html += inline(p.v) + (caret && i === parts.length - 1 ? "<span class='caret'></span>" : "");
     });
     if (caret && !parts.length) html += "<span class='caret'></span>";
@@ -971,7 +1034,7 @@
     const el = $("thread");
     if (!s.messages.length) {
       const meta = modelMeta(s.model);
-      el.innerHTML = "<div class='empty'><div class='mark'><svg viewBox='0 0 32 32' width='22' height='22' fill='none'><circle cx='16' cy='16' r='9' stroke='currentColor' stroke-width='2.2'/><circle cx='16' cy='16' r='3.2' fill='currentColor'/></svg></div><h2>How can I help?</h2><p><b style='color:var(--fg);font-weight:500'>" + esc(meta.label) + "</b> · verified on Puter. Sign in free, no API key. Toggle thinking for slower, more careful answers.</p><div class='prompts' id='prompts'></div></div>";
+      el.innerHTML = "<div class='empty'><div class='mark' style='border:0;background:transparent;color:var(--accent)'><svg viewBox='0 0 32 32' width='28' height='28' fill='currentColor'><path d='M16 2.4c.4 0 .7.24.84.6l2.52 6.62a1 1 0 0 0 .56.56l6.62 2.52a.9.9 0 0 1 0 1.68l-6.62 2.52a1 1 0 0 0-.56.56l-2.52 6.62a.9.9 0 0 1-1.68 0l-2.52-6.62a1 1 0 0 0-.56-.56L4.46 14.38a.9.9 0 0 1 0-1.68l6.62-2.52a1 1 0 0 0 .56-.56L14.16 3a.9.9 0 0 1 .84-.6z'/></svg></div><h2>Hello</h2><p><b style='color:var(--fg);font-weight:500'>" + esc(prefs.botName || "Omni") + "</b> · " + esc(meta.label) + ". Ask, generate an image, or get a file back.</p><div class='prompts' id='prompts'></div></div>";
       PROMPTS.forEach((p, i) => {
         const b = document.createElement("button");
         b.innerHTML = "<small><span>" + p.k + "</span><span>0" + (i + 1) + "</span></small>" + esc(p.t);
@@ -1014,7 +1077,7 @@
         const phrase = pool[Math.min(pool.length - 1, Math.floor(elapsed / 3.2))];
         const live = m.streaming ? "<span class='live'><span class='dot on'></span>" + phrase + "</span>" : "";
         const reroute = m.fallbackNotice ? "<div class='reroute'>" + esc(m.fallbackNotice) + "</div>" : "";
-        d.innerHTML = "<div class='ai-mark'><svg viewBox='0 0 32 32' width='16' height='16' fill='none'><circle cx='16' cy='16' r='9' stroke='currentColor' stroke-width='2.2'/><circle cx='16' cy='16' r='3.2' fill='currentColor'/></svg></div><div class='ai-body'><div class='ai-meta'>" + esc(meta.label) + "<span class='v'>verified</span>" + live + "</div>" + reroute + think + body + "<div class='acts'><button data-copy='1'>Copy</button>" + (lastA && lastA.id === m.id && !streaming ? "<button data-regen='1'>Retry</button>" : "") + "</div></div>";
+        d.innerHTML = "<div class='ai-mark' style='border:0;background:transparent;color:var(--accent)'><svg viewBox='0 0 32 32' width='18' height='18' fill='currentColor'><path d='M16 2.4c.4 0 .7.24.84.6l2.52 6.62a1 1 0 0 0 .56.56l6.62 2.52a.9.9 0 0 1 0 1.68l-6.62 2.52a1 1 0 0 0-.56.56l-2.52 6.62a.9.9 0 0 1-1.68 0l-2.52-6.62a1 1 0 0 0-.56-.56L4.46 14.38a.9.9 0 0 1 0-1.68l6.62-2.52a1 1 0 0 0 .56-.56L14.16 3a.9.9 0 0 1 .84-.6z'/></svg></div><div class='ai-body'><div class='ai-meta'>" + esc(meta.label) + "<span class='v'>verified</span>" + live + "</div>" + reroute + think + body + "<div class='acts'><button data-copy='1'>Copy</button>" + (lastA && lastA.id === m.id && !streaming ? "<button data-regen='1'>Retry</button>" : "") + "</div></div>";
         d.querySelector("[data-copy]")?.addEventListener("click", () => navigator.clipboard.writeText(m.content || ""));
         d.querySelector("[data-regen]")?.addEventListener("click", regenerate);
         d.querySelectorAll("[data-copy-code]").forEach((btn) => {
@@ -1022,6 +1085,21 @@
             const pre = btn.closest("pre");
             const raw = pre ? pre.querySelector("code") : null;
             if (raw) navigator.clipboard.writeText(raw.textContent || "");
+            btn.textContent = "Copied";
+            setTimeout(() => { btn.textContent = "Copy"; }, 1400);
+          });
+        });
+        d.querySelectorAll("[data-dl]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const pre = btn.closest("pre");
+            const raw = pre ? pre.querySelector("code") : null;
+            const name = btn.getAttribute("data-dl") || "file.txt";
+            const blob = new Blob([raw ? raw.textContent : ""], { type: "text/plain;charset=utf-8" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = name;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(a.href), 1200);
           });
         });
         box.appendChild(d);
@@ -1240,7 +1318,7 @@
           renderThread();
           if (isRate(lastErr)) await sleep(900);
         }
-        const sys = systemFor(model) + (s.thinking && model === s.model ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + (s.messages.some(m => m.school) ? "\n\n" + SCHOOL : "");
+        const sys = systemFor(model) + "\n\n" + prefsBlock() + (s.thinking && model === s.model ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + (s.messages.some(m => m.school) ? "\n\n" + SCHOOL : "");
         const payload = [{ role: "system", content: sys }, ...history];
         const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking && model === s.model, model));
         try {
@@ -1520,13 +1598,60 @@
     }
   }
 
+  function fillSettings() {
+    $("set-name").value = prefs.botName || "Omni";
+    $("set-persona").value = prefs.personality || "";
+    $("set-memory").value = prefs.memory || "";
+    $("set-accent").value = prefs.accent || (THEMES[prefs.theme] || THEMES.gemini).accent;
+    $("import-status").textContent = prefs.importedMemory ? ("Loaded from " + (prefs.importedFrom || "import")) : "";
+    const box = $("theme-opts");
+    box.innerHTML = "";
+    Object.keys(THEMES).forEach((id) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn btn-outline";
+      b.textContent = id[0].toUpperCase() + id.slice(1);
+      if (prefs.theme === id) b.style.borderColor = "var(--accent)";
+      b.onclick = () => { prefs.theme = id; savePrefs(); fillSettings(); };
+      box.appendChild(b);
+    });
+  }
+  function showSettings() { fillSettings(); $("settings-modal").classList.add("show"); }
+  function hideSettings() { $("settings-modal").classList.remove("show"); }
+  $("settings-btn").onclick = showSettings;
+  $("settings-close").onclick = () => {
+    prefs.botName = $("set-name").value.trim() || "Omni";
+    prefs.personality = $("set-persona").value;
+    prefs.memory = $("set-memory").value;
+    prefs.accent = $("set-accent").value;
+    savePrefs(); hideSettings(); render();
+  };
+  $("set-name").oninput = () => { prefs.botName = $("set-name").value; savePrefs(); };
+  $("set-persona").oninput = () => { prefs.personality = $("set-persona").value; savePrefs(); };
+  $("set-memory").oninput = () => { prefs.memory = $("set-memory").value; savePrefs(); };
+  $("set-accent").oninput = () => { prefs.accent = $("set-accent").value; savePrefs(); };
+  $("copy-import").onclick = async () => {
+    try { await navigator.clipboard.writeText(IMPORT_PROMPT); $("copy-import").textContent = "Copied"; setTimeout(() => $("copy-import").textContent = "Copy import prompt", 1400); } catch (e) {}
+  };
+  $("save-import").onclick = () => {
+    const t = $("set-import").value.trim();
+    if (!t) return;
+    prefs.importedMemory = t;
+    prefs.importedFrom = $("set-from").value;
+    $("set-import").value = "";
+    savePrefs();
+    $("import-status").textContent = "Loaded from " + prefs.importedFrom;
+    toast("Memory imported from " + prefs.importedFrom);
+  };
+  $("settings-modal").onclick = (e) => { if (e.target.id === "settings-modal") hideSettings(); };
+
   document.addEventListener("keydown", (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "n") {
       e.preventDefault();
       $("new-chat").click();
     }
     if (e.key === "Escape") {
-      closeModels(); hideEffort(); closeSide(); hidePopupHelp(); hideUsage();
+      closeModels(); hideEffort(); closeSide(); hidePopupHelp(); hideUsage(); hideSettings();
       if (streaming) aborted = true;
     }
   });
