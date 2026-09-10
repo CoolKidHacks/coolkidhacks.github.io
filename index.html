@@ -369,7 +369,7 @@
       <div class="grab" aria-hidden="true"><i></i></div>
       <div class="hd">
         <div>
-          <h3>Models</h3>
+          <h3 id="models-title">Models</h3>
           <p id="model-count">Estimated spend per reply. Verified IDs from Puter’s live catalog.</p>
         </div>
         <button type="button" class="icon-btn" id="model-close" aria-label="Close models" style="width:44px;height:44px;border-radius:12px">
@@ -407,7 +407,8 @@
       <label class="stat">Accent</label>
       <input type="color" id="set-accent" style="margin:6px 0 12px;height:40px;width:72px;border:0;background:none" />
       <label class="stat">Memory</label>
-      <textarea id="set-memory" rows="3" placeholder="Preferred name, school, projects…" style="width:100%;margin:6px 0 12px;border:1px solid var(--line);border-radius:12px;background:var(--elevated);color:var(--fg);padding:10px;font:inherit"></textarea>
+      <textarea id="set-memory" rows="3" placeholder="Preferred name, school, projects…" style="width:100%;margin:6px 0 8px;border:1px solid var(--line);border-radius:12px;background:var(--elevated);color:var(--fg);padding:10px;font:inherit"></textarea>
+      <p id="learned-mem" style="font-size:12px;color:var(--subtle);margin:0 0 12px">Omni slowly writes notes from what you say. Every model sees them.</p>
       <label class="stat">Import from another AI</label>
       <p style="font-size:13px;color:var(--muted);margin:6px 0">Copy the import prompt, paste it into ChatGPT / Claude / Grok / Gemini, then paste the reply here.</p>
       <button class="btn btn-outline" id="copy-import" style="width:100%;margin-bottom:8px">Copy import prompt</button>
@@ -448,7 +449,7 @@
     { id: "claude-haiku-4-5", label: "Claude Haiku 4.5", vendor: "Anthropic" },
     { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6", vendor: "Anthropic" },
     { id: "gpt-5.6-luna", label: "GPT-5.6 Luna", vendor: "OpenAI", reasoning: true },
-    { id: "gpt-5-nano", label: "GPT-5 Nano", vendor: "OpenAI" },
+    { id: "qwen3.6-plus", label: "Qwen 3.6 Plus", vendor: "Qwen" },
     { id: "gpt-4o", label: "GPT-4o", vendor: "OpenAI" },
     { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash", vendor: "Google" },
     { id: "gemini-3.7-flash", label: "Gemini 3.7 Flash", vendor: "Google" },
@@ -457,7 +458,6 @@
     { id: "deepseek-v4-flash-0731", label: "DeepSeek V4 Flash", vendor: "DeepSeek" },
     { id: "deepseek-v3.2", label: "DeepSeek V3.2", vendor: "DeepSeek" },
     { id: "glm-5.3", label: "GLM 5.3", vendor: "Zhipu" },
-    { id: "qwen3.6-plus", label: "Qwen 3.6 Plus", vendor: "Qwen" },
     { id: "kimi-k2.6", label: "Kimi K2.6", vendor: "Moonshot" },
     { id: "kimi-k2.7-code", label: "Kimi K2.7 Code", vendor: "Moonshot" }
   ];
@@ -519,7 +519,7 @@
     ink: { bg:"#08080a", surface:"#101014", elevated:"#19191e", fg:"#f3f2ee", muted:"#9a9aa3", subtle:"#6d6d76", line:"#26262c", primary:"#eceae4", pfg:"#0c0c0e", accent:"#c5ccd6" },
     dusk: { bg:"#10151c", surface:"#171e27", elevated:"#222b36", fg:"#e8eef4", muted:"#9aa8b6", subtle:"#6d7b88", line:"#2c3844", primary:"#8fbfa8", pfg:"#0c1612", accent:"#8fbfa8" }
   };
-  let prefs = { botName:"Omni", personality:"", theme:"gemini", accent:"", memory:"", importedMemory:"", importedFrom:"" };
+  let prefs = { botName:"Omni", personality:"", theme:"gemini", accent:"", memory:"", learnedMemory:"", importedMemory:"", importedFrom:"", vaultUnlocked:false };
   try { Object.assign(prefs, JSON.parse(localStorage.getItem("omni-prefs-v1") || "{}")); } catch (e) {}
   function savePrefs() { localStorage.setItem("omni-prefs-v1", JSON.stringify(prefs)); applyPrefsTheme(); }
   function applyPrefsTheme() {
@@ -535,8 +535,8 @@
   function prefsBlock() {
     let s = "The assistant's display name is " + (prefs.botName || "Omni") + ".";
     if (prefs.personality) s += "\nCustom instructions (always follow):\n" + prefs.personality;
-    const mem = [prefs.memory, prefs.importedMemory].filter(Boolean).join("\n\n");
-    if (mem) s += "\nMemory about the user:\n" + mem;
+    const mem = [prefs.memory, prefs.learnedMemory, prefs.importedMemory].filter(Boolean).join("\n\n");
+    if (mem) s += "\nShared memory about the user. Every model sees this, even ones not used yet:\n" + mem;
     s += "\nWhen writing a downloadable file, use a fenced block like ```cpp main.cpp";
     return s;
   }
@@ -554,11 +554,27 @@
     glm: "glm-5.3",
     luna: "gpt-5.6-luna",
     terra: "gpt-5.6-terra",
+    qwen: "qwen3.6-plus",
     nano: "gpt-5-nano",
     flash: "gemini-3.8-flash",
     ds: "deepseek-v4-flash-0731",
     haiku: "claude-haiku-4-5"
   };
+  const VAULT = [
+    { id: "claude-fable-5-1", label: "Claude Fable 5.1", vendor: "Anthropic" },
+    { id: "claude-opus-5", label: "Claude Opus 5", vendor: "Anthropic" },
+    { id: "claude-sonnet-5", label: "Claude Sonnet 5", vendor: "Anthropic" },
+    { id: "gpt-5.6-terra", label: "GPT-5.6 Terra", vendor: "OpenAI" },
+    { id: "gpt-5.6-sol", label: "GPT-5.6 Sol", vendor: "OpenAI" },
+    { id: "gpt-5.4-pro", label: "GPT-5.4 Pro", vendor: "OpenAI" },
+    { id: "grok-4.6", label: "Grok 4.6", vendor: "xAI" },
+    { id: "grok-4.5", label: "Grok 4.5", vendor: "xAI" },
+    { id: "gemini-3.1-pro", label: "Gemini 3.1 Pro", vendor: "Google" },
+    { id: "kimi-k3", label: "Kimi K3", vendor: "Moonshot" },
+    { id: "qwen3.8-max", label: "Qwen 3.8 Max", vendor: "Qwen" },
+    { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro", vendor: "DeepSeek" },
+    { id: "mistral-large", label: "Mistral Large", vendor: "Mistral" }
+  ];
   let usageSnap = null;
   let sessionTurns = 0;
   let sessionEstimated = 0;
@@ -601,21 +617,21 @@
     const broke = remaining != null && remaining < 1500000;
     const cost = (id) => estimateTurn(id, Math.max(total, 400), false, "low");
     const pairIfCheaper = (versus) => {
-      const pairs = [["gpt-5-nano","gemini-3.8-flash"],["gpt-5-nano","claude-haiku-4-5"]];
+      const pairs = [["qwen3.6-plus","gemini-3.8-flash"],["qwen3.6-plus","claude-haiku-4-5"]];
       const cap = cost(versus);
       for (const p of pairs) {
         if (cost(p[0]) + cost(p[1]) < cap * 0.85) return p;
       }
       return null;
     };
-    if (broke) return { model: "gpt-5-nano", reason: "low usage" };
-    if (text.length < 72 && messages.length < 6 && /^(hi|hey|hello|thanks|ok|yes|no)\b/i.test(text)) return { model: "gpt-5-nano", reason: "short chat" };
+    if (broke) return { model: "qwen3.6-plus", reason: "low usage · Qwen 3.6 Plus" };
+    if (text.length < 72 && messages.length < 6 && /^(hi|hey|hello|thanks|ok|yes|no)\b/i.test(text)) return { model: "qwen3.6-plus", reason: "short chat" };
     if (looksCode(text) || /```/.test(text)) {
-      if (tight) return { model: "gpt-5-nano", reason: "code · saving usage" };
+      if (tight) return { model: "qwen3.6-plus", reason: "code · Qwen, saving usage" };
       if (total > 8000 || text.length > 1800) return { model: "gpt-5.6-luna", reason: "long code" };
       return { model: "kimi-k2.7-code", reason: "code" };
     }
-    if (total > 14000 || text.length > 4500) return { model: tight ? "gemini-3.8-flash" : "kimi-k2.6", reason: "long prompt" };
+    if (total > 14000 || text.length > 4500) return { model: tight ? "qwen3.6-plus" : "kimi-k2.6", reason: "long prompt" };
     const deep = /\b(prove|reason|why does|math|puzzle|logic|algorithm|homework|essay|study|exam)\b/i.test(text) || text.length > 700 || looksSoft(text);
     if (deep && !tight) {
       const versus = /\b(prove|reason|math|puzzle|logic)\b/i.test(text) ? "grok-4.3" : "claude-sonnet-4-6";
@@ -623,13 +639,12 @@
       if (pair) return { model: pair[0], ensemble: pair, reason: "two cheap models, less than " + modelMeta(versus).label };
       return { model: versus, reason: "longer, careful answer" };
     }
-    if (text.length < 160 && messages.length < 8) return { model: "gpt-5-nano", reason: "quick question" };
-    return { model: tight ? "gemini-3.8-flash" : "gpt-5.6-luna", reason: "everyday" };
+    if (text.length < 160 && messages.length < 8) return { model: "qwen3.6-plus", reason: "quick question" };
+    return { model: tight ? "qwen3.6-plus" : "gpt-5.6-luna", reason: "everyday" };
   }
   function preferredCheap(prompt) {
     if (looksCode(prompt)) return FALLBACKS.luna;
-    if (looksSoft(prompt)) return FALLBACKS.terra;
-    return FALLBACKS.glm;
+    return FALLBACKS.qwen;
   }
   function estimateTurn(model, inputChars, thinking, effort) {
     const tokensIn = Math.max(24, Math.ceil(inputChars / 4));
@@ -643,6 +658,35 @@
     const r = ratesFor(model);
     return Math.round(r[0] * tokensIn + r[1] * tokensOut);
   }
+  function visionOk(id) { return /qwen|gpt-4o|gpt-5|gemini|claude-sonnet|claude-opus|claude-fable|claude-haiku|grok-4\.[5-9]/i.test(String(id||"")); }
+  function pickVision(id) { return visionOk(id) && id !== "auto" ? id : "qwen3.6-plus"; }
+  function harvestFacts(text) {
+    const re = /\b(?:my name is|my name's|call me|i(?:'m| am) from|i live(?: in)?|i go to|i study|i(?:'m| am) in|i work(?: at| on)?|i prefer|i like|i hate|please remember|remember that|i use|i speak|my (?:school|teacher|class|project) is)\b[^.!?\n]{2,110}/gi;
+    const out = []; const seen = new Set();
+    const m = String(text||"").match(re) || [];
+    m.forEach((raw) => {
+      const line = raw.replace(/\s+/g, " ").trim();
+      const k = line.toLowerCase();
+      if (line.length < 8 || seen.has(k)) return;
+      seen.add(k); out.push(line.charAt(0).toUpperCase() + line.slice(1));
+    });
+    return out.slice(0, 3);
+  }
+  function mergeLearned(existing, facts) {
+    const lines = String(existing||"").split("\n").map((l) => l.replace(/^[-•]\s*/, "").trim()).filter(Boolean);
+    const have = new Set(lines.map((l) => l.toLowerCase()));
+    facts.forEach((f) => {
+      const k = f.toLowerCase();
+      if (have.has(k) || [...have].some((h) => h.includes(k) || k.includes(h))) return;
+      lines.push(f); have.add(k);
+    });
+    return lines.slice(-36).join("\n");
+  }
+  function visionPrompt(sys, history, lastText) {
+    const earlier = history.map((m) => (m.role === "user" ? "User: " : "Assistant: ") + m.content).join("\n\n");
+    const ask = String(lastText || "").trim() || "Look at this image. Describe what you see and answer the question.";
+    return sys + "\n\n" + (earlier ? earlier + "\n\n" : "") + "User: " + ask + "\n\nThe user attached an image. You can see it. Answer about the image.";
+  }
   function uniq(ids) {
     const s = new Set(); const o = [];
     ids.forEach((id) => { if (id && !s.has(id)) { s.add(id); o.push(id); } });
@@ -650,7 +694,7 @@
   }
   function ladder(primary, prompt) {
     const head = preferredCheap(prompt);
-    return uniq([head, FALLBACKS.glm, FALLBACKS.luna, FALLBACKS.flash, FALLBACKS.nano, FALLBACKS.ds, FALLBACKS.haiku]).filter((id) => id !== primary);
+    return uniq([head, FALLBACKS.qwen, FALLBACKS.flash, FALLBACKS.haiku, FALLBACKS.glm, FALLBACKS.luna, FALLBACKS.nano, FALLBACKS.ds]).filter((id) => id !== primary);
   }
   function planTurn(primary, prompt, messages, thinking, effort, remaining) {
     const inputChars = messages.reduce((n, m) => n + String(m.content || "").length, 0) + prompt.length;
@@ -1211,9 +1255,10 @@
   function renderModelList() {
     const q = $("model-search").value.trim().toLowerCase();
     const sel = current().model;
+    const vault = !!prefs.vaultUnlocked;
     const source = q
-      ? MODELS.filter(m => m.id !== "auto" && (m.label + " " + m.id + " " + (m.vendor || "")).toLowerCase().includes(q))
-      : MODELS.filter(m => m.id !== "auto" && FEATURED.some(f => f.id === m.id));
+      ? MODELS.filter(m => m.id !== "auto" && !isBurner(m.id) && (m.label + " " + m.id + " " + (m.vendor || "")).toLowerCase().includes(q))
+      : MODELS.filter(m => m.id !== "auto" && !isBurner(m.id) && (vault || FEATURED.some(f => f.id === m.id)));
     const groups = {};
     source.forEach(m => {
       const v = m.vendor || guessVendor(m.id);
@@ -1233,8 +1278,46 @@
       };
       box.appendChild(auto);
     }
+    if (vault) {
+      const warn = document.createElement("div");
+      warn.style.cssText = "margin:8px 8px 12px;padding:10px 12px;border-radius:12px;border:1px solid color-mix(in oklab, #f87171 40%, var(--line));background:color-mix(in oklab, #f87171 12%, var(--surface));font-size:12px;line-height:1.45;color:var(--fg)";
+      warn.textContent = "Warning: these models can eat almost your whole monthly allowance in one reply. Fable 5.1 and the other flagships are not for everyday chat.";
+      box.appendChild(warn);
+      const hh = document.createElement("div");
+      hh.className = "vendor";
+      hh.style.color = "#f87171";
+      hh.textContent = "Heavy — eats credits";
+      box.appendChild(hh);
+      const heavies = [];
+      const seenH = new Set();
+      VAULT.concat(MODELS.filter(m => isBurner(m.id))).forEach((m) => {
+        if (seenH.has(m.id)) return;
+        seenH.add(m.id);
+        if (q && !(m.label + " " + m.id).toLowerCase().includes(q)) return;
+        heavies.push(m);
+      });
+      heavies.forEach((m) => {
+        const b = document.createElement("button");
+        b.className = "mrow" + (m.id === sel ? " sel" : "");
+        const s = current();
+        const chars = s.messages.reduce((n, x) => n + String(x.content || "").length, 0);
+        const cost = estimateTurn(m.id, chars, s.thinking, s.effort);
+        b.innerHTML = "<span style='flex:1;min-width:0'><b></b><em></em></span><span class='cost'><b></b><small>heavy / reply</small></span>";
+        b.querySelector("b").textContent = m.label;
+        b.querySelector("em").textContent = m.id;
+        b.querySelector(".cost b").textContent = "~" + formatUsd(cost);
+        b.querySelector(".cost b").style.color = "#f87171";
+        b.onclick = () => {
+          current().model = m.id;
+          state.lastModel = m.id;
+          current().updatedAt = Date.now();
+          save(); closeModels(); render();
+        };
+        box.appendChild(b);
+      });
+    }
     const order = VENDOR_ORDER.filter(v => groups[v] && groups[v].length);
-    if (!order.length && q) {
+    if (!order.length && q && !vault) {
       box.innerHTML = "<p style='padding:24px;text-align:center;color:var(--subtle);font-size:13px'>No models match.</p>";
       return;
     }
@@ -1280,6 +1363,22 @@
   $("model-btn").onclick = openModels;
   $("model-close").onclick = closeModels;
   $("model-sheet").onclick = (e) => { if (e.target.id === "model-sheet") closeModels(); };
+  (function () {
+    let taps = 0, timer = null;
+    $("models-title").onclick = () => {
+      taps += 1;
+      if (timer) clearTimeout(timer);
+      if (taps >= 3) {
+        taps = 0;
+        prefs.vaultUnlocked = true;
+        savePrefs();
+        toast("Admin models unlocked. Fable 5.1 and the rest will eat your monthly credits almost instantly.");
+        renderModelList();
+        return;
+      }
+      timer = setTimeout(() => { taps = 0; }, 900);
+    };
+  })();
   $("model-search").oninput = renderModelList;
   $("think-btn").onclick = () => { current().thinking = !current().thinking; state.lastThinking = current().thinking; save(); render(); };
   $("effort-btn").onclick = showEffort;
@@ -1331,7 +1430,15 @@
     const lastUser = [...s.messages].reverse().find((m) => m.role === "user");
     const prompt = lastUser ? lastUser.content : "";
     const autoPick = s.model === "auto" ? pickAuto(prompt, s.messages, usageSnap ? usageSnap.remaining : null) : null;
-    const plan = planTurn(autoPick ? autoPick.model : s.model, prompt, s.messages, s.thinking, s.effort, usageSnap ? usageSnap.remaining : null);
+    let primary = autoPick ? autoPick.model : s.model;
+    if (attachment) {
+      const vis = pickVision(primary);
+      if (vis !== primary) {
+        toast(modelMeta(primary).label + " cannot reliably see pictures. Using " + modelMeta(vis).label + ".");
+        primary = vis;
+      }
+    }
+    const plan = planTurn(primary, prompt, s.messages, s.thinking, s.effort, usageSnap ? usageSnap.remaining : null);
     const autoNotice = autoPick
       ? ("Auto · " + (autoPick.ensemble ? autoPick.ensemble.map((id) => modelMeta(id).label).join(" + ") : modelMeta(plan.model).label) + " · " + autoPick.reason)
       : null;
@@ -1359,7 +1466,7 @@
         const payload = [{ role: "system", content: sys }, ...history];
         const opts = Object.assign({ model: model }, effortOpts("low", false, model));
         const call = attachment
-          ? puter.ai.chat(payload, [attachment.dataUrl], false, opts)
+          ? puter.ai.chat(visionPrompt(sys, history, lastUser ? lastUser.content : ""), attachment.dataUrl, opts)
           : puter.ai.chat(payload, false, opts);
         const raw = await withTimeout(call, 18000, "The model stalled — likely rate-limited or out of usage.");
         let t = "", r = "";
@@ -1377,7 +1484,7 @@
         const rec = recoverAnswer(t, r);
         return { model, text: rec.text, reasoning: rec.reasoning };
       }
-      if (autoPick && autoPick.ensemble && autoPick.ensemble.length >= 2) {
+      if (autoPick && autoPick.ensemble && autoPick.ensemble.length >= 2 && !attachment) {
         const pair = await Promise.all(autoPick.ensemble.map(async (id) => {
           try { return await collectOnce(id); }
           catch (e) { return { model: id, text: "", reasoning: "" }; }
@@ -1423,10 +1530,10 @@
         }
         const sys = systemFor(model) + "\n\n" + prefsBlock() + (s.thinking && model === plan.model ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + (lastUser && lastUser.school ? "\n\n" + SCHOOL : "");
         const payload = [{ role: "system", content: sys }, ...history];
-        const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking && model === plan.model, model));
+        const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking && model === plan.model && !attachment, model));
         try {
           const call = attachment
-            ? puter.ai.chat(payload, [attachment.dataUrl], false, opts)
+            ? puter.ai.chat(visionPrompt(sys, history, lastUser ? lastUser.content : ""), attachment.dataUrl, opts)
             : puter.ai.chat(payload, false, opts);
           const raw = await withTimeout(call, s.thinking ? 35000 : 18000, "The model stalled — likely rate-limited or out of usage.");
           if (raw && typeof raw[Symbol.asyncIterator] === "function") {
@@ -1479,6 +1586,11 @@
         }
         saveUsageLocal();
         loadUsage();
+        const facts = harvestFacts(prompt);
+        if (facts.length) {
+          prefs.learnedMemory = mergeLearned(prefs.learnedMemory, facts);
+          savePrefs();
+        }
       }
     } catch (err) {
       const m = (err && (err.msg || err.message)) || "The model request failed.";
@@ -1676,10 +1788,10 @@
       const live = FEATURED.map(m => Object.assign({ verified: true }, m));
       list.forEach(item => {
         const id = typeof item === "string" ? item : (item && (item.id || item.name));
-        if (!id || seen.has(id) || isNoise(id) || isBurner(id)) return;
+        if (!id || seen.has(id) || isNoise(id)) return;
         seen.add(id);
         const label = (item && item.name && item.name !== id) ? item.name : pretty(id);
-        live.push({ id, label, vendor: guessVendor(id), verified: true });
+        live.push({ id, label, vendor: guessVendor(id), verified: true, vault: isBurner(id) });
       });
       MODELS = live;
       $("model-count").textContent = live.length + " verified IDs from Puter’s live catalog.";
@@ -1705,6 +1817,9 @@
     $("set-name").value = prefs.botName || "Omni";
     $("set-persona").value = prefs.personality || "";
     $("set-memory").value = prefs.memory || "";
+    $("learned-mem").textContent = prefs.learnedMemory
+      ? ("Learned from chats:\n" + prefs.learnedMemory)
+      : "Omni slowly writes notes from what you say. Every model sees them, even ones you have not used yet.";
     $("set-accent").value = prefs.accent || (THEMES[prefs.theme] || THEMES.gemini).accent;
     $("import-status").textContent = prefs.importedMemory ? ("Loaded from " + (prefs.importedFrom || "import")) : "";
     const box = $("theme-opts");
