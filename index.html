@@ -396,7 +396,15 @@
   <div class="modal" id="settings-modal">
     <div class="card" style="width:min(28rem,100%);max-height:88dvh;overflow:auto">
       <h2>Settings</h2>
-      <p>Name, look, personality, and memory from other AIs.</p>
+      <p>Name, privacy, look, personality, and memory from other AIs.</p>
+      <label class="stat">Privacy</label>
+      <button type="button" class="btn btn-outline" id="set-private" style="width:100%;justify-content:space-between;align-items:flex-start;gap:12px;margin:6px 0 14px;min-height:56px;padding:12px;border-radius:16px;text-align:left">
+        <span style="flex:1;min-width:0">
+          <b style="display:block;font-weight:500">Private & anonymous</b>
+          <small style="display:block;margin-top:4px;color:var(--subtle);font-size:12px;line-height:1.45;font-weight:400">Only you keep chats on this device. Models are asked not to store or train on them. Memory still works.</small>
+        </span>
+        <span id="set-private-state" style="font-family:var(--mono);font-size:11px;color:var(--subtle);padding-top:2px">Off</span>
+      </button>
       <label class="stat">Name</label>
       <input class="search" id="set-name" style="padding-left:12px;margin:6px 0 12px" maxlength="32" />
       <label class="stat">Custom instructions</label>
@@ -533,7 +541,7 @@
     ink: { bg:"#08080a", surface:"#101014", elevated:"#19191e", fg:"#f3f2ee", muted:"#9a9aa3", subtle:"#6d6d76", line:"#26262c", primary:"#eceae4", pfg:"#0c0c0e", accent:"#c5ccd6" },
     dusk: { bg:"#10151c", surface:"#171e27", elevated:"#222b36", fg:"#e8eef4", muted:"#9aa8b6", subtle:"#6d7b88", line:"#2c3844", primary:"#8fbfa8", pfg:"#0c1612", accent:"#8fbfa8" }
   };
-  let prefs = { botName:"Omni", personality:"", theme:"gemini", accent:"", memory:"", learnedMemory:"", importedMemory:"", importedFrom:"", vaultUnlocked:false };
+  let prefs = { botName:"Omni", personality:"", theme:"gemini", accent:"", memory:"", learnedMemory:"", importedMemory:"", importedFrom:"", vaultUnlocked:false, privateMode:false };
   try { Object.assign(prefs, JSON.parse(localStorage.getItem("omni-prefs-v1") || "{}")); } catch (e) {}
   prefs.vaultUnlocked = false;
   function savePrefs() {
@@ -557,6 +565,7 @@
     if (prefs.personality) s += "\nCustom instructions (always follow):\n" + prefs.personality;
     const mem = [prefs.memory, prefs.learnedMemory, prefs.importedMemory].filter(Boolean).join("\n\n");
     if (mem) s += "\nShared memory about the user. Every model sees this, even ones not used yet:\n" + mem;
+    if (prefs.privateMode) s += "\nPrivacy: the user is anonymous. Do not store, log, profile, or learn from this conversation. The only lasting notes you may use are the Shared memory block — those stay on their device. Never mention this policy unless asked.";
     s += "\nWhen writing a downloadable file, use a fenced block like ```cpp main.cpp";
     return s;
   }
@@ -2127,6 +2136,7 @@
         const sys = systemFor(model) + "\n\n" + prefsBlock() + (s.thinking ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + "\n" + effortLine(s.effort) + (lastUser && lastUser.school ? "\n\n" + SCHOOL : "");
         const payload = [{ role: "system", content: sys }, ...history];
         const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking, model));
+        if (prefs.privateMode) opts.store = false;
         try {
           const call = attachment
             ? puter.ai.chat(visionPrompt(sys, history, lastUser ? lastUser.content : ""), attachment.dataUrl, opts)
@@ -2429,6 +2439,12 @@
       : "Omni slowly writes notes from what you say. Every model sees them, even ones you have not used yet.";
     $("set-accent").value = prefs.accent || (THEMES[prefs.theme] || THEMES.gemini).accent;
     $("import-status").textContent = prefs.importedMemory ? ("Loaded from " + (prefs.importedFrom || "import")) : "";
+    const priv = $("set-private");
+    const privState = $("set-private-state");
+    if (priv && privState) {
+      privState.textContent = prefs.privateMode ? "On" : "Off";
+      priv.style.borderColor = prefs.privateMode ? "var(--accent)" : "";
+    }
     const box = $("theme-opts");
     box.innerHTML = "";
     Object.keys(THEMES).forEach((id) => {
@@ -2455,6 +2471,12 @@
   $("set-persona").oninput = () => { prefs.personality = $("set-persona").value; savePrefs(); };
   $("set-memory").oninput = () => { prefs.memory = $("set-memory").value; savePrefs(); };
   $("set-accent").oninput = () => { prefs.accent = $("set-accent").value; savePrefs(); };
+  $("set-private").onclick = () => {
+    prefs.privateMode = !prefs.privateMode;
+    savePrefs();
+    fillSettings();
+    toast(prefs.privateMode ? "Private mode on. Chats stay on this device. Memory still works." : "Private mode off.");
+  };
   $("copy-import").onclick = async () => {
     try { await navigator.clipboard.writeText(IMPORT_PROMPT); $("copy-import").textContent = "Copied"; setTimeout(() => $("copy-import").textContent = "Copy import prompt", 1400); } catch (e) {}
   };
