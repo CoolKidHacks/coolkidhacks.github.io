@@ -440,15 +440,12 @@
     { id: "auto", label: "Auto", vendor: "Other" },
     { id: "claude-haiku-4-5", label: "Claude Haiku 4.5", vendor: "Anthropic" },
     { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6", vendor: "Anthropic" },
-    { id: "claude-sonnet-5", label: "Claude Sonnet 5", vendor: "Anthropic" },
     { id: "gpt-5.6-luna", label: "GPT-5.6 Luna", vendor: "OpenAI", reasoning: true },
-    { id: "gpt-5.6-sol", label: "GPT-5.6 Sol", vendor: "OpenAI", reasoning: true },
     { id: "gpt-5-nano", label: "GPT-5 Nano", vendor: "OpenAI" },
     { id: "gpt-4o", label: "GPT-4o", vendor: "OpenAI" },
     { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash", vendor: "Google" },
     { id: "gemini-3.7-flash", label: "Gemini 3.7 Flash", vendor: "Google" },
     { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", vendor: "Google" },
-    { id: "grok-4.5", label: "Grok 4.5", vendor: "xAI", reasoning: true },
     { id: "grok-4.3", label: "Grok 4.3", vendor: "xAI", reasoning: true },
     { id: "deepseek-v4-flash-0731", label: "DeepSeek V4 Flash", vendor: "DeepSeek" },
     { id: "deepseek-v3.2", label: "DeepSeek V3.2", vendor: "DeepSeek" },
@@ -507,7 +504,7 @@
     if (id.includes("glm") || id.includes("zhipu") || id.includes("zai")) return named("GLM 5.3", "Zhipu (Z.ai)", "Strong in Chinese and English, solid at code. Clear and practical.");
     return `You are a capable assistant provided through Omni via Puter. Be clear, useful, and direct. Prefer working code and concrete answers. Match the user's language.\n\n${CHANNEL}`;
   }
-  const SCHOOL = "The person is doing school work — homework, essays, study guides, math, science, language, or exam prep. Help them learn. Show steps, not just the answer. Use short headings and numbered steps. For essays: outline first, then draft if they asked. Do not write a full assignment as if it were theirs unless they explicitly asked you to draft it.";
+  const SCHOOL = "The person is doing school work: homework, essays, study guides, math, science, language, or exam prep. Help them learn. Show steps, not just the answer. Use short headings and numbered steps. For essays: outline first, then draft if they asked. Do not write a full assignment as if it were theirs unless they explicitly asked you to draft it.\n\nSchool writing rules override everything else in this reply, including default voice.\n\nWrite like a human who thinks clearly and edits ruthlessly.\n\nBanned words, never use: crucial, delve, enhance, foster, garner, highlight (as a verb), interplay, intricate, key (as filler), landscape (metaphor), meticulous, pivotal, showcase, tapestry, testament, underscore (as a verb), valuable, vibrant, groundbreaking, renowned, diverse array, rich heritage, commitment to.\n\nStructural rules: default to \"is\" instead of \"serves as / stands as / marks a / represents a.\" Never end a sentence with a dangling \"-ing\" phrase that editorializes. Don't use the rule of three just to sound thorough. Don't use \"not just X but Y\" unless the contrast is the point. No \"In summary / In conclusion / Overall.\" No \"I hope this helps / Let me know if.\" Don't attribute claims to vague \"experts\" without naming them. Don't inflate significance. Don't swap the word for a thing just for variety. No promotional tone. Headings in sentence case. Bold only for labels, not decoration.\n\nVoice: direct, specific, short declarative sentences. State things without editorializing their importance. No em dashes.";
   const IMPORT_PROMPT = "You are helping me import context from one AI assistant to another. Your job is to go through our past conversations and sum up what you know about me.\n\nIn the output, please avoid using any first-person pronouns (I, my, me, mine) and any second-person pronouns (you, your, yours). Instead, refer to the individual you have learned about as \"the user\" or use neutral phrasing.\n\nPreserve the user's words verbatim where possible, especially for instructions and preferences.\n\nCategories (output in this order):\n1. Demographics Information\n2. Interests & Preferences\n3. Relationships\n4. Dated Events, Projects & Plans\n5. Instructions\n\nOutput ONLY the requested information.\n\nFinally, complete the sentence \"Imported from: <name>\".";
   const THEMES = {
     gemini: { bg:"#131314", surface:"#1e1f20", elevated:"#2b2c2d", fg:"#e3e3e3", muted:"#c4c7c5", subtle:"#8e918f", line:"#3c4043", primary:"#a8c7fa", pfg:"#062e6f", accent:"#a8c7fa" },
@@ -605,11 +602,11 @@
       return { model: "kimi-k2.7-code", reason: "code" };
     }
     if (total > 14000 || text.length > 4500) return { model: tight ? "glm-5.3" : "kimi-k2.6", reason: "long prompt" };
-    if (/\b(prove|reason|why does|math|puzzle|logic|algorithm)\b/i.test(text)) return { model: tight ? "gpt-5.6-luna" : "grok-4.5", reason: "needs a stronger model" };
-    if (/\b(homework|essay|study|exam|algebra)\b/i.test(text) || text.length > 700) return { model: tight ? "gpt-5.6-luna" : "claude-sonnet-5", reason: "longer, careful answer" };
+    if (/\b(prove|reason|why does|math|puzzle|logic|algorithm)\b/i.test(text)) return { model: tight ? "gpt-5.6-luna" : "grok-4.3", reason: "needs a stronger model" };
+    if (/\b(homework|essay|study|exam|algebra)\b/i.test(text) || text.length > 700) return { model: tight ? "gpt-5.6-luna" : "claude-sonnet-4-6", reason: "longer, careful answer" };
     if (looksSoft(text)) return { model: tight ? "glm-5.3" : "gpt-5.6-luna", reason: "project work" };
     if (text.length < 160 && messages.length < 8) return { model: "claude-haiku-4-5", reason: "quick question" };
-    return { model: tight ? "claude-haiku-4-5" : "claude-sonnet-5", reason: "everyday" };
+    return { model: tight ? "claude-haiku-4-5" : "claude-sonnet-4-6", reason: "everyday" };
   }
   function preferredCheap(prompt) {
     if (looksCode(prompt)) return FALLBACKS.luna;
@@ -1359,7 +1356,7 @@
           renderThread();
           if (isRate(lastErr)) await sleep(900);
         }
-        const sys = systemFor(model) + "\n\n" + prefsBlock() + (s.thinking && model === plan.model ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + (s.messages.some(m => m.school) ? "\n\n" + SCHOOL : "");
+        const sys = systemFor(model) + "\n\n" + prefsBlock() + (s.thinking && model === plan.model ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + (lastUser && lastUser.school ? "\n\n" + SCHOOL : "");
         const payload = [{ role: "system", content: sys }, ...history];
         const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking && model === plan.model, model));
         try {
