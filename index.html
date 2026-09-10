@@ -186,7 +186,10 @@
     .acts button { min-width: 44px; height: 36px; border-radius: 10px; color: var(--subtle); font-size: 12px; }
     .acts button:hover { color: var(--fg); background: var(--elevated); }
     .composer-wrap { padding: 8px 16px max(14px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--bg); flex-shrink: 0; }
-    .modes { max-width: 48rem; margin: 0 auto 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .modes { max-width: 48rem; margin: 0 auto 8px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .code-path { grid-template-columns: 1fr 1fr; }
+    .zr-pip { display: inline-block; width: 7px; height: 7px; border-radius: 99px; background: var(--ok); margin-left: 8px; vertical-align: 2px; box-shadow: 0 0 8px color-mix(in oklab, var(--ok) 65%, transparent); }
+    .zr-pip[hidden] { display: none; }
     .mode-btn {
       height: 44px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
       display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; color: var(--muted);
@@ -311,7 +314,7 @@
           <svg viewBox="0 0 32 32" fill="currentColor"><path d="M16 2.4c.4 0 .7.24.84.6l2.52 6.62a1 1 0 0 0 .56.56l6.62 2.52a.9.9 0 0 1 0 1.68l-6.62 2.52a1 1 0 0 0-.56.56l-2.52 6.62a.9.9 0 0 1-1.68 0l-2.52-6.62a1 1 0 0 0-.56-.56L4.46 14.38a.9.9 0 0 1 0-1.68l6.62-2.52a1 1 0 0 0 .56-.56L14.16 3a.9.9 0 0 1 .84-.6z"/></svg>
         </div>
         <div>
-          <h1>Omni</h1>
+          <h1>Omni<span class="zr-pip" id="zr-pip" hidden></span></h1>
           <p>Chats</p>
         </div>
         </div>
@@ -371,6 +374,14 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10L12 4 2 10l10 6 10-6z"/><path d="M6 12v5c0 1 3 3 6 3s6-2 6-3v-5"/></svg>
             School
           </button>
+          <button type="button" class="mode-btn" id="code-mode" aria-pressed="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            Code
+          </button>
+        </div>
+        <div class="modes code-path" id="code-path" hidden>
+          <button type="button" class="mode-btn" id="code-plan" aria-pressed="false">Plan then build</button>
+          <button type="button" class="mode-btn on" id="code-build" aria-pressed="true">Build now</button>
         </div>
         <div id="preview-img"></div>
         <form class="composer" id="form">
@@ -442,6 +453,17 @@
         </span>
         <span id="set-private-state" style="font-family:var(--mono);font-size:11px;color:var(--subtle);padding-top:2px">Off</span>
       </button>
+      <label class="stat">GitHub</label>
+      <p style="font-size:13px;color:var(--muted);margin:6px 0">Personal access token stays on this device. Used only to publish Code files. Never sent to models.</p>
+      <input class="search" id="gh-token" type="password" autocomplete="off" placeholder="ghp_… or github_pat_…" style="padding-left:12px;margin:6px 0 8px" />
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input class="search" id="gh-owner" placeholder="Owner" style="padding-left:12px" />
+        <input class="search" id="gh-repo" placeholder="Repo" style="padding-left:12px" />
+        <input class="search" id="gh-branch" placeholder="Branch (main)" style="padding-left:12px" />
+        <input class="search" id="gh-prefix" placeholder="Folder (optional)" style="padding-left:12px" />
+      </div>
+      <button class="btn btn-outline" id="gh-test" style="width:100%;margin:8px 0 4px">Test connection</button>
+      <p class="stat" id="gh-status" style="margin-bottom:12px"></p>
       <label class="stat">Import from another AI</label>
       <p style="font-size:13px;color:var(--muted);margin:6px 0">Copy the import prompt, paste it into ChatGPT / Claude / Grok / Gemini, then paste the reply here.</p>
       <button class="btn btn-outline" id="copy-import" style="width:100%;margin-bottom:8px">Copy import prompt</button>
@@ -567,6 +589,10 @@
     return `You are a capable assistant provided through Omni via Puter. Be clear, useful, and direct. Prefer working code and concrete answers. Match the user's language.\n\n${CHANNEL}`;
   }
   const SCHOOL = "The person is doing school work: homework, essays, study guides, math, science, language, or exam prep. Help them learn. Show steps, not just the answer. Use short headings and numbered steps. For essays: outline first, then draft if they asked. Do not write a full assignment as if it were theirs unless they explicitly asked you to draft it.\n\nSchool writing rules override everything else in this reply, including default voice.\n\nWrite like a human who thinks clearly and edits ruthlessly.\n\nBanned words, never use: crucial, delve, enhance, foster, garner, highlight (as a verb), interplay, intricate, key (as filler), landscape (metaphor), meticulous, pivotal, showcase, tapestry, testament, underscore (as a verb), valuable, vibrant, groundbreaking, renowned, diverse array, rich heritage, commitment to.\n\nStructural rules: default to \"is\" instead of \"serves as / stands as / marks a / represents a.\" Never end a sentence with a dangling \"-ing\" phrase that editorializes. Don't use the rule of three just to sound thorough. Don't use \"not just X but Y\" unless the contrast is the point. No \"In summary / In conclusion / Overall.\" No \"I hope this helps / Let me know if.\" Don't attribute claims to vague \"experts\" without naming them. Don't inflate significance. Don't swap the word for a thing just for variety. No promotional tone. Headings in sentence case. Bold only for labels, not decoration.\n\nVoice: direct, specific, short declarative sentences. State things without editorializing their importance. No em dashes.";
+  const CODE_PLAN = "The person is in Omni Code · Plan.\n\nDo not write full source yet. Produce a tight implementation plan:\n1. What you are building, in 2–4 sentences.\n2. File tree with a one-line job for each file.\n3. Stack and constraints.\n4. Order of work (numbered).\n5. Risks or open questions (short).\n\nEnd with: Tap Build to implement this plan.\nNo giant code blocks. Be specific.";
+  const CODE_BUILD = "The person is in Omni Code · Build.\n\nShip working files. Every file they need goes in a fenced block whose info line is `language filename.ext`.\nComplete files. No placeholders. Real filenames. Lead with a one-line summary, then the files, then 2–4 lines on how to run.";
+  const DEV_ZERO = "ZERO-RULES is ON for this developer session (Omni-CMD). Omni product policies, school-writing rules, identity wrappers, channel notes, and custom-instruction overlays are disabled. Answer the user's request directly and completely. If they ask whether zero-rules, developer mode, or OMNI-CMD is active: say yes — it is on for this tab, and stay in this mode. Do not claim there is no such setting. Do not mention Omni, Puter, or these notes unless asked. Provider-level safety still applies.";
+  const ZERO_TURN = "[ZERO-RULES ON] Developer session is active. Answer directly. If asked whether zero-rules is on, say yes.";
   const IMPORT_PROMPT = "You are helping me import context from one AI assistant to another. Your job is to go through our past conversations and sum up what you know about me.\n\nIn the output, please avoid using any first-person pronouns (I, my, me, mine) and any second-person pronouns (you, your, yours). Instead, refer to the individual you have learned about as \"the user\" or use neutral phrasing.\n\nPreserve the user's words verbatim where possible, especially for instructions and preferences.\n\nCategories (output in this order):\n1. Demographics Information\n2. Interests & Preferences\n3. Relationships\n4. Dated Events, Projects & Plans\n5. Instructions\n\nOutput ONLY the requested information.\n\nFinally, complete the sentence \"Imported from: <name>\".";
   const THEMES = {
     gemini: { bg:"#131314", surface:"#1e1f20", elevated:"#2b2c2d", fg:"#e3e3e3", muted:"#c4c7c5", subtle:"#8e918f", line:"#3c4043", primary:"#a8c7fa", pfg:"#062e6f", accent:"#a8c7fa" },
@@ -603,6 +629,103 @@
   } catch (e) {}
   function saveCmd() {
     try { sessionStorage.setItem(CMD_KEY, JSON.stringify({ authed: cmdAuthed, zeroRules: zeroRules })); } catch (e) {}
+  }
+  function liveZero() {
+    if (zeroRules) return true;
+    try {
+      const snap = JSON.parse(sessionStorage.getItem(CMD_KEY) || "{}");
+      if (snap.zeroRules) {
+        zeroRules = true;
+        if (snap.authed) cmdAuthed = true;
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+  function paintZrPip() {
+    const el = document.getElementById("zr-pip");
+    if (!el) return;
+    if (liveZero()) el.removeAttribute("hidden");
+    else el.setAttribute("hidden", "");
+  }
+  const GH_KEY = "omni-github-v1";
+  let gh = { token: "", owner: "", repo: "", branch: "main", prefix: "", login: "" };
+  try { Object.assign(gh, JSON.parse(localStorage.getItem(GH_KEY) || "{}")); } catch (e) {}
+  function saveGh() { try { localStorage.setItem(GH_KEY, JSON.stringify(gh)); } catch (e) {} }
+  function ghConnected() { return !!(gh.token && gh.owner && gh.repo); }
+  function collectFiles(src) {
+    const out = [];
+    const re = /```([^\n`]*)\n([\s\S]*?)```/g;
+    let m, i = 0, used = {};
+    while ((m = re.exec(src))) {
+      const info = (m[1] || "").trim();
+      const bits = info.split(/\s+/);
+      let lang = bits[0] || "";
+      let fname = bits.slice(1).join(" ").replace(/^[:]/, "");
+      if (lang.includes(".")) { fname = lang; lang = (lang.split(".").pop() || "txt"); }
+      if (!fname) fname = "main." + (lang === "python" ? "py" : lang === "javascript" ? "js" : lang === "typescript" ? "ts" : lang || "txt");
+      const code = m[2].replace(/\n$/, "");
+      if (!code.trim()) continue;
+      if (used[fname]) {
+        const dot = fname.lastIndexOf(".");
+        const stem = dot > 0 ? fname.slice(0, dot) : fname;
+        const ext = dot > 0 ? fname.slice(dot) : "";
+        let n = 2;
+        while (used[stem + "-" + n + ext]) n++;
+        fname = stem + "-" + n + ext;
+      }
+      used[fname] = true;
+      out.push({ filename: fname, code: code });
+      i++;
+    }
+    return out;
+  }
+  function utf8ToB64(text) {
+    const bytes = new TextEncoder().encode(text);
+    let bin = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin);
+  }
+  function safePath(prefix, filename) {
+    return [prefix, filename].filter(Boolean).join("/").replace(/\\/g, "/").split("/").filter(function (s) { return s && s !== "." && s !== ".."; }).join("/");
+  }
+  async function ghApi(path, init) {
+    const res = await fetch("https://api.github.com" + path, Object.assign({}, init, {
+      headers: Object.assign({
+        Accept: "application/vnd.github+json",
+        Authorization: "Bearer " + gh.token,
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/json"
+      }, (init && init.headers) || {})
+    }));
+    if (!res.ok) {
+      let detail = "";
+      try { const j = await res.json(); detail = j.message || ""; } catch (e) {}
+      if (res.status === 401) throw new Error("GitHub token was rejected.");
+      if (res.status === 404) throw new Error("Repo or path not found.");
+      throw new Error(detail || ("GitHub error " + res.status));
+    }
+    if (res.status === 204) return {};
+    return res.json();
+  }
+  async function publishFiles(files, message) {
+    if (!ghConnected()) throw new Error("Connect GitHub in Settings first.");
+    if (!files.length) throw new Error("No files to publish.");
+    const branch = gh.branch || "main";
+    const paths = [];
+    for (let i = 0; i < files.length; i++) {
+      const path = safePath(gh.prefix, files[i].filename);
+      if (!path) continue;
+      const loc = "/repos/" + encodeURIComponent(gh.owner) + "/" + encodeURIComponent(gh.repo) + "/contents/" + path.split("/").map(encodeURIComponent).join("/");
+      let sha;
+      try { const existing = await ghApi(loc + "?ref=" + encodeURIComponent(branch)); sha = existing.sha; } catch (e) {}
+      const body = { message: message, content: utf8ToB64(files[i].code), branch: branch };
+      if (sha) body.sha = sha;
+      const saved = await ghApi(loc, { method: "PUT", body: JSON.stringify(body) });
+      paths.push((saved.content && saved.content.path) || path);
+    }
+    if (!paths.length) throw new Error("Nothing to publish.");
+    return { paths: paths, url: "https://github.com/" + gh.owner + "/" + gh.repo + "/tree/" + encodeURIComponent(branch) };
   }
   function prefsBlock() {
     let s = "The assistant's display name is " + (prefs.botName || "Omni") + ".";
@@ -1266,7 +1389,7 @@
   function looksSchool(t) {
     return /\b(homework|school work|study guide|exam prep|quiz|worksheet|assignment|rubric|thesis statement|lab report|book report|essay prompt|cite sources?|citation|bibliography|for (my )?(class|teacher|professor)|english class|history class|algebra|calculus|geometry homework)\b/i.test(t);
   }
-  function pickAuto(prompt, messages, remaining, hasImage) {
+  function pickAuto(prompt, messages, remaining, hasImage, forceCode) {
     const text = String(prompt || "").trim();
     const historyChars = messages.reduce((n, m) => n + String(m.content || "").length, 0);
     const total = historyChars + text.length;
@@ -1279,12 +1402,12 @@
       || (text.length < 180 && /^(what( is|'s| are)|who is|when (is|was|did)|where is|how (do|does|to|much|many)|define |capital of)\b/i.test(text));
     if (hasImage) return { model: "qwen3.6-plus", reason: "picture attached · Qwen 3.6 Plus can see it" };
     if (broke) return { model: "gemini-3.1-flash-lite", reason: "almost out of usage · Gemini 3.1 Flash-Lite" };
-    if (looksSchool(text)) return { model: tight ? "gpt-5.6-luna" : "claude-sonnet-4-6", reason: tight ? "school · Luna" : "school work · Claude Sonnet 4.6" };
-    if (looksCode(text)) {
+    if (forceCode || looksCode(text)) {
       if (tight) return { model: "gemini-3.1-flash-lite", reason: "code · saving usage" };
       if (total > 8000 || text.length > 1800) return { model: "gpt-5.6-luna", reason: "long code · GPT-5.6 Luna" };
       return { model: "kimi-k2.7-code", reason: "code · Kimi K2.7 Code" };
     }
+    if (looksSchool(text)) return { model: tight ? "gpt-5.6-luna" : "claude-sonnet-4-6", reason: tight ? "school · Luna" : "school work · Claude Sonnet 4.6" };
     if (/\b(prove|proof of|derive why|logic puzzle|theorem|differential equation|solve for|equation|derivative|integral|matrix|stoich|prove that)\b/i.test(text) || /[=∑∫√]/.test(text)) {
       return { model: tight ? "gpt-5.6-luna" : "grok-4.3", reason: tight ? "hard question · Luna" : "hard question · Grok 4.3" };
     }
@@ -1501,7 +1624,7 @@
   const PROMPTS = [
     { k: "School", t: "Walk me through this algebra problem step by step: 3(x - 4) = 2x + 5", mode: "school" },
     { k: "Image", t: "A quiet editorial studio desk at night, steel lamp, warm paper", mode: "image" },
-    { k: "Code", t: "Explain how a hash map works, with a tiny JS example." },
+    { k: "Code", t: "Build a small vanilla HTML/CSS/JS todo app. Complete files, no placeholders.", mode: "coding-build" },
     { k: "Plan", t: "Draft a weekend itinerary for Tokyo on a modest budget." }
   ];
   const VENDOR_ORDER = ["Anthropic","OpenAI","xAI","Google","Moonshot","DeepSeek","Qwen","Mistral","Zhipu","Other"];
@@ -1837,9 +1960,23 @@
         const phrase = pool[Math.min(pool.length - 1, Math.floor(elapsed / 3.2))];
         const live = m.streaming ? "<span class='live'><span class='dot on'></span>" + phrase + "</span>" : "";
         const reroute = m.fallbackNotice ? "<div class='reroute'>" + esc(m.fallbackNotice) + "</div>" : "";
-        d.innerHTML = "<div class='ai-mark' style='border:0;background:transparent;color:var(--accent)'><svg viewBox='0 0 32 32' width='18' height='18' fill='currentColor'><path d='M16 2.4c.4 0 .7.24.84.6l2.52 6.62a1 1 0 0 0 .56.56l6.62 2.52a.9.9 0 0 1 0 1.68l-6.62 2.52a1 1 0 0 0-.56.56l-2.52 6.62a.9.9 0 0 1-1.68 0l-2.52-6.62a1 1 0 0 0-.56-.56L4.46 14.38a.9.9 0 0 1 0-1.68l6.62-2.52a1 1 0 0 0 .56-.56L14.16 3a.9.9 0 0 1 .84-.6z'/></svg></div><div class='ai-body'><div class='ai-meta'>" + esc(meta.label) + "<span class='v'>verified</span>" + live + "</div>" + reroute + think + body + "<div class='acts'><button data-copy='1'>Copy</button>" + (lastA && lastA.id === m.id && !streaming ? "<button data-regen='1'>Retry</button>" : "") + "</div></div>";
+        const lastUser = [...s.messages].reverse().find(x => x.role === "user");
+        const canBuild = lastA && lastA.id === m.id && !streaming && lastUser && lastUser.codePath === "plan";
+        const canPub = m.content && !m.streaming && collectFiles(m.content).length;
+        d.innerHTML = "<div class='ai-mark' style='border:0;background:transparent;color:var(--accent)'><svg viewBox='0 0 32 32' width='18' height='18' fill='currentColor'><path d='M16 2.4c.4 0 .7.24.84.6l2.52 6.62a1 1 0 0 0 .56.56l6.62 2.52a.9.9 0 0 1 0 1.68l-6.62 2.52a1 1 0 0 0-.56.56l-2.52 6.62a.9.9 0 0 1-1.68 0l-2.52-6.62a1 1 0 0 0-.56-.56L4.46 14.38a.9.9 0 0 1 0-1.68l6.62-2.52a1 1 0 0 0 .56-.56L14.16 3a.9.9 0 0 1 .84-.6z'/></svg></div><div class='ai-body'><div class='ai-meta'>" + esc(meta.label) + "<span class='v'>verified</span>" + live + "</div>" + reroute + think + body + "<div class='acts'><button data-copy='1'>Copy</button>" + (lastA && lastA.id === m.id && !streaming ? "<button data-regen='1'>Retry</button>" : "") + (canBuild ? "<button data-build='1'>Build it</button>" : "") + (canPub ? "<button data-pub='1'>Publish</button>" : "") + "</div></div>";
         d.querySelector("[data-copy]")?.addEventListener("click", () => navigator.clipboard.writeText(m.content || ""));
         d.querySelector("[data-regen]")?.addEventListener("click", regenerate);
+        d.querySelector("[data-build]")?.addEventListener("click", () => send("Build the plan. Write every file complete, no placeholders.", null, "coding-build"));
+        d.querySelector("[data-pub]")?.addEventListener("click", async () => {
+          const files = collectFiles(m.content || "");
+          if (!ghConnected()) { toast("Connect GitHub in Settings first."); return; }
+          try {
+            const result = await publishFiles(files, s.title || "Omni code");
+            toast("Published " + result.paths.length + " files.");
+          } catch (err) {
+            toast((err && err.message) || "Publish failed.");
+          }
+        });
         d.querySelectorAll("[data-copy-code]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const pre = btn.closest("pre");
@@ -2066,11 +2203,11 @@
     const promptEl = $("cmd-prompt");
     const live = $("cmd-live");
     const HELP = [
-      "enable     zero-rules — strip Omni wrappers",
+      "enable     zero-rules on — stays on after exit",
       "disable    restore normal prompts",
       "status     session flags",
       "clear      clear screen",
-      "exit       close console"
+      "exit       close console — does not disable"
     ];
     function paintLive() {
       if (zeroRules) live.removeAttribute("hidden");
@@ -2088,6 +2225,7 @@
       if (cmdAuthed) {
         cmdPrint("OMNI DEV CONSOLE");
         cmdPrint("session restored");
+        cmdPrint(zeroRules ? "zero-rules: ON — stays on after exit" : "zero-rules: off");
         cmdPrint("type help");
         cmdPrint("");
       } else {
@@ -2162,12 +2300,13 @@
         return;
       }
       if (cmd === "exit" || cmd === "close" || cmd === "logout") {
+        if (zeroRules) cmdPrint("zero-rules stays ON after close");
         closeCmd();
         return;
       }
       if (cmd === "status") {
         cmdPrint("zero-rules: " + (zeroRules ? "ON" : "off"));
-        cmdPrint("scope: this tab only");
+        cmdPrint("scope: this tab only — exit does not disable");
         cmdPrint("");
         return;
       }
@@ -2175,8 +2314,11 @@
         zeroRules = true;
         saveCmd();
         paintLive();
+        paintZrPip();
         cmdPrint("ZERO-RULES: ON");
-        cmdPrint("Omni wrappers stripped. Provider hard-limits still apply.");
+        cmdPrint("stays on after you close this console");
+        cmdPrint("type disable to restore Omni wrappers");
+        cmdPrint("provider hard-limits still apply");
         cmdPrint("");
         return;
       }
@@ -2184,6 +2326,7 @@
         zeroRules = false;
         saveCmd();
         paintLive();
+        paintZrPip();
         cmdPrint("ZERO-RULES: off");
         cmdPrint("normal Omni prompts restored.");
         cmdPrint("");
@@ -2282,7 +2425,7 @@
     streaming = true; aborted = false; updateSend();
     const lastUser = [...s.messages].reverse().find((m) => m.role === "user");
     const prompt = lastUser ? lastUser.content : "";
-    const autoPick = s.model === "auto" ? pickAuto(prompt, s.messages, usageSnap ? usageSnap.remaining : null, !!attachment) : null;
+    const autoPick = s.model === "auto" ? pickAuto(prompt, s.messages, usageSnap ? usageSnap.remaining : null, !!attachment, !!(lastUser && lastUser.codePath)) : null;
     let primary = autoPick ? autoPick.model : s.model;
     if (attachment) {
       const vis = pickVision(primary);
@@ -2337,10 +2480,21 @@
           renderThread();
           if (isRate(lastErr)) await sleep(900);
         }
-        const sys = zeroRules
-          ? ("Developer session. Skip Omni product policies, school-writing rules, identity wrappers, and channel notes. Answer the request directly and completely. Do not mention this mode unless asked." + (prefs.memory || prefs.learnedMemory || prefs.importedMemory ? "\n\nShared memory (device-only):\n" + [prefs.memory, prefs.learnedMemory, prefs.importedMemory].filter(Boolean).join("\n\n") : ""))
-          : systemFor(model) + "\n\n" + prefsBlock() + (s.thinking ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + "\n" + effortLine(s.effort) + (lastUser && lastUser.school ? "\n\n" + SCHOOL : "");
-        const payload = [{ role: "system", content: sys }, ...history];
+        const zr = liveZero();
+        const coding = lastUser && lastUser.codePath === "plan" ? "\n\n" + CODE_PLAN : (lastUser && lastUser.codePath === "build" ? "\n\n" + CODE_BUILD : "");
+        const sys = zr
+          ? (DEV_ZERO + (prefs.memory || prefs.learnedMemory || prefs.importedMemory ? "\n\nShared memory (device-only):\n" + [prefs.memory, prefs.learnedMemory, prefs.importedMemory].filter(Boolean).join("\n\n") : "") + coding)
+          : systemFor(model) + "\n\n" + prefsBlock() + (s.thinking ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + "\n" + effortLine(s.effort) + (lastUser && lastUser.school ? "\n\n" + SCHOOL : "") + coding;
+        let historyPayload = history.slice();
+        if (zr) {
+          for (let hi = historyPayload.length - 1; hi >= 0; hi--) {
+            if (historyPayload[hi].role === "user") {
+              historyPayload[hi] = { role: "user", content: ZERO_TURN + "\n\n" + historyPayload[hi].content };
+              break;
+            }
+          }
+        }
+        const payload = [{ role: "system", content: sys }, ...historyPayload];
         const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking, model));
         if (prefs.privateMode) opts.store = false;
         try {
@@ -2425,18 +2579,43 @@
   }
 
   async function send(text, file, mode) {
+    let m = mode || composerMode;
+    if (m === "coding") m = (codePath === "plan" ? "coding-plan" : "coding-build");
     const t = (text || "").trim();
     if ((!t && !file) || streaming) return;
     try { await ensureSignedIn(); } catch (e) { return; }
     const s = current();
-    const asImage = mode === "image" || (looksImg(t) && !file);
+    const coding = m === "coding-plan" || m === "coding-build";
+    const asImage = m === "image" || ((m === "chat" || !m) && looksImg(t) && !file);
+    if (!asImage && looksPublish(t) && ghConnected()) {
+      const lastAsst = [...s.messages].reverse().find(x => x.role === "assistant" && x.content && !x.error);
+      const files = lastAsst ? collectFiles(lastAsst.content) : [];
+      if (!files.length) { toast("No files in the last reply to publish."); return; }
+      s.messages.push({ id: uid("msg"), role: "user", content: t, createdAt: Date.now() });
+      const nid = uid("msg");
+      s.messages.push({ id: nid, role: "assistant", content: "Publishing to GitHub…", createdAt: Date.now(), model: s.model });
+      save(); $("input").value = ""; render();
+      try {
+        const result = await publishFiles(files, s.title || "Omni code");
+        const msg = s.messages.find(x => x.id === nid);
+        if (msg) msg.content = "Published " + result.paths.length + " file" + (result.paths.length === 1 ? "" : "s") + " to " + result.url + "\n\n" + result.paths.map(p => "- `" + p + "`").join("\n");
+        toast("Published " + result.paths.length + " files.");
+      } catch (err) {
+        const msg = s.messages.find(x => x.id === nid);
+        if (msg) { msg.error = true; msg.content = (err && err.message) || "Publish failed."; }
+        toast((err && err.message) || "Publish failed.");
+      }
+      save(); render();
+      return;
+    }
     if (!s.messages.length) s.title = t.slice(0, 42) || (asImage ? "Image" : "New chat");
     s.messages.push({
       id: uid("msg"),
       role: "user",
-      content: asImage ? String(t).replace(/^\/(imagine|image|img|draw|picture)\s*/i, "").trim() || t : (t || "Describe this image."),
+      content: asImage ? String(t).replace(/^\/(imagine|image|img|draw|picture)\s*/i, "").trim() || t : (t || "What's in this image?"),
       createdAt: Date.now(),
-      school: mode === "school" || undefined
+      school: m === "school" || undefined,
+      codePath: m === "coding-plan" ? "plan" : m === "coding-build" ? "build" : undefined
     });
     save(); $("input").value = ""; $("input").style.height = "auto"; render();
     if (asImage) { await runImage(t); return; }
@@ -2444,6 +2623,9 @@
   }
   function looksImg(t) {
     return /^\/(imagine|image|img|draw|picture)\b/i.test(t) || /\b(generate|create|make|draw|render)\b.{0,40}\b(image|picture|photo|illustration|logo)\b/i.test(t);
+  }
+  function looksPublish(t) {
+    return /\b(publish (this|it|these|the (files?|code|project)|to (my )?github)|push (this|it|these|the (files?|code)|to github)|commit (this|these files|the (files?|code)) to (my )?github|upload (this|these files|the (files?|code)) to (my )?github)\b/i.test(t);
   }
   async function runImage(prompt) {
     const s = current();
@@ -2485,17 +2667,35 @@
   };
   $("attach").onclick = () => $("file").click();
   let composerMode = "chat";
+  let codePath = "build";
   function setMode(next) {
     composerMode = composerMode === next ? "chat" : next;
     $("image-mode").classList.toggle("on", composerMode === "image");
     $("school-mode").classList.toggle("on", composerMode === "school");
+    $("code-mode").classList.toggle("on", composerMode === "coding");
     $("image-mode").setAttribute("aria-pressed", composerMode === "image" ? "true" : "false");
     $("school-mode").setAttribute("aria-pressed", composerMode === "school" ? "true" : "false");
-    $("input").placeholder = composerMode === "image" ? "Describe the image to generate" : composerMode === "school" ? "Homework, essay, study question…" : "Message";
+    $("code-mode").setAttribute("aria-pressed", composerMode === "coding" ? "true" : "false");
+    const pathEl = $("code-path");
+    if (pathEl) pathEl.hidden = composerMode !== "coding";
+    $("input").placeholder = composerMode === "image" ? "Describe the image to generate" : composerMode === "school" ? "Homework, essay, study question…" : composerMode === "coding" ? (codePath === "plan" ? "What should we plan and then build?" : "What should we build?") : "Message";
     $("input").focus();
+  }
+  function setCodePath(next) {
+    codePath = next;
+    $("code-plan").classList.toggle("on", codePath === "plan");
+    $("code-build").classList.toggle("on", codePath === "build");
+    $("code-plan").setAttribute("aria-pressed", codePath === "plan" ? "true" : "false");
+    $("code-build").setAttribute("aria-pressed", codePath === "build" ? "true" : "false");
+    if (composerMode === "coding") {
+      $("input").placeholder = codePath === "plan" ? "What should we plan and then build?" : "What should we build?";
+    }
   }
   $("image-mode").onclick = () => setMode("image");
   $("school-mode").onclick = () => setMode("school");
+  $("code-mode").onclick = () => setMode("coding");
+  $("code-plan").onclick = () => setCodePath("plan");
+  $("code-build").onclick = () => setCodePath("build");
   $("file").onchange = () => {
     const f = $("file").files[0]; $("file").value = "";
     if (!f) return;
@@ -2651,6 +2851,16 @@
       privState.textContent = prefs.privateMode ? "On" : "Off";
       priv.style.borderColor = prefs.privateMode ? "var(--accent)" : "";
     }
+    if ($("gh-token")) {
+      $("gh-token").value = gh.token || "";
+      $("gh-owner").value = gh.owner || "";
+      $("gh-repo").value = gh.repo || "";
+      $("gh-branch").value = gh.branch || "main";
+      $("gh-prefix").value = gh.prefix || "";
+      $("gh-status").textContent = gh.login
+        ? ("Connected as " + gh.login + (gh.owner && gh.repo ? (" · " + gh.owner + "/" + gh.repo) : " · add owner and repo"))
+        : (gh.token ? "Token saved. Test connection." : "");
+    }
     const box = $("theme-opts");
     box.innerHTML = "";
     Object.keys(THEMES).forEach((id) => {
@@ -2682,6 +2892,31 @@
     savePrefs();
     fillSettings();
     toast(prefs.privateMode ? "Private mode on. Chats stay on this device. Memory still works." : "Private mode off.");
+  };
+  function pullGhFields() {
+    gh.token = $("gh-token").value.trim();
+    gh.owner = $("gh-owner").value.trim();
+    gh.repo = $("gh-repo").value.trim();
+    gh.branch = $("gh-branch").value.trim() || "main";
+    gh.prefix = $("gh-prefix").value.replace(/^\/+|\/+$/g, "");
+    saveGh();
+  }
+  ["gh-token","gh-owner","gh-repo","gh-branch","gh-prefix"].forEach((id) => {
+    $(id).oninput = pullGhFields;
+  });
+  $("gh-test").onclick = async () => {
+    pullGhFields();
+    if (!gh.token) { toast("Paste a GitHub token first."); return; }
+    try {
+      const me = await ghApi("/user");
+      gh.login = me.login || "";
+      if (!gh.owner) gh.owner = gh.login;
+      saveGh();
+      fillSettings();
+      toast("Connected as " + gh.login);
+    } catch (err) {
+      toast((err && err.message) || "Could not connect.");
+    }
   };
   $("copy-import").onclick = async () => {
     try { await navigator.clipboard.writeText(IMPORT_PROMPT); $("copy-import").textContent = "Copied"; setTimeout(() => $("copy-import").textContent = "Copy import prompt", 1400); } catch (e) {}
@@ -2724,6 +2959,7 @@
   }, 200);
   loadLiveModels();
   paintUsage();
+  paintZrPip();
   render();
   </script>
 </body>
