@@ -396,15 +396,7 @@
   <div class="modal" id="settings-modal">
     <div class="card" style="width:min(28rem,100%);max-height:88dvh;overflow:auto">
       <h2>Settings</h2>
-      <p>Name, privacy, look, personality, and memory from other AIs.</p>
-      <label class="stat">Privacy</label>
-      <button type="button" class="btn btn-outline" id="set-private" style="width:100%;justify-content:space-between;align-items:flex-start;gap:12px;margin:6px 0 14px;min-height:56px;padding:12px;border-radius:16px;text-align:left">
-        <span style="flex:1;min-width:0">
-          <b style="display:block;font-weight:500">Private & anonymous</b>
-          <small style="display:block;margin-top:4px;color:var(--subtle);font-size:12px;line-height:1.45;font-weight:400">Only you keep chats on this device. Models are asked not to store or train on them. Memory still works.</small>
-        </span>
-        <span id="set-private-state" style="font-family:var(--mono);font-size:11px;color:var(--subtle);padding-top:2px">Off</span>
-      </button>
+      <p>Name, look, personality, and memory from other AIs.</p>
       <label class="stat">Name</label>
       <input class="search" id="set-name" style="padding-left:12px;margin:6px 0 12px" maxlength="32" />
       <label class="stat">Custom instructions</label>
@@ -417,6 +409,14 @@
       <label class="stat">Memory</label>
       <textarea id="set-memory" rows="3" placeholder="Preferred name, school, projects…" style="width:100%;margin:6px 0 8px;border:1px solid var(--line);border-radius:12px;background:var(--elevated);color:var(--fg);padding:10px;font:inherit"></textarea>
       <p id="learned-mem" style="font-size:12px;color:var(--subtle);margin:0 0 12px">Omni slowly writes notes from what you say. Every model sees them.</p>
+      <label class="stat">Privacy</label>
+      <button type="button" class="btn btn-outline" id="set-private" style="width:100%;justify-content:space-between;align-items:flex-start;gap:12px;margin:6px 0 14px;min-height:56px;padding:12px;border-radius:16px;text-align:left">
+        <span style="flex:1;min-width:0">
+          <b style="display:block;font-weight:500">Private & anonymous</b>
+          <small style="display:block;margin-top:4px;color:var(--subtle);font-size:12px;line-height:1.45;font-weight:400">Only you keep chats on this device. Models are asked not to store or train on them. Memory still works.</small>
+        </span>
+        <span id="set-private-state" style="font-family:var(--mono);font-size:11px;color:var(--subtle);padding-top:2px">Off</span>
+      </button>
       <label class="stat">Import from another AI</label>
       <p style="font-size:13px;color:var(--muted);margin:6px 0">Copy the import prompt, paste it into ChatGPT / Claude / Grok / Gemini, then paste the reply here.</p>
       <button class="btn btn-outline" id="copy-import" style="width:100%;margin-bottom:8px">Copy import prompt</button>
