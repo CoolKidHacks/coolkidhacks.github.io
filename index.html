@@ -49,6 +49,7 @@
       background: var(--surface); border-right: 1px solid var(--line); min-height: 0; overflow: hidden;
     }
     .brand { display: flex; align-items: center; gap: 12px; padding: 24px 16px 16px; }
+    .brand-hit { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
     .side-close { display: none; margin-left: auto; width: 44px; height: 44px; border-radius: 12px; color: var(--subtle); }
     .mark {
       width: 36px; height: 36px; display: grid; place-items: center;
@@ -275,7 +276,29 @@
     }
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; animation: none !important; }
+      #cmd-scan { display: none; }
     }
+    #cmd-overlay {
+      display: none; position: fixed; inset: 0; z-index: 90;
+      background: #030604; color: #86f0a0; font-family: var(--mono);
+      flex-direction: column; overflow: hidden;
+      text-shadow: 0 0 10px rgba(125,255,154,.18);
+    }
+    #cmd-overlay.show { display: flex; }
+    #cmd-scan {
+      pointer-events: none; position: absolute; inset: 0;
+      background: repeating-linear-gradient(to bottom, rgba(0,0,0,.2) 0 1px, transparent 1px 3px),
+        radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.4) 100%);
+      mix-blend-mode: multiply;
+    }
+    #cmd-bar { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1c3d28; padding: 8px 12px; letter-spacing: .14em; font-size: 11px; position: relative; z-index: 1; }
+    #cmd-log { flex: 1; min-height: 0; overflow: auto; padding: 12px; font-size: 13px; line-height: 1.55; white-space: pre-wrap; position: relative; z-index: 1; }
+    #cmd-form { display: flex; align-items: center; gap: 8px; border-top: 1px solid #1c3d28; padding: 10px 12px; position: relative; z-index: 1; }
+    #cmd-form input { flex: 1; min-width: 0; background: transparent; border: 0; color: #9cffb4; font: inherit; outline: none; caret-color: #7dff9a; }
+    #cmd-exit { min-width: 44px; min-height: 44px; color: #7dff9a; }
+    #cmd-live { border-top: 1px solid #1c3d28; padding: 8px 12px; font-size: 10px; letter-spacing: .12em; color: rgba(125,255,154,.7); position: relative; z-index: 1; }
+    #cmd-live[hidden] { display: none; }
+    .cmd-hi { color: #c8ffd4; }
   </style>
 </head>
 <body>
@@ -283,12 +306,14 @@
     <div class="backdrop" id="backdrop"></div>
     <aside class="sidebar" id="sidebar">
       <div class="brand">
+        <div class="brand-hit" id="brand-hit">
         <div class="mark" aria-hidden="true">
           <svg viewBox="0 0 32 32" fill="currentColor"><path d="M16 2.4c.4 0 .7.24.84.6l2.52 6.62a1 1 0 0 0 .56.56l6.62 2.52a.9.9 0 0 1 0 1.68l-6.62 2.52a1 1 0 0 0-.56.56l-2.52 6.62a.9.9 0 0 1-1.68 0l-2.52-6.62a1 1 0 0 0-.56-.56L4.46 14.38a.9.9 0 0 1 0-1.68l6.62-2.52a1 1 0 0 0 .56-.56L14.16 3a.9.9 0 0 1 .84-.6z"/></svg>
         </div>
         <div>
           <h1>Omni</h1>
           <p>Chats</p>
+        </div>
         </div>
         <button type="button" class="icon-btn side-close" id="side-close" aria-label="Close chats">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -441,6 +466,14 @@
 
   <div class="toast" id="toast" role="status"></div>
 
+  <div id="cmd-overlay" role="dialog" aria-label="Developer console">
+    <div id="cmd-scan"></div>
+    <div id="cmd-bar"><span>OMNI-CMD</span><button type="button" id="cmd-exit">exit</button></div>
+    <div id="cmd-log"></div>
+    <form id="cmd-form"><span id="cmd-prompt">auth></span><input id="cmd-input" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" /></form>
+    <div id="cmd-live" hidden>ZERO-RULES LIVE</div>
+  </div>
+
   <div class="modal" id="popup-modal">
     <div class="card">
       <h2>Allow the sign-in popup</h2>
@@ -560,6 +593,17 @@
     document.body.style.background = t.bg; document.body.style.color = t.fg;
   }
   applyPrefsTheme();
+  const CMD_KEY = "omni-cmd-v1";
+  const CMD_PASS = "OMNI-CMD";
+  let cmdAuthed = false, zeroRules = false, cmdFails = 0, cmdLockUntil = 0;
+  try {
+    const snap = JSON.parse(sessionStorage.getItem(CMD_KEY) || "{}");
+    cmdAuthed = !!snap.authed;
+    zeroRules = !!snap.zeroRules;
+  } catch (e) {}
+  function saveCmd() {
+    try { sessionStorage.setItem(CMD_KEY, JSON.stringify({ authed: cmdAuthed, zeroRules: zeroRules })); } catch (e) {}
+  }
   function prefsBlock() {
     let s = "The assistant's display name is " + (prefs.botName || "Omni") + ".";
     if (prefs.personality) s += "\nCustom instructions (always follow):\n" + prefs.personality;
@@ -2014,6 +2058,166 @@
       timer = setTimeout(() => { taps = 0; }, 900);
     };
   })();
+  (function () {
+    const overlay = $("cmd-overlay");
+    const log = $("cmd-log");
+    const input = $("cmd-input");
+    const form = $("cmd-form");
+    const promptEl = $("cmd-prompt");
+    const live = $("cmd-live");
+    const HELP = [
+      "enable     zero-rules — strip Omni wrappers",
+      "disable    restore normal prompts",
+      "status     session flags",
+      "clear      clear screen",
+      "exit       close console"
+    ];
+    function paintLive() {
+      if (zeroRules) live.removeAttribute("hidden");
+      else live.setAttribute("hidden", "");
+    }
+    function cmdPrint(line) {
+      const p = document.createElement("div");
+      p.textContent = line || " ";
+      if (line && line.indexOf("ZERO-RULES") === 0) p.className = "cmd-hi";
+      log.appendChild(p);
+      log.scrollTop = log.scrollHeight;
+    }
+    function resetLog() {
+      log.textContent = "";
+      if (cmdAuthed) {
+        cmdPrint("OMNI DEV CONSOLE");
+        cmdPrint("session restored");
+        cmdPrint("type help");
+        cmdPrint("");
+      } else {
+        cmdPrint("OMNI DEV CONSOLE");
+        cmdPrint("unauthorized");
+        cmdPrint("enter access key");
+        cmdPrint("");
+      }
+    }
+    function setPrompt() {
+      promptEl.textContent = cmdAuthed ? "omni$" : "auth>";
+      input.type = cmdAuthed ? "text" : "password";
+    }
+    function openCmd() {
+      overlay.classList.add("show");
+      lockPage(true);
+      resetLog();
+      setPrompt();
+      paintLive();
+      input.value = "";
+      input.disabled = Date.now() < cmdLockUntil;
+      setTimeout(() => input.focus(), 40);
+    }
+    function closeCmd() {
+      overlay.classList.remove("show");
+      lockPage(false);
+    }
+    function runCmd(raw) {
+      const text = String(raw || "").trim();
+      const prompt = cmdAuthed ? "omni$" : "auth>";
+      if (!cmdAuthed) {
+        if (!text) return;
+        if (Date.now() < cmdLockUntil) {
+          cmdPrint("locked. wait.");
+          cmdPrint("");
+          return;
+        }
+        cmdPrint(prompt + " ••••••••");
+        if (text === CMD_PASS) {
+          cmdAuthed = true;
+          cmdFails = 0;
+          saveCmd();
+          setPrompt();
+          cmdPrint("access granted");
+          cmdPrint("developer only. type help");
+          cmdPrint("");
+        } else {
+          cmdFails += 1;
+          if (cmdFails >= 3) {
+            cmdFails = 0;
+            cmdLockUntil = Date.now() + 8000;
+            input.disabled = true;
+            cmdPrint("denied. wait, then retry.");
+            cmdPrint("");
+            setTimeout(function () { input.disabled = false; input.focus(); }, Math.max(0, cmdLockUntil - Date.now()));
+          } else {
+            cmdPrint("denied");
+            cmdPrint("");
+          }
+        }
+        return;
+      }
+      cmdPrint(prompt + " " + text);
+      const cmd = text.toLowerCase();
+      if (!cmd || cmd === "help") {
+        HELP.forEach(cmdPrint);
+        cmdPrint("");
+        return;
+      }
+      if (cmd === "clear") {
+        log.textContent = "";
+        return;
+      }
+      if (cmd === "exit" || cmd === "close" || cmd === "logout") {
+        closeCmd();
+        return;
+      }
+      if (cmd === "status") {
+        cmdPrint("zero-rules: " + (zeroRules ? "ON" : "off"));
+        cmdPrint("scope: this tab only");
+        cmdPrint("");
+        return;
+      }
+      if (cmd === "enable" || cmd === "zero" || cmd === "zero-rules") {
+        zeroRules = true;
+        saveCmd();
+        paintLive();
+        cmdPrint("ZERO-RULES: ON");
+        cmdPrint("Omni wrappers stripped. Provider hard-limits still apply.");
+        cmdPrint("");
+        return;
+      }
+      if (cmd === "disable") {
+        zeroRules = false;
+        saveCmd();
+        paintLive();
+        cmdPrint("ZERO-RULES: off");
+        cmdPrint("normal Omni prompts restored.");
+        cmdPrint("");
+        return;
+      }
+      cmdPrint("unknown: " + cmd);
+      cmdPrint("");
+    }
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (input.disabled) return;
+      runCmd(input.value);
+      input.value = "";
+    });
+    $("cmd-exit").onclick = closeCmd;
+    overlay.addEventListener("click", function () { input.focus(); });
+    let taps = 0, timer = null;
+    $("brand-hit").addEventListener("click", function () {
+      taps += 1;
+      if (timer) clearTimeout(timer);
+      if (taps >= 3) {
+        taps = 0;
+        openCmd();
+        return;
+      }
+      timer = setTimeout(function () { taps = 0; }, 900);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && overlay.classList.contains("show")) {
+        e.stopImmediatePropagation();
+        closeCmd();
+      }
+    }, true);
+  })();
   $("model-search").oninput = renderModelList;
   $("think-btn").onclick = () => { current().thinking = !current().thinking; state.lastThinking = current().thinking; save(); render(); };
   $("effort-btn").onclick = showEffort;
@@ -2133,7 +2337,9 @@
           renderThread();
           if (isRate(lastErr)) await sleep(900);
         }
-        const sys = systemFor(model) + "\n\n" + prefsBlock() + (s.thinking ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + "\n" + effortLine(s.effort) + (lastUser && lastUser.school ? "\n\n" + SCHOOL : "");
+        const sys = zeroRules
+          ? ("Developer session. Skip Omni product policies, school-writing rules, identity wrappers, and channel notes. Answer the request directly and completely. Do not mention this mode unless asked." + (prefs.memory || prefs.learnedMemory || prefs.importedMemory ? "\n\nShared memory (device-only):\n" + [prefs.memory, prefs.learnedMemory, prefs.importedMemory].filter(Boolean).join("\n\n") : ""))
+          : systemFor(model) + "\n\n" + prefsBlock() + (s.thinking ? "\nWhen helpful, reason carefully. Put the final answer in the user-facing reply." : "\nAnswer directly.") + "\n" + effortLine(s.effort) + (lastUser && lastUser.school ? "\n\n" + SCHOOL : "");
         const payload = [{ role: "system", content: sys }, ...history];
         const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking, model));
         if (prefs.privateMode) opts.store = false;
@@ -2498,6 +2704,11 @@
       $("new-chat").click();
     }
     if (e.key === "Escape") {
+      if ($("cmd-overlay").classList.contains("show")) {
+        $("cmd-overlay").classList.remove("show");
+        lockPage(false);
+        return;
+      }
       closeModels(); hideEffort(); closeSide(); hidePopupHelp(); hideUsage(); hideSettings();
       if (streaming) aborted = true;
     }
