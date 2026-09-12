@@ -19,25 +19,25 @@
   <link rel="manifest" href="omni.webmanifest" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://js.puter.com/v2/"></script>
   <style>
     :root {
-      --bg: #131314;
-      --surface: #1e1f20;
-      --elevated: #2b2c2d;
-      --fg: #e3e3e3;
-      --muted: #c4c7c5;
-      --subtle: #8e918f;
-      --line: #3c4043;
-      --primary: #a8c7fa;
-      --primary-fg: #062e6f;
-      --accent: #a8c7fa;
+      --bg: #08080a;
+      --surface: #101014;
+      --elevated: #19191e;
+      --fg: #f3f2ee;
+      --muted: #9a9aa3;
+      --subtle: #6d6d76;
+      --line: #26262c;
+      --primary: #eceae4;
+      --primary-fg: #0c0c0e;
+      --accent: #c5ccd6;
       --danger: #e11d48;
       --ok: #5ee9a3;
       --warn: #c9a27a;
       --font: "Outfit", ui-sans-serif, system-ui, sans-serif;
-      --display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+      --display: "Newsreader", "Iowan Old Style", Palatino, serif;
       --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
       --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
@@ -133,7 +133,7 @@
     .tools::-webkit-scrollbar { display: none; }
     .chip {
       display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px;
-      border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
+      border-radius: 12px; border: 1px solid var(--line); background: var(--surface);
       font-size: 13px; color: var(--fg); white-space: nowrap; max-width: 16rem;
     }
     .chip span { overflow: hidden; text-overflow: ellipsis; }
@@ -145,7 +145,7 @@
     .thread { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
     .empty { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px; max-width: 36rem; margin: 0 auto; }
     .empty .mark { width: 52px; height: 52px; border-radius: 16px; }
-    .empty h2 { margin: 22px 0 10px; font-family: var(--font); font-size: clamp(22px, 4.5vw, 32px); font-weight: 500; font-style: normal; letter-spacing: -.03em; line-height: 1.2; }
+    .empty h2 { margin: 22px 0 10px; font-family: var(--display); font-size: clamp(28px, 6vw, 44px); font-weight: 500; font-style: italic; letter-spacing: -.03em; line-height: 1.15; }
     .empty p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.55; max-width: 28rem; }
     .prompts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 32px; width: 100%; }
     .prompts button { text-align: left; min-height: 72px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--muted); font-size: 13px; line-height: 1.4; }
@@ -212,11 +212,11 @@
     .zr-pip { display: inline-block; width: 7px; height: 7px; border-radius: 99px; background: var(--ok); margin-left: 8px; vertical-align: 2px; box-shadow: 0 0 8px color-mix(in oklab, var(--ok) 65%, transparent); }
     .zr-pip[hidden] { display: none; }
     .mode-btn {
-      height: 44px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
+      height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface);
       display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; color: var(--muted);
     }
     .mode-btn.on { border-color: color-mix(in oklab, var(--accent) 50%, var(--line)); background: var(--elevated); color: var(--fg); }
-    .composer { max-width: 48rem; margin: 0 auto; display: flex; align-items: flex-end; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 28px; padding: 6px; box-shadow: 0 8px 30px -18px rgba(0,0,0,.55); }
+    .composer { max-width: 48rem; margin: 0 auto; display: flex; align-items: flex-end; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 18px; padding: 6px; box-shadow: 0 10px 40px -28px rgba(0,0,0,.85); }
     .composer:focus-within { border-color: color-mix(in oklab, var(--accent) 40%, var(--line)); }
     textarea { flex: 1; resize: none; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 16px; line-height: 1.5; max-height: 168px; outline: none; padding: 10px 4px; }
     .icon-btn { width: 44px; height: 44px; border-radius: 16px; display: grid; place-items: center; flex-shrink: 0; color: var(--muted); }
@@ -257,6 +257,13 @@
     .mrow .cost small { display: block; font-size: 10px; color: var(--subtle); margin-top: 2px; }
     .ok-tag { color: var(--accent); font-size: 11px; }
     .chip .cost { font-family: var(--mono); font-size: 11px; color: var(--subtle); }
+    .gh-code { font-family: var(--mono); font-size: 22px; letter-spacing: .16em; text-align: center; width: 100%; min-height: 52px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--fg); margin: 10px 0; }
+    .gh-repos { max-height: 14rem; overflow: auto; border: 1px solid var(--line); border-radius: 12px; margin-top: 8px; }
+    .gh-repo { display: flex; width: 100%; text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); min-height: 48px; flex-direction: column; gap: 2px; }
+    .gh-repo:last-child { border-bottom: 0; }
+    .gh-repo b { display: block; font-weight: 500; font-size: 13px; }
+    .gh-repo small { font-family: var(--mono); font-size: 11px; color: var(--subtle); }
+    .gh-card { border: 1px solid var(--line); background: color-mix(in oklab, var(--elevated) 40%, transparent); border-radius: 16px; padding: 14px; }
     puter-dialog { display: none !important; visibility: hidden !important; pointer-events: none !important; }
     @keyframes pulse { 50% { opacity: .35; } }
     @media (max-width: 768px) {
@@ -267,7 +274,7 @@
       .menu-btn { display: grid; place-items: center; }
       .mob-bar { display: none !important; }
       .side-close { display: grid; place-items: center; }
-      .connect, .status, #usage-chip { display: none; }
+      .connect, .status, #usage-chip, #gh-chip { display: none; }
       .prompts { grid-template-columns: 1fr; }
       .tools-row { padding: 8px 8px 8px 4px; }
       .tools { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; overflow: visible; width: 100%; }
@@ -336,7 +343,7 @@
         </div>
         <div>
           <h1>OMNI-AI<span class="zr-pip" id="zr-pip" hidden></span></h1>
-          <p>Chats</p>
+          <p>Studio</p>
         </div>
         </div>
         <button type="button" class="icon-btn side-close" id="side-close" aria-label="Close chats">
@@ -376,6 +383,7 @@
             <button type="button" class="chip on" id="think-btn" aria-pressed="true">Think <span class="led"></span></button>
             <button type="button" class="chip" id="effort-btn">High</button>
             <button type="button" class="chip" id="usage-chip">0 turns</button>
+            <button type="button" class="chip" id="gh-chip">GitHub</button>
           </div>
           <button class="connect" id="connect-btn">Sign in</button>
           <span class="status" id="desk-status">Loading</span>
@@ -475,23 +483,7 @@
         <span id="set-private-state" style="font-family:var(--mono);font-size:11px;color:var(--subtle);padding-top:2px">Off</span>
       </button>
       <label class="stat">GitHub</label>
-      <p style="font-size:13px;color:var(--muted);margin:6px 0">Connect a token. When you ask OMNI-AI to change files, it commits them to this repo. Token stays on this device — never sent to models.</p>
-      <input class="search" id="gh-token" type="password" autocomplete="off" placeholder="ghp_… or github_pat_…" style="padding-left:12px;margin:6px 0 8px" />
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <input class="search" id="gh-owner" placeholder="Owner" style="padding-left:12px" />
-        <input class="search" id="gh-repo" placeholder="Repo" style="padding-left:12px" />
-        <input class="search" id="gh-branch" placeholder="Branch (main)" style="padding-left:12px" />
-        <input class="search" id="gh-prefix" placeholder="Folder (optional)" style="padding-left:12px" />
-      </div>
-      <button type="button" class="btn btn-outline" id="gh-apply" style="width:100%;justify-content:space-between;margin:8px 0 4px;min-height:52px;padding:10px 12px;border-radius:16px;text-align:left">
-        <span style="flex:1;min-width:0">
-          <b style="display:block;font-weight:500">Apply changes when I ask</b>
-          <small style="display:block;margin-top:4px;color:var(--subtle);font-size:12px;line-height:1.45;font-weight:400">“Push this”, “update the repo”, “commit these files” writes the last Code files.</small>
-        </span>
-        <span id="gh-apply-state" style="font-family:var(--mono);font-size:11px;color:var(--subtle)">On</span>
-      </button>
-      <button class="btn btn-outline" id="gh-test" style="width:100%;margin:8px 0 4px">Connect</button>
-      <p class="stat" id="gh-status" style="margin-bottom:12px"></p>
+      <div id="gh-root" style="margin:6px 0 12px"></div>
       <label class="stat">Home Screen</label>
       <p id="hs-note" style="font-size:13px;color:var(--muted);margin:6px 0 12px">On iPhone: Share → Add to Home Screen. Opens as OMNI-AI, full screen, with its own icon.</p>
       <label class="stat">Import from another AI</label>
@@ -644,9 +636,10 @@
     ink: { bg:"#08080a", surface:"#101014", elevated:"#19191e", fg:"#f3f2ee", muted:"#9a9aa3", subtle:"#6d6d76", line:"#26262c", primary:"#eceae4", pfg:"#0c0c0e", accent:"#c5ccd6" },
     dusk: { bg:"#10151c", surface:"#171e27", elevated:"#222b36", fg:"#e8eef4", muted:"#9aa8b6", subtle:"#6d7b88", line:"#2c3844", primary:"#8fbfa8", pfg:"#0c1612", accent:"#8fbfa8" }
   };
-  let prefs = { botName:"Omni", personality:"", theme:"gemini", accent:"", memory:"", learnedMemory:"", importedMemory:"", importedFrom:"", vaultUnlocked:false, privateMode:false };
+  let prefs = { botName:"OMNI-AI", personality:"", theme:"ink", accent:"", memory:"", learnedMemory:"", importedMemory:"", importedFrom:"", vaultUnlocked:false, privateMode:false };
   try { Object.assign(prefs, JSON.parse(localStorage.getItem("omni-prefs-v1") || "{}")); } catch (e) {}
   prefs.vaultUnlocked = false;
+  if (prefs.theme === "gemini") prefs.theme = "ink";
   function savePrefs() {
     const copy = Object.assign({}, prefs);
     delete copy.vaultUnlocked;
@@ -654,7 +647,7 @@
     applyPrefsTheme();
   }
   function applyPrefsTheme() {
-    const t = THEMES[prefs.theme] || THEMES.gemini;
+    const t = THEMES[prefs.theme] || THEMES.ink;
     const acc = /^#[0-9a-f]{6}$/i.test(prefs.accent) ? prefs.accent : t.accent;
     const r = document.documentElement.style;
     r.setProperty("--bg", t.bg); r.setProperty("--surface", t.surface); r.setProperty("--elevated", t.elevated);
@@ -693,10 +686,405 @@
     else el.setAttribute("hidden", "");
   }
   const GH_KEY = "omni-github-v1";
-  let gh = { token: "", owner: "", repo: "", branch: "main", prefix: "", login: "", autoApply: true };
+  let gh = { token: "", owner: "", repo: "", branch: "main", prefix: "", login: "", autoApply: true, clientId: "", clientSecret: "", slug: "", method: "" };
   try { Object.assign(gh, JSON.parse(localStorage.getItem(GH_KEY) || "{}")); } catch (e) {}
   function saveGh() { try { localStorage.setItem(GH_KEY, JSON.stringify(gh)); } catch (e) {} }
   function ghConnected() { return !!(gh.token && gh.owner && gh.repo); }
+  let ghPhase = "idle";
+  let ghDevice = null;
+  let ghRepos = [];
+  let ghQuery = "";
+  let ghError = "";
+  let ghPatOpen = false;
+  let ghPollTimer = 0;
+  const GH_PKCE = "omni-gh-pkce";
+  function ghRedirectUri() {
+    const u = new URL(location.href);
+    u.search = ""; u.hash = "";
+    if (u.pathname.endsWith("/index.html")) u.pathname = u.pathname.slice(0, -"/index.html".length) || "/";
+    return u.toString();
+  }
+  function ghAppUrl() {
+    return location.origin + (location.pathname.indexOf("/FREE-AI-CHAT-BOT") === 0 ? "/FREE-AI-CHAT-BOT/" : "/");
+  }
+  function ghStripQuery() {
+    const u = new URL(location.href);
+    if (!u.search && !u.hash) return;
+    u.search = ""; u.hash = "";
+    history.replaceState(null, "", u.toString());
+  }
+  async function corsFetch(url, init) {
+    try {
+      if (window.puter && window.puter.net && window.puter.net.fetch) return await window.puter.net.fetch(url, init);
+    } catch (e) {}
+    return fetch(url, init);
+  }
+  async function oauthFetch(url, body) {
+    const init = { method: "POST", headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() };
+    const res = await corsFetch(url, init);
+    return res.text();
+  }
+  function parseGhJson(text) {
+    const t = (text || "").trim();
+    if (!t) return {};
+    if (t[0] === "{" || t[0] === "[") {
+      try { return JSON.parse(t); } catch (e) {}
+    }
+    const p = new URLSearchParams(t);
+    const o = {};
+    p.forEach((v, k) => { o[k] = v; });
+    return o;
+  }
+  function ghErr(data, fallback) {
+    const err = data && data.error;
+    const desc = data && data.error_description;
+    const msg = data && data.message;
+    if (err === "authorization_pending" || err === "slow_down") return err;
+    if (err === "expired_token") return "The GitHub code expired. Tap Continue with GitHub again.";
+    if (err === "access_denied") return "GitHub access was denied.";
+    return desc || msg || (err ? String(err).replace(/_/g, " ") : fallback);
+  }
+  async function ensurePuterNet() {
+    if (!window.puter) throw new Error("Puter.js is still connecting.");
+    if (!puter.auth.isSignedIn()) await signIn();
+  }
+  function startManifest() {
+    const uri = ghRedirectUri();
+    const url = ghAppUrl();
+    const manifest = JSON.stringify({
+      name: "OMNI-AI",
+      url: url,
+      description: "OMNI-AI publishes code you ask it to write into your GitHub repos.",
+      redirect_url: uri,
+      callback_urls: [uri],
+      setup_url: uri,
+      public: false,
+      request_oauth_on_install: true,
+      default_permissions: { contents: "write", metadata: "read" },
+      hook_attributes: { url: url.replace(/\/$/, "") + "/github-webhook", active: false }
+    });
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "https://github.com/settings/apps/new?state=omni-manifest";
+    form.style.display = "none";
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "manifest";
+    input.value = manifest;
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+  }
+  async function convertManifest(code) {
+    const res = await corsFetch("https://api.github.com/app-manifests/" + encodeURIComponent(code) + "/conversions", {
+      method: "POST",
+      headers: { Accept: "application/vnd.github+json" }
+    });
+    const data = parseGhJson(await res.text());
+    if (!res.ok) throw new Error(ghErr(data, "GitHub did not finish creating the app."));
+    if (!data.client_id) throw new Error("GitHub did not return a client id.");
+    gh.clientId = data.client_id;
+    gh.clientSecret = data.client_secret || "";
+    gh.slug = data.slug || "";
+    saveGh();
+  }
+  async function startDevice() {
+    const body = new URLSearchParams({ client_id: gh.clientId, scope: "repo" });
+    const data = parseGhJson(await oauthFetch("https://github.com/login/device/code", body));
+    if (data.error) throw new Error(ghErr(data, "Device sign-in is not available."));
+    if (!data.device_code || !data.user_code) throw new Error("GitHub did not return a device code.");
+    return {
+      device_code: data.device_code,
+      user_code: data.user_code,
+      verification_uri: data.verification_uri || "https://github.com/login/device",
+      verification_uri_complete: data.verification_uri_complete || data.verification_uri,
+      interval: Math.max(5, Number(data.interval) || 5),
+      expires_in: Number(data.expires_in) || 900
+    };
+  }
+  async function pollDevice(deviceCode) {
+    const body = new URLSearchParams({
+      client_id: gh.clientId,
+      device_code: deviceCode,
+      grant_type: "urn:ietf:params:oauth:grant-type:device_code"
+    });
+    const data = parseGhJson(await oauthFetch("https://github.com/login/oauth/access_token", body));
+    if (data.error === "authorization_pending") return { status: "pending" };
+    if (data.error === "slow_down") return { status: "slow_down" };
+    if (data.error) throw new Error(ghErr(data, "GitHub did not finish authorizing."));
+    if (!data.access_token) return { status: "pending" };
+    return { status: "ready", token: data.access_token };
+  }
+  function b64url(bytes) {
+    let bin = "";
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  }
+  async function startWebOauth() {
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    const verifier = b64url(bytes);
+    try { sessionStorage.setItem(GH_PKCE, verifier); } catch (e) {}
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+    const challenge = b64url(new Uint8Array(digest));
+    const url = new URL("https://github.com/login/oauth/authorize");
+    url.searchParams.set("client_id", gh.clientId);
+    url.searchParams.set("redirect_uri", ghRedirectUri());
+    url.searchParams.set("scope", "repo");
+    url.searchParams.set("state", "omni-oauth");
+    url.searchParams.set("code_challenge", challenge);
+    url.searchParams.set("code_challenge_method", "S256");
+    location.href = url.toString();
+  }
+  async function exchangeCode(code) {
+    const body = new URLSearchParams({
+      client_id: gh.clientId,
+      client_secret: gh.clientSecret || "",
+      code: code,
+      redirect_uri: ghRedirectUri()
+    });
+    try {
+      const v = sessionStorage.getItem(GH_PKCE);
+      if (v) body.set("code_verifier", v);
+    } catch (e) {}
+    const data = parseGhJson(await oauthFetch("https://github.com/login/oauth/access_token", body));
+    if (!data.access_token) throw new Error(ghErr(data, "GitHub did not return an access token."));
+    try { sessionStorage.removeItem(GH_PKCE); } catch (e) {}
+    return data.access_token;
+  }
+  async function listRepos(token) {
+    const out = [];
+    const prev = gh.token;
+    gh.token = token;
+    try {
+      for (let page = 1; page <= 4; page++) {
+        const batch = await ghApi("/user/repos?per_page=100&page=" + page + "&sort=updated&affiliation=owner,collaborator,organization_member");
+        if (!Array.isArray(batch) || !batch.length) break;
+        batch.forEach((r) => {
+          out.push({
+            owner: r.owner && r.owner.login,
+            name: r.name,
+            fullName: r.full_name,
+            branch: r.default_branch || "main",
+            private: !!r.private
+          });
+        });
+        if (batch.length < 100) break;
+      }
+    } finally {
+      gh.token = prev;
+    }
+    return out;
+  }
+  async function finishToken(token, method) {
+    const prev = gh.token;
+    gh.token = token;
+    let me;
+    try { me = await ghApi("/user"); }
+    catch (e) { gh.token = prev; throw e; }
+    gh.login = me.login || "";
+    gh.method = method || "oauth";
+    try { ghRepos = await listRepos(token); } catch (e) { ghRepos = []; }
+    if (ghRepos.length === 1) {
+      gh.owner = ghRepos[0].owner;
+      gh.repo = ghRepos[0].name;
+      gh.branch = ghRepos[0].branch || "main";
+    }
+    saveGh();
+    paintGhChip();
+    if (gh.owner && gh.repo) {
+      ghPhase = "idle";
+      toast("GitHub connected as " + gh.login);
+    } else {
+      ghPhase = "repos";
+    }
+    renderGh();
+  }
+  async function beginConnect() {
+    ghError = "";
+    ghPhase = "working";
+    renderGh();
+    try {
+      await ensurePuterNet();
+      if (!gh.clientId) { startManifest(); return; }
+      try {
+        ghDevice = await startDevice();
+        ghPhase = "device";
+        renderGh();
+        startGhPoll();
+      } catch (e) {
+        await startWebOauth();
+      }
+    } catch (e) {
+      ghError = (e && e.message) || "Could not start GitHub.";
+      ghPhase = "idle";
+      renderGh();
+    }
+  }
+  function startGhPoll() {
+    window.clearTimeout(ghPollTimer);
+    if (!ghDevice) return;
+    let interval = Math.max(5, ghDevice.interval) * 1000;
+    const tick = async () => {
+      if (ghPhase !== "device" || !ghDevice) return;
+      try {
+        const out = await pollDevice(ghDevice.device_code);
+        if (out.status === "slow_down") interval += 5000;
+        else if (out.status === "ready" && out.token) {
+          ghDevice = null;
+          await finishToken(out.token, "oauth");
+          return;
+        }
+      } catch (e) {
+        ghError = (e && e.message) || "GitHub authorize failed.";
+        ghPhase = "idle";
+        ghDevice = null;
+        renderGh();
+        return;
+      }
+      ghPollTimer = window.setTimeout(tick, interval);
+    };
+    ghPollTimer = window.setTimeout(tick, interval);
+  }
+  let ghConsumeOnce = false;
+  async function consumeGhRedirect() {
+    if (ghConsumeOnce) return;
+    const q = new URLSearchParams(location.search);
+    const state = q.get("state") || "";
+    const code = q.get("code") || "";
+    if (!code || (state !== "omni-manifest" && state !== "omni-oauth")) return;
+    ghConsumeOnce = true;
+    ghStripQuery();
+    showSettings();
+    ghPhase = "working";
+    renderGh();
+    try {
+      await ensurePuterNet();
+      if (state === "omni-manifest") {
+        await convertManifest(code);
+        try {
+          ghDevice = await startDevice();
+          ghPhase = "device";
+          renderGh();
+          startGhPoll();
+        } catch (e) {
+          await startWebOauth();
+        }
+        return;
+      }
+      const token = await exchangeCode(code);
+      await finishToken(token, "oauth");
+    } catch (e) {
+      ghError = (e && e.message) || "GitHub connect failed.";
+      ghPhase = "idle";
+      renderGh();
+    }
+  }
+  function paintGhChip() {
+    const el = $("gh-chip");
+    if (!el) return;
+    el.textContent = ghConnected() ? (gh.owner + "/" + gh.repo) : (gh.login ? ("@" + gh.login) : "GitHub");
+  }
+  function renderGh() {
+    const root = $("gh-root");
+    if (!root) return;
+    paintGhChip();
+    if (ghPhase === "device" && ghDevice) {
+      root.innerHTML = "<div class='gh-card'><p class='stat'>CONTINUE ON GITHUB</p><p style='font-size:13px;color:var(--muted);margin:8px 0'>Open GitHub, confirm this code, then come back.</p><button type='button' class='gh-code' id='gh-copy-code'></button><a class='btn btn-primary' id='gh-open' target='_blank' rel='noopener' style='margin-top:4px'>Open GitHub</a><p class='stat' style='margin-top:10px'>Waiting for GitHub…</p><button type='button' class='btn btn-ghost' id='gh-cancel' style='width:100%'>Cancel</button></div>";
+      $("gh-copy-code").textContent = ghDevice.user_code;
+      $("gh-open").href = ghDevice.verification_uri_complete || ghDevice.verification_uri;
+      $("gh-copy-code").onclick = async () => {
+        try { await navigator.clipboard.writeText(ghDevice.user_code); toast("Code copied"); } catch (e) {}
+      };
+      $("gh-cancel").onclick = () => { ghDevice = null; ghPhase = "idle"; window.clearTimeout(ghPollTimer); renderGh(); };
+      return;
+    }
+    if (ghPhase === "repos") {
+      const q = ghQuery.trim().toLowerCase();
+      const list = ghRepos.filter((r) => !q || (r.fullName || "").toLowerCase().indexOf(q) >= 0);
+      let html = "<p style='font-size:13px;color:var(--muted);margin:0 0 8px'>Pick the repo OMNI-AI should write to.</p><input class='search' id='gh-repo-q' placeholder='Search repos' style='padding-left:12px' /><div class='gh-repos' id='gh-repo-list'></div>";
+      if (gh.slug) html += "<a href='https://github.com/apps/" + encodeURIComponent(gh.slug) + "/installations/new' target='_blank' rel='noopener' class='btn btn-ghost' style='width:100%;margin-top:8px'>Install OMNI-AI on a repo</a>";
+      html += "<button type='button' class='btn btn-ghost' id='gh-back' style='width:100%'>Back</button>";
+      root.innerHTML = html;
+      $("gh-repo-q").value = ghQuery;
+      $("gh-repo-q").oninput = () => { ghQuery = $("gh-repo-q").value; renderGh(); };
+      const box = $("gh-repo-list");
+      if (!list.length) {
+        box.innerHTML = "<p class='stat' style='padding:16px;text-align:center'>No repos yet.</p>";
+      } else {
+        list.forEach((r) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "gh-repo";
+          b.innerHTML = "<b></b><small></small>";
+          b.firstChild.textContent = r.fullName;
+          b.lastChild.textContent = (r.branch || "main") + (r.private ? " · private" : "");
+          b.onclick = () => {
+            gh.owner = r.owner;
+            gh.repo = r.name;
+            gh.branch = r.branch || "main";
+            saveGh();
+            ghPhase = "idle";
+            toast("Writing to " + r.fullName);
+            renderGh();
+          };
+          box.appendChild(b);
+        });
+      }
+      $("gh-back").onclick = () => { ghPhase = "idle"; renderGh(); };
+      return;
+    }
+    if (ghConnected()) {
+      root.innerHTML = "<div class='gh-card'><p style='font-size:14px;margin:0'>" + (gh.login ? ("@" + gh.login) : "Connected") + "</p><p class='stat' style='margin:4px 0 10px'>" + gh.owner + "/" + gh.repo + (gh.branch ? (" · " + gh.branch) : "") + "</p><button type='button' class='btn btn-outline' id='gh-apply' style='width:100%;justify-content:space-between;min-height:52px;padding:10px 12px;border-radius:16px;text-align:left'><span style='flex:1'><b style='display:block;font-weight:500'>Apply changes when I ask</b><small style='display:block;margin-top:4px;color:var(--subtle);font-size:12px;font-weight:400'>Publish, push, update the repo.</small></span><span id='gh-apply-state' style='font-family:var(--mono);font-size:11px;color:var(--subtle)'></span></button><div style='display:flex;gap:8px;margin-top:10px'><button type='button' class='btn btn-outline' id='gh-change' style='flex:1'>Change repo</button><button type='button' class='btn btn-ghost' id='gh-disconnect' style='flex:1'>Disconnect</button></div></div>";
+      $("gh-apply-state").textContent = gh.autoApply === false ? "Off" : "On";
+      $("gh-apply").style.borderColor = gh.autoApply === false ? "" : "var(--accent)";
+      $("gh-apply").onclick = () => {
+        gh.autoApply = gh.autoApply === false;
+        saveGh();
+        renderGh();
+        toast(gh.autoApply === false ? "Won’t write to GitHub until you turn this back on." : "Will apply repo changes when you ask.");
+      };
+      $("gh-change").onclick = () => {
+        if (ghRepos.length) { ghPhase = "repos"; renderGh(); }
+        else beginConnect();
+      };
+      $("gh-disconnect").onclick = () => {
+        gh.token = ""; gh.owner = ""; gh.repo = ""; gh.login = ""; gh.method = "";
+        saveGh();
+        toast("GitHub disconnected.");
+        renderGh();
+      };
+      return;
+    }
+    root.innerHTML = "<p style='font-size:13px;color:var(--muted);margin:0 0 10px'>Sign in with GitHub the same way you connect it to an AI. OMNI-AI can then commit files when you ask.</p><button type='button' class='btn btn-primary' id='gh-continue'>" + (ghPhase === "working" ? "Opening GitHub…" : "Continue with GitHub") + "</button>" + (ghError ? ("<p style='color:var(--danger);font-size:12px;margin:8px 0 0'>" + ghError + "</p>") : "") + "<details id='gh-pat' style='margin-top:14px'" + (ghPatOpen ? " open" : "") + "><summary style='font-size:12px;color:var(--subtle);cursor:pointer'>Use a token instead</summary><div style='margin-top:10px'><input class='search' id='gh-token' type='password' autocomplete='off' placeholder='ghp_… or github_pat_…' style='padding-left:12px;margin-bottom:8px' /><div style='display:grid;grid-template-columns:1fr 1fr;gap:8px'><input class='search' id='gh-owner' placeholder='Owner' style='padding-left:12px' /><input class='search' id='gh-repo' placeholder='Repo' style='padding-left:12px' /><input class='search' id='gh-branch' placeholder='Branch (main)' style='padding-left:12px' /><input class='search' id='gh-prefix' placeholder='Folder (optional)' style='padding-left:12px' /></div><button class='btn btn-outline' id='gh-test' style='width:100%;margin-top:8px'>Save token</button></div></details>";
+    $("gh-continue").disabled = ghPhase === "working";
+    $("gh-continue").onclick = () => beginConnect();
+    $("gh-pat").ontoggle = () => { ghPatOpen = $("gh-pat").open; };
+    $("gh-token").value = gh.token || "";
+    $("gh-owner").value = gh.owner || "";
+    $("gh-repo").value = gh.repo || "";
+    $("gh-branch").value = gh.branch || "main";
+    $("gh-prefix").value = gh.prefix || "";
+    $("gh-test").onclick = async () => {
+      gh.token = $("gh-token").value.trim();
+      gh.owner = $("gh-owner").value.trim();
+      gh.repo = $("gh-repo").value.trim();
+      gh.branch = $("gh-branch").value.trim() || "main";
+      gh.prefix = $("gh-prefix").value.replace(/^\/+|\/+$/g, "");
+      if (!gh.token) { toast("Paste a GitHub token first."); return; }
+      try {
+        const me = await ghApi("/user");
+        gh.login = me.login || "";
+        if (!gh.owner) gh.owner = gh.login;
+        gh.method = "pat";
+        saveGh();
+        toast("Connected as " + gh.login);
+        renderGh();
+      } catch (err) {
+        toast((err && err.message) || "Could not connect.");
+      }
+    };
+  }
   function parseFence(info) {
     const raw = (info || "").trim();
     if (!raw) return { lang: "", filename: "" };
@@ -765,7 +1153,7 @@
     if (!res.ok) {
       let detail = "";
       try { const j = await res.json(); detail = j.message || ""; } catch (e) {}
-      if (res.status === 401) throw new Error("GitHub token was rejected.");
+      if (res.status === 401) throw new Error("GitHub sign-in expired. Connect GitHub again in Settings.");
       if (res.status === 404) throw new Error("Repo or path not found.");
       throw new Error(detail || ("GitHub error " + res.status));
     }
@@ -2062,13 +2450,14 @@
     const el = $("thread");
     if (!s.messages.length) {
       const meta = modelMeta(s.model);
-      el.innerHTML = "<div class='empty'><div class='mark' style='border:0;background:transparent;color:var(--accent)'><svg viewBox='0 0 32 32' width='28' height='28' fill='currentColor'><path d='M16 2.4c.4 0 .7.24.84.6l2.52 6.62a1 1 0 0 0 .56.56l6.62 2.52a.9.9 0 0 1 0 1.68l-6.62 2.52a1 1 0 0 0-.56.56l-2.52 6.62a.9.9 0 0 1-1.68 0l-2.52-6.62a1 1 0 0 0-.56-.56L4.46 14.38a.9.9 0 0 1 0-1.68l6.62-2.52a1 1 0 0 0 .56-.56L14.16 3a.9.9 0 0 1 .84-.6z'/></svg></div><h2>Hello</h2><p><b style='color:var(--fg);font-weight:500'>" + esc(prefs.botName || "Omni") + "</b> · " + esc(meta.label) + ". Ask, generate an image, or get a file back.</p><div class='prompts' id='prompts'></div></div>";
+      el.innerHTML = "<div class='empty'><div class='mark' style='border:0;background:transparent;color:var(--accent)'><svg viewBox='0 0 32 32' width='28' height='28' fill='currentColor'><path d='M16 2.4c.4 0 .7.24.84.6l2.52 6.62a1 1 0 0 0 .56.56l6.62 2.52a.9.9 0 0 1 0 1.68l-6.62 2.52a1 1 0 0 0-.56.56l-2.52 6.62a.9.9 0 0 1-1.68 0l-2.52-6.62a1 1 0 0 0-.56-.56L4.46 14.38a.9.9 0 0 1 0-1.68l6.62-2.52a1 1 0 0 0 .56-.56L14.16 3a.9.9 0 0 1 .84-.6z'/></svg></div><h2>Hello</h2><p><b style='color:var(--fg);font-weight:500'>" + esc(prefs.botName || "OMNI-AI") + "</b> · " + esc(meta.label) + ". Ask, generate an image, or write files you can publish.</p><div class='prompts' id='prompts'></div>" + (ghConnected() ? "" : "<button type='button' class='btn btn-ghost' id='gh-empty' style='margin-top:18px'>Connect GitHub to publish code</button>") + "</div>";
       PROMPTS.forEach((p, i) => {
         const b = document.createElement("button");
         b.innerHTML = "<small><span>" + p.k + "</span><span>0" + (i + 1) + "</span></small>" + esc(p.t);
         b.onclick = () => send(p.t, null, p.mode);
         $("prompts").appendChild(b);
       });
+      if ($("gh-empty")) $("gh-empty").onclick = showSettings;
       return;
     }
     el.innerHTML = "<div class='msgs'></div>";
@@ -3035,13 +3424,13 @@
   }
 
   function fillSettings() {
-    $("set-name").value = prefs.botName || "Omni";
+    $("set-name").value = prefs.botName || "OMNI-AI";
     $("set-persona").value = prefs.personality || "";
     $("set-memory").value = prefs.memory || "";
     $("learned-mem").textContent = prefs.learnedMemory
       ? ("Learned from chats:\n" + prefs.learnedMemory)
       : "Omni slowly writes notes from what you say. Every model sees them, even ones you have not used yet.";
-    $("set-accent").value = prefs.accent || (THEMES[prefs.theme] || THEMES.gemini).accent;
+    $("set-accent").value = prefs.accent || (THEMES[prefs.theme] || THEMES.ink).accent;
     $("import-status").textContent = prefs.importedMemory ? ("Loaded from " + (prefs.importedFrom || "import")) : "";
     const priv = $("set-private");
     const privState = $("set-private-state");
@@ -3049,18 +3438,7 @@
       privState.textContent = prefs.privateMode ? "On" : "Off";
       priv.style.borderColor = prefs.privateMode ? "var(--accent)" : "";
     }
-    if ($("gh-token")) {
-      $("gh-token").value = gh.token || "";
-      $("gh-owner").value = gh.owner || "";
-      $("gh-repo").value = gh.repo || "";
-      $("gh-branch").value = gh.branch || "main";
-      $("gh-prefix").value = gh.prefix || "";
-      $("gh-status").textContent = gh.login
-        ? ("Connected as " + gh.login + (gh.owner && gh.repo ? (" · writing to " + gh.owner + "/" + gh.repo) : " · add owner and repo"))
-        : (gh.token ? "Token saved. Connect to verify." : "");
-      if ($("gh-apply-state")) $("gh-apply-state").textContent = gh.autoApply === false ? "Off" : "On";
-      if ($("gh-apply")) $("gh-apply").style.borderColor = gh.autoApply === false ? "" : "var(--accent)";
-    }
+    renderGh();
     if ($("hs-note")) {
       const stand = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
       $("hs-note").textContent = stand
@@ -3069,11 +3447,12 @@
     }
     const box = $("theme-opts");
     box.innerHTML = "";
+    const themeNames = { gemini: "Studio", day: "Day", ink: "Ink", dusk: "Dusk" };
     Object.keys(THEMES).forEach((id) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "btn btn-outline";
-      b.textContent = id[0].toUpperCase() + id.slice(1);
+      b.textContent = themeNames[id] || (id[0].toUpperCase() + id.slice(1));
       if (prefs.theme === id) b.style.borderColor = "var(--accent)";
       b.onclick = () => { prefs.theme = id; savePrefs(); fillSettings(); };
       box.appendChild(b);
@@ -3083,7 +3462,7 @@
   function hideSettings() { $("settings-modal").classList.remove("show"); }
   $("settings-btn").onclick = showSettings;
   $("settings-close").onclick = () => {
-    prefs.botName = $("set-name").value.trim() || "Omni";
+    prefs.botName = $("set-name").value.trim() || "OMNI-AI";
     prefs.personality = $("set-persona").value;
     prefs.memory = $("set-memory").value;
     prefs.accent = $("set-accent").value;
@@ -3099,23 +3478,6 @@
     fillSettings();
     toast(prefs.privateMode ? "Private mode on. Chats stay on this device. Memory still works." : "Private mode off.");
   };
-  function pullGhFields() {
-    gh.token = $("gh-token").value.trim();
-    gh.owner = $("gh-owner").value.trim();
-    gh.repo = $("gh-repo").value.trim();
-    gh.branch = $("gh-branch").value.trim() || "main";
-    gh.prefix = $("gh-prefix").value.replace(/^\/+|\/+$/g, "");
-    saveGh();
-  }
-  ["gh-token","gh-owner","gh-repo","gh-branch","gh-prefix"].forEach((id) => {
-    $(id).oninput = pullGhFields;
-  });
-  if ($("gh-apply")) $("gh-apply").onclick = () => {
-    gh.autoApply = gh.autoApply === false;
-    saveGh();
-    fillSettings();
-    toast(gh.autoApply === false ? "Won’t write to GitHub until you turn this back on." : "Will apply repo changes when you ask.");
-  };
   $("site-close") && ($("site-close").onclick = closePreview);
   $("site-phone") && ($("site-phone").onclick = () => { $("site-stage").classList.add("phone"); $("site-stage").classList.remove("desk"); });
   $("site-desk") && ($("site-desk").onclick = () => { $("site-stage").classList.add("desk"); $("site-stage").classList.remove("phone"); });
@@ -3127,20 +3489,6 @@
       : "Fix the website I just previewed. Improve layout, mobile, bugs, and polish. Keep the same files unless a new file is needed. Complete files, real filenames, no placeholders.";
     send(ask, null, "coding-build");
   });
-  $("gh-test").onclick = async () => {
-    pullGhFields();
-    if (!gh.token) { toast("Paste a GitHub token first."); return; }
-    try {
-      const me = await ghApi("/user");
-      gh.login = me.login || "";
-      if (!gh.owner) gh.owner = gh.login;
-      saveGh();
-      fillSettings();
-      toast("Connected as " + gh.login);
-    } catch (err) {
-      toast((err && err.message) || "Could not connect.");
-    }
-  };
   $("copy-import").onclick = async () => {
     try { await navigator.clipboard.writeText(IMPORT_PROMPT); $("copy-import").textContent = "Copied"; setTimeout(() => $("copy-import").textContent = "Copy import prompt", 1400); } catch (e) {}
   };
@@ -3178,11 +3526,18 @@
       refreshAuth();
       loadLiveModels();
       loadUsage();
+      consumeGhRedirect();
     }
   }, 200);
+  setTimeout(() => {
+    clearInterval(waitPuter);
+    consumeGhRedirect();
+  }, 8000);
   loadLiveModels();
   paintUsage();
   paintZrPip();
+  paintGhChip();
+  if ($("gh-chip")) $("gh-chip").onclick = showSettings;
   render();
   </script>
 
