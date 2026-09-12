@@ -1,6 +1,8 @@
-# Omni — Free AI Chat Bot
+# OMNI-AI — Free AI Chat
 
-Talk to **real** Claude Fable, GPT, Grok, Gemini, Kimi, DeepSeek, Qwen, and Mistral in the browser. **No API key.** Sign in with a free [Puter](https://puter.com) account.
+Talk to **real** Claude, GPT, Grok, Gemini, Kimi, DeepSeek, Qwen, and Mistral in the browser. **No API key.** Sign in with a free [Puter](https://puter.com) account.
+
+Add it to your **Home Screen** — it opens as **OMNI-AI**, full screen, with its own icon.
 
 Each model runs **as itself** (Claude is Claude, Grok is Grok) using distilled vendor system prompts — not a shared Omni persona.
 
