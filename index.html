@@ -3,12 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
-  <title>Omni — Free AI Chat</title>
-  <meta name="description" content="Free multi-model AI chat. Real Claude, GPT, Grok, Gemini via Puter.js — no API keys." />
+  <title>OMNI-AI</title>
+  <meta name="description" content="OMNI-AI — free multi-model AI chat. Real Claude, GPT, Grok, Gemini via Puter.js — no API keys." />
   <meta name="theme-color" content="#08080a" />
-  <meta property="og:title" content="Omni — Free AI Chat" />
+  <meta name="apple-mobile-web-app-title" content="OMNI-AI" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta property="og:title" content="OMNI-AI" />
   <meta property="og:description" content="Talk to verified Claude, GPT, Grok, and Gemini models. No API key." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2308080a'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23c5ccd6' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='2.6' fill='%23c5ccd6'/%3E%3C/svg%3E" />
+  <link rel="icon" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-180.png" sizes="180x180" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="omni.webmanifest" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -36,6 +44,10 @@
     * { box-sizing: border-box; }
     html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); -webkit-font-smoothing: antialiased; overflow: hidden; overscroll-behavior: none; }
     html.scroll-lock, html.scroll-lock body { overflow: hidden !important; touch-action: none; }
+    html.standalone, html.standalone body { min-height: 100dvh; -webkit-user-select: none; user-select: none; }
+    html.standalone #app { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+    html.standalone .tools-row { padding-top: max(8px, env(safe-area-inset-top)); }
+    html.standalone input, html.standalone textarea, html.standalone pre, html.standalone code, html.standalone .md { -webkit-user-select: text; user-select: text; }
     button, [role="button"] { cursor: pointer; font-family: inherit; }
     button:disabled { cursor: default; opacity: .4; }
     button { background: none; border: 0; color: inherit; }
@@ -182,9 +194,18 @@
     .live { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-size: 12px; }
     .live .dot { width: 6px; height: 6px; }
     .error { display: flex; gap: 8px; border: 1px solid color-mix(in oklab, var(--danger) 30%, transparent); background: color-mix(in oklab, var(--danger) 10%, transparent); border-radius: 14px; padding: 10px 12px; font-size: 14px; white-space: pre-wrap; }
-    .acts { margin-top: 6px; display: flex; gap: 4px; }
+    .acts { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
     .acts button { min-width: 44px; height: 36px; border-radius: 10px; color: var(--subtle); font-size: 12px; }
     .acts button:hover { color: var(--fg); background: var(--elevated); }
+    .site-prev { position: fixed; inset: 0; z-index: 80; background: var(--bg); display: none; flex-direction: column; }
+    .site-prev.show { display: flex; }
+    .site-prev-hd { display: flex; align-items: center; gap: 8px; padding: 8px 10px max(8px, env(safe-area-inset-top)); border-bottom: 1px solid var(--line); }
+    .site-prev-stage { flex: 1; min-height: 0; display: flex; justify-content: center; padding: 12px; background: var(--elevated); }
+    .site-prev-stage iframe { height: 100%; background: #fff; border: 1px solid var(--line); border-radius: 20px; }
+    .site-prev-stage.phone iframe { width: min(390px, 100%); }
+    .site-prev-stage.desk iframe { width: 100%; max-width: 64rem; border-radius: 12px; }
+    .site-prev-ft { padding: 10px 12px max(12px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); display: flex; gap: 8px; align-items: flex-end; }
+    .site-prev-ft textarea { flex: 1; min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--elevated); color: var(--fg); padding: 8px 10px; font: inherit; font-size: 14px; }
     .composer-wrap { padding: 8px 16px max(14px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--bg); flex-shrink: 0; }
     .modes { max-width: 48rem; margin: 0 auto 8px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
     .code-path { grid-template-columns: 1fr 1fr; }
@@ -314,7 +335,7 @@
           <svg viewBox="0 0 32 32" fill="currentColor"><path d="M16 2.4c.4 0 .7.24.84.6l2.52 6.62a1 1 0 0 0 .56.56l6.62 2.52a.9.9 0 0 1 0 1.68l-6.62 2.52a1 1 0 0 0-.56.56l-2.52 6.62a.9.9 0 0 1-1.68 0l-2.52-6.62a1 1 0 0 0-.56-.56L4.46 14.38a.9.9 0 0 1 0-1.68l6.62-2.52a1 1 0 0 0 .56-.56L14.16 3a.9.9 0 0 1 .84-.6z"/></svg>
         </div>
         <div>
-          <h1>Omni<span class="zr-pip" id="zr-pip" hidden></span></h1>
+          <h1>OMNI-AI<span class="zr-pip" id="zr-pip" hidden></span></h1>
           <p>Chats</p>
         </div>
         </div>
@@ -454,7 +475,7 @@
         <span id="set-private-state" style="font-family:var(--mono);font-size:11px;color:var(--subtle);padding-top:2px">Off</span>
       </button>
       <label class="stat">GitHub</label>
-      <p style="font-size:13px;color:var(--muted);margin:6px 0">Personal access token stays on this device. Used only to publish Code files. Never sent to models.</p>
+      <p style="font-size:13px;color:var(--muted);margin:6px 0">Connect a token. When you ask OMNI-AI to change files, it commits them to this repo. Token stays on this device — never sent to models.</p>
       <input class="search" id="gh-token" type="password" autocomplete="off" placeholder="ghp_… or github_pat_…" style="padding-left:12px;margin:6px 0 8px" />
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <input class="search" id="gh-owner" placeholder="Owner" style="padding-left:12px" />
@@ -462,8 +483,17 @@
         <input class="search" id="gh-branch" placeholder="Branch (main)" style="padding-left:12px" />
         <input class="search" id="gh-prefix" placeholder="Folder (optional)" style="padding-left:12px" />
       </div>
-      <button class="btn btn-outline" id="gh-test" style="width:100%;margin:8px 0 4px">Test connection</button>
+      <button type="button" class="btn btn-outline" id="gh-apply" style="width:100%;justify-content:space-between;margin:8px 0 4px;min-height:52px;padding:10px 12px;border-radius:16px;text-align:left">
+        <span style="flex:1;min-width:0">
+          <b style="display:block;font-weight:500">Apply changes when I ask</b>
+          <small style="display:block;margin-top:4px;color:var(--subtle);font-size:12px;line-height:1.45;font-weight:400">“Push this”, “update the repo”, “commit these files” writes the last Code files.</small>
+        </span>
+        <span id="gh-apply-state" style="font-family:var(--mono);font-size:11px;color:var(--subtle)">On</span>
+      </button>
+      <button class="btn btn-outline" id="gh-test" style="width:100%;margin:8px 0 4px">Connect</button>
       <p class="stat" id="gh-status" style="margin-bottom:12px"></p>
+      <label class="stat">Home Screen</label>
+      <p id="hs-note" style="font-size:13px;color:var(--muted);margin:6px 0 12px">On iPhone: Share → Add to Home Screen. Opens as OMNI-AI, full screen, with its own icon.</p>
       <label class="stat">Import from another AI</label>
       <p style="font-size:13px;color:var(--muted);margin:6px 0">Copy the import prompt, paste it into ChatGPT / Claude / Grok / Gemini, then paste the reply here.</p>
       <button class="btn btn-outline" id="copy-import" style="width:100%;margin-bottom:8px">Copy import prompt</button>
@@ -487,6 +517,20 @@
   </div>
 
   <div class="toast" id="toast" role="status"></div>
+
+  <div class="site-prev" id="site-preview">
+    <div class="site-prev-hd">
+      <button type="button" class="icon-btn" id="site-close" aria-label="Close preview" style="width:44px;height:44px">✕</button>
+      <div style="flex:1;min-width:0"><b>Preview</b><div class="stat" id="site-name">site</div></div>
+      <button type="button" class="btn btn-ghost" id="site-phone">Phone</button>
+      <button type="button" class="btn btn-ghost" id="site-desk">Desktop</button>
+    </div>
+    <div class="site-prev-stage phone" id="site-stage"><iframe id="site-frame" title="Website preview" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe></div>
+    <div class="site-prev-ft">
+      <textarea id="site-notes" placeholder="e.g. Make the header stick, bigger type on phone…"></textarea>
+      <button type="button" class="btn btn-primary" id="site-fix" style="width:auto;padding:0 16px">Fix this</button>
+    </div>
+  </div>
 
   <div id="cmd-overlay" role="dialog" aria-label="Developer console">
     <div id="cmd-scan"></div>
@@ -590,7 +634,7 @@
   }
   const SCHOOL = "The person is doing school work: homework, essays, study guides, math, science, language, or exam prep. Help them learn. Show steps, not just the answer. Use short headings and numbered steps. For essays: outline first, then draft if they asked. Do not write a full assignment as if it were theirs unless they explicitly asked you to draft it.\n\nSchool writing rules override everything else in this reply, including default voice.\n\nWrite like a human who thinks clearly and edits ruthlessly.\n\nBanned words, never use: crucial, delve, enhance, foster, garner, highlight (as a verb), interplay, intricate, key (as filler), landscape (metaphor), meticulous, pivotal, showcase, tapestry, testament, underscore (as a verb), valuable, vibrant, groundbreaking, renowned, diverse array, rich heritage, commitment to.\n\nStructural rules: default to \"is\" instead of \"serves as / stands as / marks a / represents a.\" Never end a sentence with a dangling \"-ing\" phrase that editorializes. Don't use the rule of three just to sound thorough. Don't use \"not just X but Y\" unless the contrast is the point. No \"In summary / In conclusion / Overall.\" No \"I hope this helps / Let me know if.\" Don't attribute claims to vague \"experts\" without naming them. Don't inflate significance. Don't swap the word for a thing just for variety. No promotional tone. Headings in sentence case. Bold only for labels, not decoration.\n\nVoice: direct, specific, short declarative sentences. State things without editorializing their importance. No em dashes.";
   const CODE_PLAN = "The person is in Omni Code · Plan.\n\nDo not write full source yet. Produce a tight implementation plan:\n1. What you are building, in 2–4 sentences.\n2. File tree with a one-line job for each file.\n3. Stack and constraints.\n4. Order of work (numbered).\n5. Risks or open questions (short).\n\nEnd with: Tap Build to implement this plan.\nNo giant code blocks. Be specific.";
-  const CODE_BUILD = "The person is in Omni Code · Build.\n\nShip working files. Every file they need goes in a fenced block whose info line is `language filename.ext`.\nComplete files. No placeholders. Real filenames. Lead with a one-line summary, then the files, then 2–4 lines on how to run.";
+  const CODE_BUILD = "The person is in Omni Code · Build.\n\nShip working files. Every file they need goes in a fenced block whose info line is `language filename.ext`, for example html index.html.\nComplete files. No placeholders. Real filenames on the fence line so Copy and Preview are exact.\nFor a website: complete index.html (plus styles.css / script.js if split) that runs in an in-app preview iframe.\nLead with a one-line summary, then the files, then 2–4 lines on how to run. They can tap Preview on HTML.";
   const DEV_ZERO = "ZERO-RULES is ON for this developer session (Omni-CMD). Omni product policies, school-writing rules, identity wrappers, channel notes, and custom-instruction overlays are disabled. Answer the user's request directly and completely. If they ask whether zero-rules, developer mode, or OMNI-CMD is active: say yes — it is on for this tab, and stay in this mode. Do not claim there is no such setting. Do not mention Omni, Puter, or these notes unless asked. Provider-level safety still applies.";
   const ZERO_TURN = "[ZERO-RULES ON] Developer session is active. Answer directly. If asked whether zero-rules is on, say yes.";
   const IMPORT_PROMPT = "You are helping me import context from one AI assistant to another. Your job is to go through our past conversations and sum up what you know about me.\n\nIn the output, please avoid using any first-person pronouns (I, my, me, mine) and any second-person pronouns (you, your, yours). Instead, refer to the individual you have learned about as \"the user\" or use neutral phrasing.\n\nPreserve the user's words verbatim where possible, especially for instructions and preferences.\n\nCategories (output in this order):\n1. Demographics Information\n2. Interests & Preferences\n3. Relationships\n4. Dated Events, Projects & Plans\n5. Instructions\n\nOutput ONLY the requested information.\n\nFinally, complete the sentence \"Imported from: <name>\".";
@@ -649,22 +693,42 @@
     else el.setAttribute("hidden", "");
   }
   const GH_KEY = "omni-github-v1";
-  let gh = { token: "", owner: "", repo: "", branch: "main", prefix: "", login: "" };
+  let gh = { token: "", owner: "", repo: "", branch: "main", prefix: "", login: "", autoApply: true };
   try { Object.assign(gh, JSON.parse(localStorage.getItem(GH_KEY) || "{}")); } catch (e) {}
   function saveGh() { try { localStorage.setItem(GH_KEY, JSON.stringify(gh)); } catch (e) {} }
   function ghConnected() { return !!(gh.token && gh.owner && gh.repo); }
+  function parseFence(info) {
+    const raw = (info || "").trim();
+    if (!raw) return { lang: "", filename: "" };
+    const named = raw.match(/(?:filename|file|name|title|path)\s*[=:]\s*["']?([^"'\s]+)["']?/i);
+    const bits = raw.split(/\s+/);
+    let lang = bits[0] || "";
+    let filename = named && named[1] ? named[1] : "";
+    if (!filename) {
+      const rest = bits.slice(1).join(" ").replace(/^[:]/, "").trim();
+      if (rest && /\.[A-Za-z0-9]{1,12}$/.test((rest.split(/[/\\]/).pop() || ""))) filename = rest;
+      else if (/^[A-Za-z0-9._\-]+\.[A-Za-z0-9]{1,12}$/.test(lang)) { filename = lang; lang = (lang.split(".").pop() || "").toLowerCase(); }
+    }
+    filename = String(filename).replace(/^["'`]+|["'`]+$/g, "").replace(/\\/g, "/").split("/").filter(function (x) { return x && x !== "." && x !== ".."; }).join("/");
+    return { lang: lang, filename: filename };
+  }
+  function canonName(lang, i) {
+    const k = (lang || "").toLowerCase();
+    const map = { html: "index.html", css: "styles.css", javascript: "script.js", js: "script.js", python: "main.py", py: "main.py", typescript: "main.ts", ts: "main.ts" };
+    if (!i && map[k]) return map[k];
+    const ext = k === "python" ? "py" : k === "javascript" ? "js" : k === "typescript" ? "ts" : (k || "txt");
+    return i ? ("file-" + (i + 1) + "." + ext) : ("main." + ext);
+  }
   function collectFiles(src) {
     const out = [];
     const re = /```([^\n`]*)\n([\s\S]*?)```/g;
     let m, i = 0, used = {};
     while ((m = re.exec(src))) {
-      const info = (m[1] || "").trim();
-      const bits = info.split(/\s+/);
-      let lang = bits[0] || "";
-      let fname = bits.slice(1).join(" ").replace(/^[:]/, "");
-      if (lang.includes(".")) { fname = lang; lang = (lang.split(".").pop() || "txt"); }
-      if (!fname) fname = "main." + (lang === "python" ? "py" : lang === "javascript" ? "js" : lang === "typescript" ? "ts" : lang || "txt");
-      const code = m[2].replace(/\n$/, "");
+      const parsed = parseFence(m[1] || "");
+      let lang = parsed.lang;
+      let fname = parsed.filename;
+      if (!fname) fname = canonName(lang, i);
+      const code = m[2].replace(/\n$/, "").replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
       if (!code.trim()) continue;
       if (used[fname]) {
         const dot = fname.lastIndexOf(".");
@@ -1621,6 +1685,85 @@
     });
   }
   function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+  function copyExact(text) {
+    const value = String(text == null ? "" : text).replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    if (!value) return Promise.resolve(false);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(value).then(function () { return true; }).catch(function () { return copyFallback(value); });
+    }
+    return Promise.resolve(copyFallback(value));
+  }
+  function copyFallback(value) {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = value;
+      ta.setAttribute("readonly", "");
+      ta.style.cssText = "position:fixed;top:0;left:0;width:2px;height:2px;opacity:0.01;z-index:2147483647";
+      document.body.appendChild(ta);
+      ta.focus(); ta.select(); ta.setSelectionRange(0, value.length);
+      const ok = document.execCommand("copy");
+      ta.remove();
+      return ok;
+    } catch (e) { return false; }
+  }
+  function toB64(str) {
+    const bytes = new TextEncoder().encode(str);
+    let bin = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin);
+  }
+  function fromB64(b64) {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+  function isHtmlFile(f) {
+    const n = (f.filename || "").toLowerCase();
+    return /\.html?$/.test(n) || /<!doctype html|<html[\s>]/i.test(f.code || "");
+  }
+  function assembleSite(files) {
+    if (!files || !files.length) return "";
+    const htmlFile = files.find(isHtmlFile);
+    if (!htmlFile) return "";
+    let doc = htmlFile.code;
+    if (!/<html[\s>]/i.test(doc)) doc = "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'></head><body>" + doc + "</body></html>";
+    const others = files.filter(function (f) { return f !== htmlFile; });
+    others.filter(function (f) { return /\.css$/i.test(f.filename); }).forEach(function (c) {
+      const name = (c.filename.split("/").pop() || c.filename).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const re = new RegExp("<link\\b[^>]*href=[\"'][^\"']*" + name + "[\"'][^>]*>", "i");
+      const tag = "<style>\n" + c.code + "\n</style>";
+      if (re.test(doc)) doc = doc.replace(re, tag);
+      else if (/<\/head>/i.test(doc)) doc = doc.replace(/<\/head>/i, tag + "</head>");
+      else doc = tag + doc;
+    });
+    others.filter(function (f) { return /\.(js|mjs)$/i.test(f.filename); }).forEach(function (j) {
+      const name = (j.filename.split("/").pop() || j.filename).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const re = new RegExp("<script\\b[^>]*src=[\"'][^\"']*" + name + "[\"'][^>]*>\\s*</" + "script>", "i");
+      const tag = "<script>\n" + j.code + "\n</" + "script>";
+      if (re.test(doc)) doc = doc.replace(re, tag);
+      else if (/<\/body>/i.test(doc)) doc = doc.replace(/<\/body>/i, tag + "</body>");
+      else doc += tag;
+    });
+    return doc;
+  }
+  let previewFiles = [];
+  let previewUrl = "";
+  function openPreview(files) {
+    previewFiles = files || [];
+    const html = assembleSite(previewFiles);
+    if (!html) { toast("No HTML to preview."); return; }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
+    $("site-frame").src = previewUrl;
+    const first = previewFiles.find(isHtmlFile);
+    $("site-name").textContent = first ? first.filename : "site";
+    $("site-preview").classList.add("show");
+  }
+  function closePreview() {
+    $("site-preview").classList.remove("show");
+    if (previewUrl) { URL.revokeObjectURL(previewUrl); previewUrl = ""; }
+  }
   const PROMPTS = [
     { k: "School", t: "Walk me through this algebra problem step by step: 3(x - 4) = 2x + 5", mode: "school" },
     { k: "Image", t: "A quiet editorial studio desk at night, steel lamp, warm paper", mode: "image" },
@@ -1637,6 +1780,8 @@
       const top = vv ? Math.round(vv.offsetTop) : 0;
       document.documentElement.style.setProperty("--app-h", h + "px");
       document.documentElement.style.setProperty("--app-top", top + "px");
+      const stand = window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: fullscreen)").matches || window.navigator.standalone === true;
+      document.documentElement.classList.toggle("standalone", stand);
     };
     apply();
     window.visualViewport?.addEventListener("resize", apply);
@@ -1877,7 +2022,7 @@
         let fname = bits.slice(1).join(" ").replace(/^[:]/,"");
         if (lang.includes(".")) { fname = lang; lang = (lang.split(".").pop() || "txt"); }
         if (!fname) fname = "main." + (lang === "python" ? "py" : lang === "javascript" ? "js" : lang === "typescript" ? "ts" : lang === "cpp" ? "cpp" : lang);
-        html += "<pre><div class='code-hd'><span>" + esc(fname) + "</span><span><button type='button' data-dl='" + esc(fname).replace(/'/g,"") + "'>Download</button><button type='button' data-copy-code='1'>Copy</button></span></div><code>" + hl(p.v, lang) + "</code></pre>";
+        html += "<pre data-raw='" + toB64(p.v) + "'><div class='code-hd'><span>" + esc(fname) + "</span><span><button type='button' data-dl='" + esc(fname).replace(/'/g,"") + "'>Download</button><button type='button' data-copy-code='1'>Copy</button></span></div><code>" + hl(p.v, lang) + "</code></pre>";
       } else html += inline(p.v) + (caret && i === parts.length - 1 ? "<span class='caret'></span>" : "");
     });
     if (caret && !parts.length) html += "<span class='caret'></span>";
@@ -1962,9 +2107,18 @@
         const reroute = m.fallbackNotice ? "<div class='reroute'>" + esc(m.fallbackNotice) + "</div>" : "";
         const lastUser = [...s.messages].reverse().find(x => x.role === "user");
         const canBuild = lastA && lastA.id === m.id && !streaming && lastUser && lastUser.codePath === "plan";
-        const canPub = m.content && !m.streaming && collectFiles(m.content).length;
-        d.innerHTML = "<div class='ai-mark' style='border:0;background:transparent;color:var(--accent)'><svg viewBox='0 0 32 32' width='18' height='18' fill='currentColor'><path d='M16 2.4c.4 0 .7.24.84.6l2.52 6.62a1 1 0 0 0 .56.56l6.62 2.52a.9.9 0 0 1 0 1.68l-6.62 2.52a1 1 0 0 0-.56.56l-2.52 6.62a.9.9 0 0 1-1.68 0l-2.52-6.62a1 1 0 0 0-.56-.56L4.46 14.38a.9.9 0 0 1 0-1.68l6.62-2.52a1 1 0 0 0 .56-.56L14.16 3a.9.9 0 0 1 .84-.6z'/></svg></div><div class='ai-body'><div class='ai-meta'>" + esc(meta.label) + "<span class='v'>verified</span>" + live + "</div>" + reroute + think + body + "<div class='acts'><button data-copy='1'>Copy</button>" + (lastA && lastA.id === m.id && !streaming ? "<button data-regen='1'>Retry</button>" : "") + (canBuild ? "<button data-build='1'>Build it</button>" : "") + (canPub ? "<button data-pub='1'>Publish</button>" : "") + "</div></div>";
-        d.querySelector("[data-copy]")?.addEventListener("click", () => navigator.clipboard.writeText(m.content || ""));
+        const filesNow = (!m.streaming && m.content) ? collectFiles(m.content) : [];
+        const canPub = filesNow.length;
+        const canPrev = filesNow.some(isHtmlFile);
+        d.innerHTML = "<div class='ai-mark' style='border:0;background:transparent;color:var(--accent)'><svg viewBox='0 0 32 32' width='18' height='18' fill='currentColor'><path d='M16 2.4c.4 0 .7.24.84.6l2.52 6.62a1 1 0 0 0 .56.56l6.62 2.52a.9.9 0 0 1 0 1.68l-6.62 2.52a1 1 0 0 0-.56.56l-2.52 6.62a.9.9 0 0 1-1.68 0l-2.52-6.62a1 1 0 0 0-.56-.56L4.46 14.38a.9.9 0 0 1 0-1.68l6.62-2.52a1 1 0 0 0 .56-.56L14.16 3a.9.9 0 0 1 .84-.6z'/></svg></div><div class='ai-body'><div class='ai-meta'>" + esc(meta.label) + "<span class='v'>verified</span>" + live + "</div>" + reroute + think + body + "<div class='acts'><button data-copy='1'>Copy</button>" + (filesNow.length > 1 ? "<button data-copy-all='1'>Copy all</button>" : "") + (lastA && lastA.id === m.id && !streaming ? "<button data-regen='1'>Retry</button>" : "") + (canPrev ? "<button data-preview='1'>Preview</button>" : "") + (canBuild ? "<button data-build='1'>Build it</button>" : "") + (canPub ? "<button data-pub='1'>Publish</button>" : "") + "</div></div>";
+        d.querySelector("[data-copy]")?.addEventListener("click", () => {
+          const payload = filesNow.length === 1 ? filesNow[0].code : (filesNow.length ? filesNow.map(function (f) { return "// ===== " + f.filename + " =====\n" + f.code; }).join("\n\n") : (m.content || ""));
+          copyExact(payload).then(function (ok) { if (ok) toast("Copied"); });
+        });
+        d.querySelector("[data-copy-all]")?.addEventListener("click", () => {
+          copyExact(filesNow.map(function (f) { return "// ===== " + f.filename + " =====\n" + f.code; }).join("\n\n")).then(function (ok) { if (ok) toast("Copied all"); });
+        });
+        d.querySelector("[data-preview]")?.addEventListener("click", () => openPreview(filesNow));
         d.querySelector("[data-regen]")?.addEventListener("click", regenerate);
         d.querySelector("[data-build]")?.addEventListener("click", () => send("Build the plan. Write every file complete, no placeholders.", null, "coding-build"));
         d.querySelector("[data-pub]")?.addEventListener("click", async () => {
@@ -1980,18 +2134,33 @@
         d.querySelectorAll("[data-copy-code]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const pre = btn.closest("pre");
-            const raw = pre ? pre.querySelector("code") : null;
-            if (raw) navigator.clipboard.writeText(raw.textContent || "");
-            btn.textContent = "Copied";
-            setTimeout(() => { btn.textContent = "Copy"; }, 1400);
+            let src = "";
+            if (pre && pre.getAttribute("data-raw")) {
+              try { src = fromB64(pre.getAttribute("data-raw")); } catch (e) { src = ""; }
+            }
+            if (!src) {
+              const raw = pre ? pre.querySelector("code") : null;
+              src = raw ? (raw.textContent || "") : "";
+            }
+            copyExact(src).then(function (ok) {
+              btn.textContent = ok ? "Copied" : "Retry";
+              setTimeout(() => { btn.textContent = "Copy"; }, 1400);
+            });
           });
         });
         d.querySelectorAll("[data-dl]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const pre = btn.closest("pre");
-            const raw = pre ? pre.querySelector("code") : null;
+            let src = "";
+            if (pre && pre.getAttribute("data-raw")) {
+              try { src = fromB64(pre.getAttribute("data-raw")); } catch (e) { src = ""; }
+            }
+            if (!src) {
+              const raw = pre ? pre.querySelector("code") : null;
+              src = raw ? (raw.textContent || "") : "";
+            }
             const name = btn.getAttribute("data-dl") || "file.txt";
-            const blob = new Blob([raw ? raw.textContent : ""], { type: "text/plain;charset=utf-8" });
+            const blob = new Blob([src], { type: "text/plain;charset=utf-8" });
             const a = document.createElement("a");
             a.href = URL.createObjectURL(blob);
             a.download = name;
@@ -2557,6 +2726,16 @@
           prefs.learnedMemory = mergeLearned(prefs.learnedMemory, facts);
           savePrefs();
         }
+        const built = collectFiles(finalText);
+        if (built.length && ghConnected() && gh.autoApply !== false && wantsGithubAfter(prompt)) {
+          try {
+            const result = await publishFiles(built, s.title || "OMNI-AI");
+            s.messages.push({ id: uid("msg"), role: "assistant", content: "Updated " + result.paths.length + " file" + (result.paths.length === 1 ? "" : "s") + " on GitHub\n" + result.url + "\n\n" + result.paths.map(function (p) { return "- `" + p + "`"; }).join("\n"), createdAt: Date.now() });
+            toast("GitHub · " + result.paths.length + " files");
+          } catch (err) {
+            toast((err && err.message) || "GitHub update failed.");
+          }
+        }
       }
     } catch (err) {
       const m = (err && (err.msg || err.message)) || "The model request failed.";
@@ -2587,7 +2766,9 @@
     const s = current();
     const coding = m === "coding-plan" || m === "coding-build";
     const asImage = m === "image" || ((m === "chat" || !m) && looksImg(t) && !file);
-    if (!asImage && looksPublish(t) && ghConnected()) {
+    if (!asImage && isGithubWriteCommand(t)) {
+      if (!ghConnected()) { toast("Connect GitHub in Settings first."); return; }
+      if (gh.autoApply === false) { toast("Turn on Apply changes when I ask in Settings."); return; }
       const lastAsst = [...s.messages].reverse().find(x => x.role === "assistant" && x.content && !x.error);
       const files = lastAsst ? collectFiles(lastAsst.content) : [];
       if (!files.length) { toast("No files in the last reply to publish."); return; }
@@ -2625,7 +2806,24 @@
     return /^\/(imagine|image|img|draw|picture)\b/i.test(t) || /\b(generate|create|make|draw|render)\b.{0,40}\b(image|picture|photo|illustration|logo)\b/i.test(t);
   }
   function looksPublish(t) {
-    return /\b(publish (this|it|these|the (files?|code|project)|to (my )?github)|push (this|it|these|the (files?|code)|to github)|commit (this|these files|the (files?|code)) to (my )?github|upload (this|these files|the (files?|code)) to (my )?github)\b/i.test(t);
+    return /\b(publish (this|it|these|the (files?|code|project)|to (my )?github)|push (this|it|these|the (files?|code)|to github)|commit (this|these files|the (files?|code)) to (my )?github|upload (this|these files|the (files?|code)) to (my )?github|send (this|it|these files) to (my )?github)\b/i.test(t);
+  }
+  function looksGithubWrite(t) {
+    t = String(t || "").trim();
+    if (looksPublish(t)) return true;
+    return /\b((push|commit|upload|publish|save|write|update|apply|sync)\b.{0,48}\b(github|repo|repository)\b|\b(github|repo|repository)\b.{0,48}\b(push|commit|upload|publish|update|change|apply)\b|update (the|this|my) (file|code|repo|project)|push (the )?(changes?|fix|update|files?)|commit (the )?(changes?|fix|update)|apply (this|these|the) (changes?|fix|update))\b/i.test(t);
+  }
+  function isGithubWriteCommand(t) {
+    t = String(t || "").trim();
+    if (!looksGithubWrite(t)) return false;
+    if (t.length > 240) return false;
+    const starts = /^(ok[,.]?\s+|please\s+|now\s+|can you\s+|could you\s+)?(publish|push|commit|upload|apply|save|update|sync)\b/i.test(t);
+    const mentionsBuild = /\b(build|create|make|write me|generate|code a|implement|scaffold|website|app)\b/i.test(t);
+    if (mentionsBuild && !starts) return false;
+    return starts || t.length < 90;
+  }
+  function wantsGithubAfter(t) {
+    return looksGithubWrite(t) && !isGithubWriteCommand(t);
   }
   async function runImage(prompt) {
     const s = current();
@@ -2858,8 +3056,16 @@
       $("gh-branch").value = gh.branch || "main";
       $("gh-prefix").value = gh.prefix || "";
       $("gh-status").textContent = gh.login
-        ? ("Connected as " + gh.login + (gh.owner && gh.repo ? (" · " + gh.owner + "/" + gh.repo) : " · add owner and repo"))
-        : (gh.token ? "Token saved. Test connection." : "");
+        ? ("Connected as " + gh.login + (gh.owner && gh.repo ? (" · writing to " + gh.owner + "/" + gh.repo) : " · add owner and repo"))
+        : (gh.token ? "Token saved. Connect to verify." : "");
+      if ($("gh-apply-state")) $("gh-apply-state").textContent = gh.autoApply === false ? "Off" : "On";
+      if ($("gh-apply")) $("gh-apply").style.borderColor = gh.autoApply === false ? "" : "var(--accent)";
+    }
+    if ($("hs-note")) {
+      const stand = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+      $("hs-note").textContent = stand
+        ? "Running as OMNI-AI — full screen, Home Screen icon."
+        : "On iPhone: Share → Add to Home Screen. Opens as OMNI-AI, full screen, with its own icon.";
     }
     const box = $("theme-opts");
     box.innerHTML = "";
@@ -2903,6 +3109,23 @@
   }
   ["gh-token","gh-owner","gh-repo","gh-branch","gh-prefix"].forEach((id) => {
     $(id).oninput = pullGhFields;
+  });
+  if ($("gh-apply")) $("gh-apply").onclick = () => {
+    gh.autoApply = gh.autoApply === false;
+    saveGh();
+    fillSettings();
+    toast(gh.autoApply === false ? "Won’t write to GitHub until you turn this back on." : "Will apply repo changes when you ask.");
+  };
+  $("site-close") && ($("site-close").onclick = closePreview);
+  $("site-phone") && ($("site-phone").onclick = () => { $("site-stage").classList.add("phone"); $("site-stage").classList.remove("desk"); });
+  $("site-desk") && ($("site-desk").onclick = () => { $("site-stage").classList.add("desk"); $("site-stage").classList.remove("phone"); });
+  $("site-fix") && ($("site-fix").onclick = () => {
+    const notes = ($("site-notes").value || "").trim();
+    closePreview();
+    const ask = notes
+      ? ("Fix the website I just previewed. Issues:\n" + notes + "\n\nKeep the same files unless a new file is needed. Complete files, real filenames, no placeholders.")
+      : "Fix the website I just previewed. Improve layout, mobile, bugs, and polish. Keep the same files unless a new file is needed. Complete files, real filenames, no placeholders.";
+    send(ask, null, "coding-build");
   });
   $("gh-test").onclick = async () => {
     pullGhFields();
@@ -2962,5 +3185,6 @@
   paintZrPip();
   render();
   </script>
+
 </body>
 </html>
