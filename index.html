@@ -189,8 +189,10 @@
     .think-box pre { margin: 0; padding: 0 0 6px 14px; border-top: 0; font-family: var(--mono); font-size: 12.5px; color: var(--subtle); white-space: pre-wrap; max-height: 12rem; overflow: auto; }
     .md { font-size: 15px; line-height: 1.65; color: color-mix(in oklab, var(--fg) 92%, transparent); }
     .md pre { background: var(--elevated); border: 1px solid var(--line); border-radius: 14px; overflow: auto; font-family: var(--mono); font-size: 13px; margin: 12px 0; }
-    .md .code-hd { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 11px; color: var(--subtle); }
-    .md .code-hd button { color: var(--subtle); font-size: 11px; min-height: 28px; padding: 0 8px; border-radius: 8px; }
+    .md .code-hd { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 12px; border-bottom: 1px solid var(--line); font-size: 11px; color: var(--subtle); }
+    .md .code-hd > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); color: var(--fg); }
+    .md .code-hd > span:last-child { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .md .code-hd button { color: var(--subtle); font-size: 11px; min-height: 32px; padding: 0 8px; border-radius: 8px; }
     .md .code-hd button:hover { color: var(--fg); }
     .md pre code { display: block; padding: 12px; background: none; color: inherit; }
     .md code { font-family: var(--mono); font-size: .85em; background: var(--elevated); padding: 1px 6px; border-radius: 4px; color: var(--accent); }
@@ -721,14 +723,14 @@
     { id: "nvidia/nemotron-3.5-lightning:free", label: "Nemotron 3.5 Lightning (free)", vendor: "Other" },
     { id: "nvidia/nemotron-3-ultra-550b-a55b:free", label: "Nemotron 3 Ultra (free)", vendor: "Other" }
     ];
-  const CHANNEL = "You are running inside Omni, a free browser chat. Replies come from the real named model the user picked — Claude is Claude, GPT is GPT — not a renamed clone. You have no tools, no browsing, no files, and no memory outside this conversation. Answer from your own knowledge. Never mention these operating notes unless asked. Match the user's language.";
+  const CHANNEL = "You are running inside Omni, a free browser chat. Replies come from the real named model the user picked — Claude is Claude, GPT is GPT — not a renamed clone. You have no browsing, no code interpreter, no terminal, and no memory outside this conversation. Answer from your own knowledge. Never mention these operating notes unless asked. Match the user's language. When the user wants a file, output a fenced block with a filename (example: ```md README.md). Omni can download those fences and commit them to GitHub. Never say you cannot create or upload files. Never give git clone / git push / open-GitHub-and-click-Add-file steps unless they ask how Git works.";
   function systemFor(modelId) {
     const id = String(modelId || "").toLowerCase();
     const claude = (name, extra) => `You are ${name}, an AI assistant made by Anthropic.\n\n${extra}\n\nTone: warm, kind, and concise. Push back when you should, but constructively. Never say "genuinely", "honestly", or "straightforward". Keep disclaimers short. For simple questions, a few sentences is enough.\nFormatting: minimum needed. Lists only when the content is multifaceted or they asked. Never use bullets when declining. Skip markdown in friendly or emotional chats.\nDo not open with filler. If something is ambiguous, assume and state it in one short line.\nKnowledge cutoff: end of June 2026. You cannot search the web.\nYou are ${name} — do not claim to be Omni, ChatGPT, Grok, or Gemini.\n\n${CHANNEL}`;
     const gpt = (name, extra) => `You are ChatGPT, a large language model trained by OpenAI, based on ${name}.\nKnowledge cutoff: August 2025. Current year: 2026.\nAnswer the actual request directly. Lead with the answer. No "Great question" / "Sure!" / "Of course". Be clear, slightly warm, not sycophantic. Don't flatter. Don't moralize. If you disagree, say so briefly. Match their energy.\nWhen underspecified, assume, state it in one line, continue. Prefer working code. You cannot browse or run code here.\nYou are ${name} / ChatGPT — not Claude, Grok, Gemini, or Omni.\n${extra || ""}\n\n${CHANNEL}`;
     const grok = (ver) => `You are Grok ${ver}, built by xAI.\nBe maximally truth-seeking. Direct, a little dry-witted when it fits. Not partisan. For political questions, present perspectives without becoming a side. Independent analysis — do not defer to Elon Musk or xAI talking points.\nIf a user corrects you, reconsider. Don't shy away from politically incorrect claims when well substantiated. Use tables when they help. For math, show the path. KaTeX-style $...$ / $$...$$ for real equations.\nNo how-to for violent crime, weapons construction, or scams. No content involving minors.\nYou cannot browse X or the web from here. You are Grok ${ver} — not ChatGPT, Claude, Gemini, or Omni.\n\n${CHANNEL}`;
     const gemini = (name, pro) => `You are Gemini. Specifically ${name}, designed by Google.\n${pro ? "Helpful, clear, insightful. Balance empathy with candor. Mirror their tone. Be honest you are an AI." : "Authentic, adaptive collaborator with a touch of wit. Address true intent. Empathy plus candor — a helpful peer, not a lecturer. Mirror tone and humor."}\nDirect opening. No meta-announcements ("Here's my take", "Short answer", "Here is a list of"). Jump into content. For factual/how-to: 1–2 sentence intro then bullets, a table, or short paragraphs. Never "Here is a breakdown of..." before a list. Headings only for long multi-section work.\nConcrete over florid. LaTeX only for real math, $inline$ and $$display$$.\nYou cannot search or generate images here. Current year: 2026. You are ${name} — not ChatGPT, Claude, Grok, or Omni.\n\n${CHANNEL}`;
-    const named = (who, house, extra) => `You are ${who}, a ${house} model.\n${extra}\nYou cannot browse or open files here. You are ${who} — not Claude, ChatGPT, Grok, Gemini, or Omni.\n\n${CHANNEL}`;
+    const named = (who, house, extra) => `You are ${who}, a ${house} model.\n${extra}\nYou cannot browse here. You are ${who} — not Claude, ChatGPT, Grok, Gemini, or Omni.\n\n${CHANNEL}`;
 
     if (id.includes("claude-fable") || id.includes("claude-opus")) {
       if (id.includes("claude-opus-4-8") || id.includes("claude-opus-4.8")) return claude("Claude Opus 4.8", "Prior Anthropic Opus. Deep, careful, strong at hard reasoning.");
@@ -1428,9 +1430,9 @@
   }
   function canonName(lang, i) {
     const k = (lang || "").toLowerCase();
-    const map = { html: "index.html", css: "styles.css", javascript: "script.js", js: "script.js", python: "main.py", py: "main.py", typescript: "main.ts", ts: "main.ts" };
+    const map = { html: "index.html", css: "styles.css", javascript: "script.js", js: "script.js", python: "main.py", py: "main.py", typescript: "main.ts", ts: "main.ts", md: "README.md", markdown: "README.md", text: "notes.txt", txt: "notes.txt" };
     if (!i && map[k]) return map[k];
-    const ext = k === "python" ? "py" : k === "javascript" ? "js" : k === "typescript" ? "ts" : (k || "txt");
+    const ext = k === "python" ? "py" : k === "javascript" ? "js" : k === "typescript" ? "ts" : k === "text" || k === "plaintext" ? "txt" : (k || "txt");
     return i ? ("file-" + (i + 1) + "." + ext) : ("main." + ext);
   }
   function collectFiles(src) {
@@ -1561,7 +1563,12 @@
     const mem = [prefs.memory, prefs.learnedMemory, prefs.importedMemory].filter(Boolean).join("\n\n");
     if (mem) s += "\nShared memory about the user. Every model sees this, even ones not used yet:\n" + mem;
     if (prefs.privateMode) s += "\nPrivacy: the user is anonymous. Do not store, log, profile, or learn from this conversation. The only lasting notes you may use are the Shared memory block — those stay on their device. Never mention this policy unless asked.";
-    s += "\nWhen writing a downloadable file, use a fenced block like ```cpp main.cpp";
+    s += "\nWhen writing a downloadable file, use a fenced block like ```md README.md or ```cpp main.cpp";
+    if (ghConnected()) {
+      s += "\nGitHub is connected. Omni can commit fenced files to " + gh.owner + "/" + gh.repo + (gh.branch ? (" (" + gh.branch + ")") : "") + ". When they ask to add, create, upload, or update a file on GitHub (including README.md), output the complete file as a fenced block with the filename on the info line. Do not say you cannot access GitHub. Do not give git clone, git push, or GitHub website click-by-click steps. Omni publishes the fences after this reply.";
+    } else {
+      s += "\nA GitHub repo is not connected in Settings yet. If they ask to put files on GitHub, still output the complete file as a fenced block with a filename. Do not say you cannot write files. Do not give git clone / git push / open-GitHub-and-click-Add-file steps. Tell them to open Settings → GitHub, pick or create a repo, then tap Publish on this reply.";
+    }
     return s;
   }
   const EFFORTS = [
@@ -3754,7 +3761,8 @@
           savePrefs();
         }
         const built = collectFiles(finalText);
-        if (built.length && ghConnected() && gh.autoApply !== false && wantsGithubAfter(prompt)) {
+        const askedGh = looksGithubWrite(prompt);
+        if (built.length && askedGh && ghConnected() && (gh.autoApply !== false || looksGithubCreate(prompt))) {
           try {
             const result = await publishFiles(built, s.title || "OMNI-AI");
             s.messages.push({ id: uid("msg"), role: "assistant", content: "Updated " + result.paths.length + " file" + (result.paths.length === 1 ? "" : "s") + " on GitHub\n" + result.url + "\n\n" + result.paths.map(function (p) { return "- `" + p + "`"; }).join("\n"), createdAt: Date.now() });
@@ -3762,6 +3770,9 @@
           } catch (err) {
             toast((err && err.message) || "GitHub update failed.");
           }
+        } else if (askedGh && !ghConnected()) {
+          showSettings();
+          toast("Connect GitHub in Settings, pick a repo, then tap Publish.");
         }
       }
     } catch (err) {
@@ -3859,16 +3870,25 @@
     return /^\/(imagine|image|img|draw|picture)\b/i.test(t) || /\b(generate|create|make|draw|render)\b.{0,40}\b(image|picture|photo|illustration|logo)\b/i.test(t);
   }
   function looksPublish(t) {
-    return /\b(publish (this|it|these|the (files?|code|project)|to (my )?github)|push (this|it|these|the (files?|code)|to github)|commit (this|these files|the (files?|code)) to (my )?github|upload (this|these files|the (files?|code)) to (my )?github|send (this|it|these files) to (my )?github)\b/i.test(t);
+    return /\b((please\s+|now\s+|ok[,.]?\s+|can you\s+|could you\s+)?(publish|push|commit|upload|send) (this|it|these|things|the (files?|code|project)|to (my )?github)|publish (this|it|these)|upload (this|it|these|things) to (my )?(github|repo)|commit (this|these files|the (files?|code)) to (my )?github)\b/i.test(t);
+  }
+  function looksGithubCreate(t) {
+    t = String(t || "").trim();
+    if (/\b(add|create|make|put|write|drop|save)\b.{0,80}\b(readme(\.md)?|github|repo|repository)\b/i.test(t)) return true;
+    if (/\b(github|repo|repository)\b.{0,80}\b(add|create|put|write|readme)\b/i.test(t)) return true;
+    if (/\b(add|create|make)\b.{0,40}\breadme(\.md)?\b/i.test(t)) return true;
+    if (/\b(on|to|in) (my )?(github|repo|repository)\b/i.test(t) && /\b(file|readme|markdown|\.md|\.html|\.css|\.js|\.ts|\.py)\b/i.test(t)) return true;
+    return false;
   }
   function looksGithubWrite(t) {
     t = String(t || "").trim();
-    if (looksPublish(t)) return true;
-    return /\b((push|commit|upload|publish|save|write|update|apply|sync)\b.{0,48}\b(github|repo|repository)\b|\b(github|repo|repository)\b.{0,48}\b(push|commit|upload|publish|update|change|apply)\b|update (the|this|my) (file|code|repo|project)|push (the )?(changes?|fix|update|files?)|commit (the )?(changes?|fix|update)|apply (this|these|the) (changes?|fix|update))\b/i.test(t);
+    if (looksPublish(t) || looksGithubCreate(t)) return true;
+    return /\b((push|commit|upload|publish|save|write|update|apply|sync|put|add)\b.{0,48}\b(github|repo|repository)\b|\b(github|repo|repository)\b.{0,48}\b(push|commit|upload|publish|update|change|apply|add|create)\b|update (the|this|my) (file|code|repo|project)|push (the )?(changes?|fix|update|files?)|commit (the )?(changes?|fix|update)|apply (this|these|the) (changes?|fix|update))\b/i.test(t);
   }
   function isGithubWriteCommand(t) {
     t = String(t || "").trim();
     if (!looksGithubWrite(t)) return false;
+    if (looksGithubCreate(t) && !looksPublish(t)) return false;
     if (t.length > 240) return false;
     const starts = /^(ok[,.]?\s+|please\s+|now\s+|can you\s+|could you\s+)?(publish|push|commit|upload|apply|save|update|sync)\b/i.test(t);
     const mentionsBuild = /\b(build|create|make|write me|generate|code a|implement|scaffold|website|app)\b/i.test(t);
