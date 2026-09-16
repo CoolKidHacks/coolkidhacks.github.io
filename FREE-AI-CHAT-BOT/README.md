@@ -1,6 +1,8 @@
 # OMNI-AI — Free AI Chat
 
-Talk to **real** Claude, GPT, Grok, Gemini, Kimi, DeepSeek, Qwen, and Mistral in the browser. **No API key.** Sign in with a free [Puter](https://puter.com) account.
+Talk to **real** Claude, GPT, Grok, Gemini, Llama, Kimi, DeepSeek, Qwen, Mistral, and more in the browser. Models are official OpenRouter IDs (`anthropic/claude-opus-5`, `openai/gpt-4o`, `openai/gpt-5.6-luna`, `x-ai/grok-4.6`) — not renamed clones.
+
+Tap **Log in** or **Sign up** to connect your OpenRouter account. You are sent to OpenRouter, then returned here. Chat runs as OpenRouter agents on the model you pick — including `:free` models.
 
 Add it to your **Home Screen** — it opens as **OMNI-AI**, full screen, with its own icon.
 
@@ -14,21 +16,23 @@ Each model runs **as itself** (Claude is Claude, Grok is Grok) using distilled v
 ## Use it
 
 1. Open the live site.
-2. Click **Sign in** — allow the Puter popup.
-3. Pick a **verified model**.
+2. Tap **Log in** or **Sign up**. OpenRouter’s page covers both existing accounts and create-account.
+3. Pick a **real model** — every catalog model is listed. Auto picks one if you do not know names.
 4. Toggle **Think** for slower, more careful answers. Effort: Low → Max.
-5. Open **Usage** in the sidebar to see remaining Puter allowance, a turn counter, and whether this chat can finish on the current model.
+5. Open **Usage** in the sidebar to see remaining credits.
 6. Type a message, press Enter. Replies stream live, with syntax highlighting on code.
 
-Chats stay in this browser (`localStorage`).
+Chats stay in this browser (`localStorage`). Your OpenRouter session never leaves the device.
 
 ## Features
 
-- Streaming `puter.ai.chat()` — every option is a real Puter-hosted model ID
-- Automatic **fallback** when a flagship model is rate-limited or out of usage (reroutes to GLM 5.3, GPT-5.6 Luna, or Flash, and labels it in the thread)
-- **Usage meter** from `puter.auth.getMonthlyUsage()` plus a mid-chat projection: if remaining allowance cannot finish the project on the heavy model, Omni switches to a lighter one so you still get the answer
-- Per-model system prompts (Claude Fable 5.1 / Opus / Sonnet, GPT-5.6 Luna/Sol/Terra, Grok 4.6, Gemini, Kimi, DeepSeek, Qwen, Mistral, GLM)
-- Live catalog merge from Puter’s model API
+- Streaming chat through [OpenRouter](https://openrouter.ai) with `provider.allow_fallbacks: false` so a named model is not swapped for a cheaper clone
+- Sticky `session_id` per chat so the same OpenRouter agent stays on one provider
+- Live catalog from `https://openrouter.ai/api/v1/models` — official $ input / $ output per 1M
+- `:free` models (Gemma 4, GLM 5.2, Nemotron) when you want $0
+- Automatic **reroute** when a flagship model is rate-limited or out of usage (retries on GLM 5.3, GPT-5.6 Luna, or Flash, and labels it in the thread)
+- **Usage meter** from OpenRouter credits
+- Per-model system prompts (Claude Opus / Sonnet / Haiku, GPT-4o, GPT-5.6 Luna/Sol/Terra, Grok 4.6, Gemini, Llama, Kimi, DeepSeek, Qwen, GLM)
 - Thinking traces + effort control, shown as they stream
 - Syntax-highlighted code, tables, copy / retry
 - Recovers replies that some reasoning models only emit in the thinking channel
@@ -47,4 +51,4 @@ The working site is published from [coolkidhacks.github.io](https://github.com/C
 
 made by Adrian In Ur Class Rn
 
-AI runs through [Puter.js](https://developer.puter.com). Model voices distilled from public archives at [asgeirtj/system_prompts_leaks](https://github.com/asgeirtj/system_prompts_leaks) (identity + tone only — no vendor tools).
+AI runs through [OpenRouter](https://openrouter.ai). Model voices distilled from public archives at [asgeirtj/system_prompts_leaks](https://github.com/asgeirtj/system_prompts_leaks) (identity + tone only — no vendor tools).
