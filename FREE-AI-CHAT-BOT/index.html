@@ -85,7 +85,7 @@
       border: 1px solid var(--line); border-radius: 10px; background: var(--elevated); color: var(--accent);
     }
     .mark svg { width: 18px; height: 18px; }
-    .brand h1 { margin: 0; font-family: var(--display); font-size: 22px; font-weight: 500; font-style: normal; letter-spacing: -0.02em; line-height: 1; }
+    .brand h1 { margin: 0; font-family: var(--display); font-size: 22px; font-weight: 500; font-style: italic; letter-spacing: -0.02em; line-height: 1; }
     .brand p { margin: 4px 0 0; font-size: 11px; letter-spacing: .04em; color: var(--subtle); }
     .pad { padding: 0 12px; }
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--control); padding: 0 14px; border-radius: 14px; font-size: 13px; font-weight: 500; }
@@ -105,13 +105,13 @@
     .chat-item .del { width: 40px; height: 40px; border-radius: 10px; color: var(--subtle); flex-shrink: 0; }
     .chat-item .del:hover { color: var(--danger); }
     .side-foot { border-top: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-    .or-card { border: 1px solid var(--line); background: var(--bg); border-radius: 16px; padding: 12px; }
-    .or-card .row { display: flex; align-items: center; justify-content: space-between; }
-    .or-card small { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--subtle); }
+    .puter-card { border: 1px solid var(--line); background: var(--bg); border-radius: 16px; padding: 12px; }
+    .puter-card .row { display: flex; align-items: center; justify-content: space-between; }
+    .puter-card small { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--subtle); }
     .dot { width: 6px; height: 6px; border-radius: 99px; background: var(--subtle); }
     .dot.on { background: var(--ok); }
     .dot.wait { background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
-    .or-card p { margin: 6px 0 10px; font-size: 13px; }
+    .puter-card p { margin: 6px 0 10px; font-size: 13px; }
     .credit { font-size: 11px; color: var(--subtle); padding: 0 4px; }
     .credit a { text-decoration: underline; text-underline-offset: 2px; }
     .usage-card { width: 100%; text-align: left; border: 1px solid var(--line); background: var(--bg); border-radius: 16px; padding: 12px; }
@@ -146,7 +146,7 @@
     .mob-bar span { display: block; font-family: var(--mono); font-size: 10px; color: var(--subtle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .tools-row {
       display: flex; align-items: center; gap: 2px; padding: 3px;
-      min-height: var(--rail); border: 1px solid var(--line); border-radius: 18px; background: var(--surface);
+      min-height: var(--rail); border: 1px solid var(--line); border-radius: 18px; background: var(--surface); box-shadow: 0 12px 32px -26px rgba(0,0,0,.9), inset 0 1px 0 color-mix(in oklab, var(--fg) 6%, transparent);
     }
     .menu-btn { display: none; width: var(--control); height: var(--control); border-radius: 12px; flex-shrink: 0; }
     .tools { display: flex; align-items: center; gap: 4px; min-width: 0; flex: 1; overflow-x: auto; scrollbar-width: none; }
@@ -164,19 +164,20 @@
     .status { margin-left: auto; font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--subtle); flex-shrink: 0; }
     .thread { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
     .empty { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px 16px; max-width: var(--thread); margin: 0 auto; }
-    .empty .mark { width: 40px; height: 40px; border-radius: 12px; }
+    .empty .mark { width: 60px; height: 60px; border-radius: 20px; border: 1px solid color-mix(in oklab, var(--accent) 32%, var(--line)); background: color-mix(in oklab, var(--elevated) 78%, transparent); box-shadow: inset 0 1px 0 color-mix(in oklab, var(--fg) 8%, transparent); }
+    .empty .mark svg { width: 26px; height: 26px; }
     .empty h2 { margin: 16px 0 8px; font-family: var(--display); font-size: clamp(1.65rem, 5vw + 0.4rem, 3rem); font-weight: 500; font-style: italic; letter-spacing: -.03em; line-height: 1.1; }
     .empty p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; max-width: 28rem; }
     .empty-sub { margin-top: 8px !important; color: var(--subtle) !important; font-size: 12px !important; max-width: 22rem; }
-    .empty-auth { display: flex; gap: 8px; margin-top: 16px; justify-content: center; width: min(18rem, 100%); }
-    .empty-auth .btn { width: auto; flex: 1; min-width: 0; }
+    .empty-auth { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; justify-content: center; width: min(16.5rem, 100%); }
+    .empty-auth .btn { width: 100%; }
     .prompts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 24px; width: 100%; }
     .prompts button { text-align: left; min-height: 64px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--muted); font-size: 13px; line-height: 1.35; }
     .prompts button:hover { background: var(--elevated); color: var(--fg); }
     .prompts small { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--subtle); margin-bottom: 6px; }
     .msgs { max-width: var(--thread); margin: 0 auto; padding: 32px 20px 16px; display: flex; flex-direction: column; gap: 28px; }
     .bubble-user { display: flex; justify-content: flex-end; }
-    .bubble-user .body { max-width: min(42rem, 88%); background: var(--elevated); border-radius: 18px 18px 6px 18px; padding: 12px 16px; font-size: 15px; line-height: 1.55; white-space: pre-wrap; }
+    .bubble-user .body { max-width: min(42rem, 88%); background: color-mix(in oklab, var(--elevated) 78%, var(--accent) 10%); border: 1px solid color-mix(in oklab, var(--line) 72%, var(--accent) 28%); box-shadow: inset 0 1px 0 color-mix(in oklab, var(--fg) 6%, transparent); border-radius: 18px 18px 6px 18px; padding: 12px 16px; font-size: 15px; line-height: 1.55; white-space: pre-wrap; }
     .bubble-ai { display: flex; gap: 12px; }
     .ai-mark { width: 32px; height: 32px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--elevated); color: var(--accent); margin-top: 2px; }
     .ai-body { min-width: 0; flex: 1; max-width: 46rem; }
@@ -230,7 +231,8 @@
     .site-prev-ft { padding: 10px 12px max(12px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); display: flex; gap: 8px; align-items: flex-end; }
     .site-prev-ft textarea { flex: 1; min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--elevated); color: var(--fg); padding: 8px 10px; font: inherit; font-size: 14px; }
     .composer-wrap { padding: 6px 12px max(12px, env(safe-area-inset-bottom)); background: transparent; flex-shrink: 0; }
-    .dock { max-width: var(--thread); margin: 0 auto; border: 1px solid var(--line); border-radius: 24px; background: var(--surface); overflow: hidden; box-shadow: 0 16px 48px -28px rgba(0,0,0,.9); }
+    .dock { max-width: var(--thread); margin: 0 auto; border: 1px solid var(--line); border-radius: 24px; background: var(--surface); overflow: hidden; box-shadow: 0 18px 50px -30px rgba(0,0,0,.92), inset 0 1px 0 color-mix(in oklab, var(--fg) 6%, transparent); }
+    .composer { display: flex; align-items: flex-end; gap: 4px; border: 0; background: color-mix(in oklab, var(--elevated) 72%, transparent); border-radius: 18px; margin: 6px; padding: 4px 6px; }
     .dock:focus-within { border-color: color-mix(in oklab, var(--accent) 40%, var(--line)); }
     .modes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border-bottom: 1px solid var(--line); }
     .code-path { grid-template-columns: 1fr 1fr; }
@@ -242,8 +244,6 @@
     }
     .mode-btn + .mode-btn { border-left: 1px solid var(--line); }
     .mode-btn.on { background: var(--elevated); color: var(--fg); }
-    .composer { display: flex; align-items: flex-end; gap: 4px; border: 0; background: transparent; border-radius: 0; padding: 4px 6px; }
-    .composer:focus-within { border-color: transparent; }
     textarea { flex: 1; min-width: 0; resize: none; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 16px; line-height: 1.5; max-height: 168px; outline: none; padding: 10px 4px; }
     .icon-btn { width: var(--control); height: var(--control); min-width: 44px; min-height: 44px; border-radius: 16px; display: grid; place-items: center; flex-shrink: 0; color: var(--muted); }
     .send { background: var(--primary); color: var(--primary-fg); }
@@ -320,10 +320,10 @@
       .usage-card { padding: 8px 10px; }
       .usage-card .bar, .usage-card #usage-sub { display: none; }
       .usage-card strong { margin-top: 0; font-size: 12px; }
-      .or-card { padding: 8px 10px; display: flex; align-items: center; gap: 8px; }
-      .or-card .row { display: none; }
-      .or-card p { margin: 0; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .or-card .btn { width: auto; min-height: 36px; }
+      .puter-card { padding: 8px 10px; display: flex; align-items: center; gap: 8px; }
+      .puter-card .row { display: none; }
+      .puter-card p { margin: 0; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .puter-card .btn { width: auto; min-height: 36px; }
       .credit { display: none; }
       #clear-all { min-height: 32px; font-size: 11px; }
       .empty { padding: 16px 12px 12px; }
@@ -416,9 +416,9 @@
           <div class="bar" id="usage-bar"><i id="usage-bar-fill"></i></div>
           <div class="usage-meta" id="usage-sub">Puter usage</div>
         </button>
-        <div class="or-card">
+        <div class="puter-card">
           <div class="row"><small>Puter</small><span class="dot wait" id="auth-dot"></span></div>
-          <p id="or-auth-status">Not logged in</p>
+          <p id="puter-auth-status">Not logged in</p>
           <button class="btn btn-outline" id="auth-btn" style="font-size:13px;border-radius:12px">Log in</button>
         </div>
         <button class="btn btn-ghost" id="clear-all" style="justify-content:flex-start">Clear all chats</button>
@@ -573,10 +573,10 @@
       </button>
       <label class="stat">Puter</label>
       <p style="font-size:13px;color:var(--muted);margin:6px 0">Log in or create a free Puter account. No API keys. You cover your own model usage. Real Claude, GPT, Grok, Gemini.</p>
-      <p id="or-status" class="stat" style="margin:0 0 8px"></p>
-      <div style="display:flex;gap:8px;margin-bottom:14px">
-        <button type="button" class="btn btn-primary" id="or-login">Log in</button>
-        <button type="button" class="btn btn-outline" id="or-signup">Sign up</button>
+      <p id="puter-status" class="stat" style="margin:0 0 8px"></p>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+        <button type="button" class="btn btn-primary" id="puter-login">Log in with Puter</button>
+        <button type="button" class="btn btn-outline" id="puter-signup" style="width:100%">Create a free account</button>
       </div>
       <label class="stat">GitHub</label>
       <div id="gh-root" style="margin:6px 0 12px"></div>
@@ -2223,7 +2223,7 @@
     if (turns) turns.textContent = sessionTurns + " turns";
     if (chip) chip.textContent = usageSnap ? ((usageSnap.allowance > 0 ? formatUsd(usageSnap.remaining) + " left" : "Pay as you go") + " · " + sessionTurns) : (sessionTurns + " turns");
     if (!left) return;
-    if (hasOrKey()) {
+    if (isPuterOn()) {
       if (!usageSnap) {
         left.textContent = "Puter connected";
         if (sub) sub.textContent = sessionTurns + " local turns this session";
@@ -2281,8 +2281,8 @@
   }
   async function loadUsage() {
     try {
-      if (hasOrKey()) {
-        const snap = await fetchOrCredits();
+      if (isPuterOn()) {
+        const snap = await fetchPuterCredits();
         if (snap) usageSnap = snap;
         paintUsage();
         return;
@@ -2785,7 +2785,7 @@
     const el = $("thread");
     if (!s.messages.length) {
       const meta = modelMeta(s.model);
-      el.innerHTML = "<div class='empty'><div class='mark' style='border:0;background:transparent;color:var(--accent)'><svg viewBox='0 0 32 32' width='22' height='22' fill='currentColor'><path d='M16 2.4c.4 0 .7.24.84.6l2.52 6.62a1 1 0 0 0 .56.56l6.62 2.52a.9.9 0 0 1 0 1.68l-6.62 2.52a1 1 0 0 0-.56.56l-2.52 6.62a.9.9 0 0 1-1.68 0l-2.52-6.62a1 1 0 0 0-.56-.56L4.46 14.38a.9.9 0 0 1 0-1.68l6.62-2.52a1 1 0 0 0 .56-.56L14.16 3a.9.9 0 0 1 .84-.6z'/></svg></div><h2>Hello</h2><p><b style='color:var(--fg);font-weight:500'>" + esc(prefs.botName || "OMNI-AI") + "</b> · " + esc(meta.label) + "</p><p class='empty-sub'>Free chat. Real models. Sign in with Puter — no API keys.</p>" + (hasOrKey() ? "" : "<div class='empty-auth'><button type='button' class='btn btn-primary' id='empty-login'>Log in</button><button type='button' class='btn btn-outline' id='empty-signup'>Sign up</button></div>") + "<div class='prompts' id='prompts'></div>" + (ghConnected() ? "" : "<button type='button' class='btn btn-ghost' id='gh-empty' style='margin-top:14px'>Connect GitHub</button>") + "</div>";
+      el.innerHTML = "<div class='empty'><div class='mark'><svg viewBox='0 0 32 32' width='22' height='22' fill='currentColor'><path d='M16 2.4c.4 0 .7.24.84.6l2.52 6.62a1 1 0 0 0 .56.56l6.62 2.52a.9.9 0 0 1 0 1.68l-6.62 2.52a1 1 0 0 0-.56.56l-2.52 6.62a.9.9 0 0 1-1.68 0l-2.52-6.62a1 1 0 0 0-.56-.56L4.46 14.38a.9.9 0 0 1 0-1.68l6.62-2.52a1 1 0 0 0 .56-.56L14.16 3a.9.9 0 0 1 .84-.6z'/></svg></div><h2>Hello</h2><p><b style='color:var(--fg);font-weight:500'>" + esc(prefs.botName || "OMNI-AI") + "</b> · " + esc(meta.label) + "</p><p class='empty-sub'>Free chat. Real models. Sign in with Puter — no API keys.</p>" + (isPuterOn() ? "" : "<div class='empty-auth'><button type='button' class='btn btn-primary' id='empty-login'>Log in with Puter</button><button type='button' class='btn btn-outline' id='empty-signup'>Create a free account</button></div>") + "<div class='prompts' id='prompts'></div>" + (ghConnected() ? "" : "<button type='button' class='btn btn-ghost' id='gh-empty' style='margin-top:14px'>Connect GitHub</button>") + "</div>";
       PROMPTS.forEach((p, i) => {
         const b = document.createElement("button");
         b.innerHTML = "<small><span>" + p.k + "</span><span>0" + (i + 1) + "</span></small>" + esc(p.s || p.t);
@@ -3316,7 +3316,7 @@
     });
   }
   let puterUserName = "";
-  function hasOrKey() {
+  function isPuterOn() {
     try { return !!(window.puter && puter.auth && puter.auth.isSignedIn()); } catch (e) { return false; }
   }
   async function startPuterAuth() {
@@ -3343,13 +3343,45 @@
     } catch (e) {}
     puterUserName = "";
   }
-  function toOrId(id) {
+  function toPuterId(id) {
     return String(canonModel(id) || id || "").replace(/:free$/i, "");
   }
-  async function* orStream(body) {
+  function extractPuterImage(raw) {
+    if (!raw) return "";
+    if (typeof raw === "string") {
+      if (raw.indexOf("data:image") === 0 || raw.indexOf("http") === 0 || raw.indexOf("blob:") === 0) return raw;
+      return "";
+    }
+    if (typeof raw !== "object") return "";
+    if (raw.src) return raw.src;
+    if (raw.url) return raw.url;
+    if (typeof raw.image === "string") return raw.image;
+    if (typeof raw.image_url === "string") return raw.image_url;
+    if (raw.image_url && raw.image_url.url) return raw.image_url.url;
+    if (raw.image && typeof raw.image === "object") return raw.image.src || raw.image.url || "";
+    const msg = raw.message && typeof raw.message === "object" ? raw.message : raw;
+    const bags = [msg.images, raw.images, raw.output];
+    for (let b = 0; b < bags.length; b++) {
+      const bag = bags[b];
+      if (!Array.isArray(bag)) continue;
+      for (let i = 0; i < bag.length; i++) {
+        const src = extractPuterImage(bag[i]);
+        if (src) return src;
+      }
+    }
+    if (Array.isArray(msg.content)) {
+      for (let i = 0; i < msg.content.length; i++) {
+        const src = extractPuterImage(msg.content[i]);
+        if (src) return src;
+      }
+    }
+    if (typeof msg.content === "string" && msg.content.indexOf("data:image") === 0) return msg.content;
+    return "";
+  }
+  async function* puterStream(body) {
     const p = await waitPuter();
     if (!p.auth.isSignedIn()) throw new Error("Log in with Puter to chat.");
-    const opts = { model: toOrId(body.model), stream: true, normalize: true, max_tokens: body.max_tokens };
+    const opts = { model: toPuterId(body.model), stream: true, normalize: true, max_tokens: body.max_tokens };
     if (body.reasoning) opts.reasoning = body.reasoning;
     let resp;
     try {
@@ -3370,14 +3402,14 @@
       yield resp;
     }
   }
-  async function* orStreamWithRetry(body) {
+  async function* puterStreamWithRetry(body) {
     try {
-      yield* orStream(body);
+      yield* puterStream(body);
     } catch (err) {
       const msg = (err && err.message) || "";
       if (body.reasoning && /reasoning|unsupported parameter|unknown argument/i.test(msg)) {
         delete body.reasoning;
-        yield* orStream(body);
+        yield* puterStream(body);
       } else throw err;
     }
   }
@@ -3386,8 +3418,8 @@
     if (Math.abs(n) >= 1000000) return Math.round(n);
     return Math.max(0, Math.round(n * MICROS_PER_DOLLAR));
   }
-  async function fetchOrCredits() {
-    if (!hasOrKey()) return null;
+  async function fetchPuterCredits() {
+    if (!isPuterOn()) return null;
     try {
       const p = await waitPuter();
       if (!p.auth.getMonthlyUsage) return null;
@@ -3440,7 +3472,7 @@
     const history = s.messages.filter(m => m.role === "user" || (m.role === "assistant" && m.content && !m.error && m.id !== msg.id)).map(m => ({ role: m.role, content: (m.role === "user" && m.modelContent) ? m.modelContent : m.content }));
     let text = "", reason = "", usedModel = plan.model, lastErr = "";
     try {
-      if (!hasOrKey()) throw new Error("Log in with Puter to chat.");
+      if (!isPuterOn()) throw new Error("Log in with Puter to chat.");
       let ok = false;
       for (let i = 0; i < plan.chain.length; i++) {
         if (aborted) break;
@@ -3482,9 +3514,9 @@
         const payload = [{ role: "system", content: sys }, ...historyPayload];
         try {
           let raw;
-          if (!hasOrKey()) throw new Error("Log in with Puter to chat.");
-          const orModel = toOrId(model);
-          const orMessages = imageDataUrl
+          if (!isPuterOn()) throw new Error("Log in with Puter to chat.");
+          const puterModel = toPuterId(model);
+          const puterMessages = imageDataUrl
             ? payload.map((m, i, arr) => {
                 const last = [...arr].map((x, j) => x.role === "user" ? j : -1).filter((j) => j >= 0).pop();
                 if (i !== last) return m;
@@ -3497,22 +3529,16 @@
                 };
               })
             : payload;
-          const orBody = {
-            model: orModel,
-            messages: orMessages,
+          const puterBody = {
+            model: puterModel,
+            messages: puterMessages,
             stream: true,
-            max_tokens: effortMaxTokens(s.effort),
-            provider: { allow_fallbacks: false },
-            session_id: s.id
+            max_tokens: effortMaxTokens(s.effort)
           };
-          if (prefs.privateMode) {
-            orBody.store = false;
-            orBody.provider.data_collection = "deny";
+          if (s.thinking || /gpt|openai|grok|claude|gemini/.test(puterModel)) {
+            puterBody.reasoning = { effort: s.effort === "max" || s.effort === "xhigh" ? "xhigh" : s.effort === "high" ? "high" : s.effort === "low" ? "low" : "medium" };
           }
-          if (s.thinking || /gpt|openai|grok|claude|gemini/.test(orModel)) {
-            orBody.reasoning = { effort: s.effort === "max" || s.effort === "xhigh" ? "xhigh" : s.effort === "high" ? "high" : s.effort === "low" ? "low" : "medium" };
-          }
-          raw = orStreamWithRetry(orBody);
+          raw = puterStreamWithRetry(puterBody);
           if (raw && typeof raw[Symbol.asyncIterator] === "function") {
             let first = true;
             const iter = raw[Symbol.asyncIterator]();
@@ -3601,7 +3627,7 @@
   }
 
   async function ensureSignedIn(text, file, mode) {
-    if (hasOrKey()) return true;
+    if (isPuterOn()) return true;
     savePending(text, file, mode);
     toast("Log in with Puter to chat.");
     try {
@@ -3613,7 +3639,7 @@
       throw e;
     }
     refreshAuth();
-    if (!hasOrKey()) throw new Error("Log in with Puter to chat.");
+    if (!isPuterOn()) throw new Error("Log in with Puter to chat.");
     takePending();
     return true;
   }
@@ -3711,17 +3737,26 @@
     try {
       const p = String(prompt).replace(/^\/(imagine|image|img|draw|picture)\s*/i, "").trim() || prompt;
       let src = "";
-      if (!hasOrKey()) throw new Error("Log in with Puter to generate images.");
-      const models = ["gemini-3.1-flash-image-preview", "google/gemini-3.1-flash-image-preview", "gpt-image-1", "openai/gpt-image-1", "grok-imagine-image", "x-ai/grok-imagine-image"];
+      if (!isPuterOn()) throw new Error("Log in with Puter to generate images.");
+      const models = ["gemini-3.1-flash-image-preview", "google/gemini-3.1-flash-image-preview", "google/gemini-3.1-flash-lite-image", "gpt-image-1", "openai/gpt-image-1", "openai/gpt-image-2.5-flare", "grok-imagine-image", "x-ai/grok-imagine-image"];
       let last = "Image generation failed.";
       const pSDK = await waitPuter();
       for (let i = 0; i < models.length && !src; i++) {
         if (aborted) break;
         try {
           const img = await pSDK.ai.txt2img(p, { model: models[i] });
-          if (typeof img === "string" && (img.indexOf("data:image") === 0 || img.indexOf("http") === 0 || img.indexOf("blob:") === 0)) src = img;
-          else if (img && (img.src || img.url)) src = img.src || img.url;
-          else if (img && img.image && (typeof img.image === "string" ? img.image : (img.image.src || img.image.url))) src = typeof img.image === "string" ? img.image : (img.image.src || img.image.url);
+          src = extractPuterImage(img);
+          if (!src) last = "Puter did not return an image.";
+        } catch (err) {
+          if (aborted || (err && err.name === "AbortError")) { aborted = true; break; }
+          last = (err && err.message) || last;
+        }
+      }
+      const chatModels = ["google/gemini-3.1-flash-image-preview", "gemini-3.1-flash-image-preview", "google/gemini-3.1-flash-lite-image"];
+      for (let i = 0; i < chatModels.length && !src && !aborted; i++) {
+        try {
+          const result = await pSDK.ai.chat(p, { model: chatModels[i], stream: false });
+          src = extractPuterImage(result);
           if (!src) last = "Puter did not return an image.";
         } catch (err) {
           if (aborted || (err && err.name === "AbortError")) { aborted = true; break; }
@@ -3817,10 +3852,10 @@
   function hidePopupHelp() { $("popup-modal").classList.remove("show"); }
 
   function refreshAuth() {
-    const st = $("or-auth-status");
+    const st = $("puter-auth-status");
     const btn = $("auth-btn");
     const dot = $("auth-dot");
-    const on = hasOrKey();
+    const on = isPuterOn();
     if (dot) dot.className = "dot" + (on ? " on" : "");
     if (on) {
       const uid = puterUserName;
@@ -3847,11 +3882,11 @@
     }
   }
   $("auth-btn").onclick = async () => {
-    if (hasOrKey()) { await signOutPuter(); refreshAuth(); loadUsage(); render(); toast("Logged out of Puter."); }
+    if (isPuterOn()) { await signOutPuter(); refreshAuth(); loadUsage(); render(); toast("Logged out of Puter."); }
     else { await loginOrToast(); }
   };
   $("connect-btn").onclick = async () => {
-    if (hasOrKey()) { await signOutPuter(); refreshAuth(); loadUsage(); render(); }
+    if (isPuterOn()) { await signOutPuter(); refreshAuth(); loadUsage(); render(); }
     else { await loginOrToast(); }
   };
   $("popup-retry").onclick = async () => { await loginOrToast(); };
@@ -3927,20 +3962,20 @@
       privState.textContent = prefs.privateMode ? "On" : "Off";
       priv.style.borderColor = prefs.privateMode ? "var(--accent)" : "";
     }
-    const orStatus = $("or-status");
-    const orLogin = $("or-login");
-    const orSignup = $("or-signup");
-    if (orStatus) {
-      if (hasOrKey()) orStatus.textContent = "Logged in · Puter";
-      else orStatus.textContent = "Not logged in. Log in or sign up to chat.";
+    const puterStatus = $("puter-status");
+    const puterLogin = $("puter-login");
+    const puterSignup = $("puter-signup");
+    if (puterStatus) {
+      if (isPuterOn()) puterStatus.textContent = "Logged in · Puter";
+      else puterStatus.textContent = "Not logged in. Log in or sign up to chat.";
     }
-    if (orLogin) {
-      orLogin.textContent = hasOrKey() ? "Log out" : "Log in";
-      orLogin.onclick = hasOrKey()
+    if (puterLogin) {
+      puterLogin.textContent = isPuterOn() ? "Log out" : "Log in with Puter";
+      puterLogin.onclick = isPuterOn()
         ? async () => { await signOutPuter(); fillSettings(); refreshAuth(); loadUsage(); render(); toast("Logged out of Puter."); }
         : async () => { try { await startPuterAuth(); fillSettings(); } catch (e) { toast((e && e.message) || "Login failed."); } };
     }
-    if (orSignup) orSignup.style.display = hasOrKey() ? "none" : "";
+    if (puterSignup) puterSignup.style.display = isPuterOn() ? "none" : "";
     renderGh();
     if ($("hs-note")) {
       const stand = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -3988,8 +4023,8 @@
     fillSettings();
     toast(prefs.privateMode ? "Private mode on. Chats stay on this device. Memory still works." : "Private mode off.");
   };
-  if ($("or-login")) $("or-login").onclick = () => { loginOrToast(); };
-  if ($("or-signup")) $("or-signup").onclick = () => { loginOrToast(); };
+  if ($("puter-login")) $("puter-login").onclick = () => { loginOrToast(); };
+  if ($("puter-signup")) $("puter-signup").onclick = () => { loginOrToast(); };
   $("site-close") && ($("site-close").onclick = closePreview);
   $("site-phone") && ($("site-phone").onclick = () => { $("site-stage").classList.add("phone"); $("site-stage").classList.remove("desk"); });
   $("site-desk") && ($("site-desk").onclick = () => { $("site-stage").classList.add("desk"); $("site-stage").classList.remove("phone"); });
@@ -4036,7 +4071,7 @@
   (async function boot() {
     try { await waitPuter(8000); } catch (e) { toast((e && e.message) || "Puter did not start."); }
     try {
-      if (hasOrKey() && window.puter && puter.auth.getUser) {
+      if (isPuterOn() && window.puter && puter.auth.getUser) {
         const u = await puter.auth.getUser();
         puterUserName = String((u && (u.username || u.email || u.name)) || "").trim();
       }
@@ -4051,7 +4086,7 @@
     if ($("gh-chip")) $("gh-chip").onclick = showSettings;
     render();
     const pending = takePending();
-    if (pending && hasOrKey()) {
+    if (pending && isPuterOn()) {
       send(pending.text || "", pending.file || null, pending.mode);
     }
   })();
