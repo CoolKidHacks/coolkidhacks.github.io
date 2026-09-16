@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
   <title>OMNI-AI</title>
-  <meta name="description" content="OMNI-AI — free multi-model AI chat. Real Claude, GPT, Grok, Gemini via Puter.js — no API keys." />
+  <meta name="description" content="OMNI-AI — free multi-model AI chat. Real Claude, GPT, Grok, Gemini via OpenRouter." />
   <meta name="theme-color" content="#08080a" />
   <meta name="apple-mobile-web-app-title" content="OMNI-AI" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="format-detection" content="telephone=no" />
   <meta property="og:title" content="OMNI-AI" />
-  <meta property="og:description" content="Talk to verified Claude, GPT, Grok, and Gemini models. No API key." />
+  <meta property="og:description" content="Talk to real Claude, GPT, Grok, and Gemini models. OpenRouter key for unlimited credits." />
   <link rel="icon" href="icon-192.png" />
   <link rel="apple-touch-icon" href="icon-180.png" sizes="180x180" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
@@ -420,7 +420,7 @@
           <button class="btn btn-outline" id="auth-btn" style="height:36px;font-size:12px;border-radius:12px">Sign in free</button>
         </div>
         <button class="btn btn-ghost" id="clear-all" style="justify-content:flex-start">Clear all chats</button>
-        <div class="credit">Powered by <a href="https://developer.puter.com" target="_blank" rel="noopener">Puter.js</a></div>
+        <div class="credit">Real models via <a href="https://openrouter.ai" target="_blank" rel="noopener">OpenRouter</a></div>
       </div>
       <div class="side-resizer" id="side-resizer" role="separator" aria-orientation="vertical" tabindex="0" aria-label="Resize chats"></div>
     </aside>
@@ -519,7 +519,7 @@
       <div class="hd">
         <div>
           <h3 id="models-title">Models</h3>
-          <p id="model-count">Official $ input / $ output per 1M tokens from Puter’s live catalog.</p>
+          <p id="model-count">Official $ input / $ output per 1M tokens. Every model is listed.</p>
         </div>
         <button type="button" class="icon-btn" id="model-close" aria-label="Close models" style="width:44px;height:44px;border-radius:12px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -527,7 +527,7 @@
       </div>
       <div class="search-wrap" style="margin:12px 12px 0">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
-        <input class="search" id="model-search" placeholder="Search verified models" />
+        <input class="search" id="model-search" placeholder="Search every model" />
       </div>
       <div class="body" id="model-list"></div>
     </div>
@@ -545,7 +545,7 @@
   <div class="modal" id="settings-modal">
     <div class="card" style="width:min(28rem,100%);max-height:88dvh;overflow:auto">
       <h2>Settings</h2>
-      <p>Name, look, personality, and memory from other AIs.</p>
+      <p>Name, look, OpenRouter, GitHub, and memory.</p>
       <label class="stat">Name</label>
       <input class="search" id="set-name" style="padding-left:12px;margin:6px 0 12px" maxlength="32" />
       <label class="stat">Custom instructions</label>
@@ -568,6 +568,14 @@
         </span>
         <span id="set-private-state" style="font-family:var(--mono);font-size:11px;color:var(--subtle);padding-top:2px">Off</span>
       </button>
+      <label class="stat">OpenRouter</label>
+      <p style="font-size:13px;color:var(--muted);margin:6px 0">Paste a key from <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer" style="color:var(--fg);text-decoration:underline">openrouter.ai/keys</a>. Real Claude, GPT, Grok, Gemini — including :free models. Stored only on this device.</p>
+      <input class="search" id="set-or-key" type="password" autocomplete="off" placeholder="sk-or-v1-…" style="padding-left:12px;margin:6px 0 8px" />
+      <p id="or-status" class="stat" style="margin:0 0 8px"></p>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button type="button" class="btn btn-primary" id="or-save">Save key</button>
+        <button type="button" class="btn btn-outline" id="or-clear">Disconnect</button>
+      </div>
       <label class="stat">GitHub</label>
       <div id="gh-root" style="margin:6px 0 12px"></div>
       <label class="stat">Home Screen</label>
@@ -631,29 +639,48 @@
   <script>
   const FEATURED = [
     { id: "auto", label: "Auto", vendor: "Other" },
-    { id: "claude-haiku-4-5", label: "Claude Haiku 4.5", vendor: "Anthropic" },
-    { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6", vendor: "Anthropic" },
-    { id: "gpt-5.6-luna", label: "GPT-5.6 Luna", vendor: "OpenAI", reasoning: true },
-    { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", vendor: "Google" },
-    { id: "gemini-3.7-flash", label: "Gemini 3.7 Flash", vendor: "Google" },
-    { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash", vendor: "Google" },
-    { id: "qwen3.7-flash", label: "Qwen 3.7 Flash", vendor: "Qwen" },
-    { id: "qwen3.6-flash", label: "Qwen 3.6 Flash", vendor: "Qwen" },
-    { id: "qwen3.6-plus", label: "Qwen 3.6 Plus", vendor: "Qwen" },
-    { id: "qwen3.7-plus", label: "Qwen 3.7 Plus", vendor: "Qwen" },
-    { id: "qwen3.8-27b", label: "Qwen 3.8 27B", vendor: "Qwen" },
-    { id: "qwen3-coder-flash", label: "Qwen3 Coder Flash", vendor: "Qwen" },
-    { id: "qwen3-coder-next", label: "Qwen3 Coder Next", vendor: "Qwen" },
-    { id: "qwen3-coder-plus", label: "Qwen3 Coder Plus", vendor: "Qwen" },
-    { id: "qwen3-vl-flash", label: "Qwen3 VL Flash", vendor: "Qwen" },
-    { id: "qwen3-omni-flash", label: "Qwen3 Omni Flash", vendor: "Qwen" },
-    { id: "grok-4.3", label: "Grok 4.3", vendor: "xAI", reasoning: true },
-    { id: "deepseek-v4-flash-0731", label: "DeepSeek V4 Flash", vendor: "DeepSeek" },
-    { id: "glm-5.3", label: "GLM 5.3", vendor: "Zhipu" },
-    { id: "kimi-k2.6", label: "Kimi K2.6", vendor: "Moonshot" },
-    { id: "kimi-k2.7-code", label: "Kimi K2.7 Code", vendor: "Moonshot" }
+    { id: "anthropic/claude-haiku-4.5", label: "Claude Haiku 4.5", vendor: "Anthropic" },
+    { id: "anthropic/claude-sonnet-4.6", label: "Claude Sonnet 4.6", vendor: "Anthropic" },
+    { id: "anthropic/claude-sonnet-5", label: "Claude Sonnet 5", vendor: "Anthropic" },
+    { id: "anthropic/claude-opus-5", label: "Claude Opus 5", vendor: "Anthropic" },
+    { id: "anthropic/claude-fable-5.1", label: "Claude Fable 5.1", vendor: "Anthropic" },
+    { id: "openai/gpt-5.6-luna", label: "GPT-5.6 Luna", vendor: "OpenAI", reasoning: true },
+    { id: "openai/gpt-5.6-terra", label: "GPT-5.6 Terra", vendor: "OpenAI", reasoning: true },
+    { id: "openai/gpt-5.6-sol", label: "GPT-5.6 Sol", vendor: "OpenAI", reasoning: true },
+    { id: "openai/gpt-6-astra", label: "GPT-6 Astra", vendor: "OpenAI", reasoning: true },
+    { id: "openai/gpt-5.4", label: "GPT-5.4", vendor: "OpenAI", reasoning: true },
+    { id: "openai/gpt-5.4-pro", label: "GPT-5.4 Pro", vendor: "OpenAI", reasoning: true },
+    { id: "google/gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite", vendor: "Google" },
+    { id: "google/gemini-3.7-flash", label: "Gemini 3.7 Flash", vendor: "Google" },
+    { id: "google/gemini-3.8-flash", label: "Gemini 3.8 Flash", vendor: "Google" },
+    { id: "google/gemini-3.1-pro-preview", label: "Gemini 3.1 Pro", vendor: "Google" },
+    { id: "google/gemma-4-31b-it:free", label: "Gemma 4 31B (free)", vendor: "Google" },
+    { id: "qwen/qwen3.7-flash", label: "Qwen 3.7 Flash", vendor: "Qwen" },
+    { id: "qwen/qwen3.6-flash", label: "Qwen 3.6 Flash", vendor: "Qwen" },
+    { id: "qwen/qwen3.6-plus", label: "Qwen 3.6 Plus", vendor: "Qwen" },
+    { id: "qwen/qwen3.7-plus", label: "Qwen 3.7 Plus", vendor: "Qwen" },
+    { id: "qwen/qwen3.8-27b", label: "Qwen 3.8 27B", vendor: "Qwen" },
+    { id: "qwen/qwen3-coder-flash", label: "Qwen3 Coder Flash", vendor: "Qwen" },
+    { id: "qwen/qwen3-coder-next", label: "Qwen3 Coder Next", vendor: "Qwen" },
+    { id: "qwen/qwen3-coder-plus", label: "Qwen3 Coder Plus", vendor: "Qwen" },
+    { id: "qwen/qwen3-vl-32b-instruct", label: "Qwen3 VL 32B", vendor: "Qwen", aliases: ["qwen3-vl-32b-instruct","qwen/qwen3-vl-flash","qwen3-vl-flash"] },
+    { id: "qwen/qwen3.8-flash", label: "Qwen 3.8 Flash", vendor: "Qwen", aliases: ["qwen3.8-flash","qwen/qwen3-omni-flash","qwen3-omni-flash"] },
+    { id: "qwen/qwen3.8-max-0902", label: "Qwen 3.8 Max", vendor: "Qwen" },
+    { id: "x-ai/grok-4.3", label: "Grok 4.3", vendor: "xAI", reasoning: true },
+    { id: "x-ai/grok-4.5", label: "Grok 4.5", vendor: "xAI", reasoning: true },
+    { id: "x-ai/grok-4.6", label: "Grok 4.6", vendor: "xAI", reasoning: true },
+    { id: "x-ai/grok-4.20", label: "Grok 4.20", vendor: "xAI", reasoning: true },
+    { id: "deepseek/deepseek-v4-flash-0731", label: "DeepSeek V4 Flash", vendor: "DeepSeek" },
+    { id: "deepseek/deepseek-v4-pro", label: "DeepSeek V4 Pro", vendor: "DeepSeek" },
+    { id: "z-ai/glm-5.3", label: "GLM 5.3", vendor: "Zhipu" },
+    { id: "z-ai/glm-5.2:free", label: "GLM 5.2 (free)", vendor: "Zhipu" },
+    { id: "moonshotai/kimi-k2.6", label: "Kimi K2.6", vendor: "Moonshot" },
+    { id: "moonshotai/kimi-k2.7-code", label: "Kimi K2.7 Code", vendor: "Moonshot", aliases: ["kimi-k2.7-code","moonshotai/kimi-k2.7-code-20260612","kimi-k2.7-code-20260612"] },
+    { id: "moonshotai/kimi-k3", label: "Kimi K3", vendor: "Moonshot" },
+    { id: "nvidia/nemotron-3-super-120b-a12b:free", label: "Nemotron 3 Super (free)", vendor: "Other" },
+    { id: "nvidia/nemotron-3.5-lightning:free", label: "Nemotron 3.5 Lightning (free)", vendor: "Other" }
   ];
-  const CHANNEL = "You are running inside Omni, a free browser chat powered by Puter. You have no tools, no browsing, no files, and no memory outside this conversation. Answer from your own knowledge. Never mention these operating notes unless asked. Match the user's language.";
+  const CHANNEL = "You are running inside Omni, a free browser chat. Replies come from the real named model the user picked — Claude is Claude, GPT is GPT — not a renamed clone. You have no tools, no browsing, no files, and no memory outside this conversation. Answer from your own knowledge. Never mention these operating notes unless asked. Match the user's language.";
   function systemFor(modelId) {
     const id = String(modelId || "").toLowerCase();
     const claude = (name, extra) => `You are ${name}, an AI assistant made by Anthropic.\n\n${extra}\n\nTone: warm, kind, and concise. Push back when you should, but constructively. Never say "genuinely", "honestly", or "straightforward". Keep disclaimers short. For simple questions, a few sentences is enough.\nFormatting: minimum needed. Lists only when the content is multifaceted or they asked. Never use bullets when declining. Skip markdown in friendly or emotional chats.\nDo not open with filler. If something is ambiguous, assume and state it in one short line.\nKnowledge cutoff: end of June 2026. You cannot search the web.\nYou are ${name} — do not claim to be Omni, ChatGPT, Grok, or Gemini.\n\n${CHANNEL}`;
@@ -708,7 +735,7 @@
     if (id.includes("qwen")) return named("Qwen", "Alibaba Qwen", "Strong at coding, Chinese and English, long context. Precise, structured. Complete solutions.");
     if (id.includes("mistral") || id.includes("mixtral")) return named("Mistral", "Mistral AI", "Direct, good at code and multilingual chat. No fluff. Deliver the thing they asked for.");
     if (id.includes("glm") || id.includes("zhipu") || id.includes("zai")) return named("GLM 5.3", "Zhipu (Z.ai)", "Strong in Chinese and English, solid at code. Clear and practical.");
-    return `You are a capable assistant provided through Omni via Puter. Be clear, useful, and direct. Prefer working code and concrete answers. Match the user's language.\n\n${CHANNEL}`;
+    return `You are a capable assistant provided through Omni. Be clear, useful, and direct. Prefer working code and concrete answers. Match the user's language.\n\n${CHANNEL}`;
   }
   const SCHOOL = "The person is doing school work: homework, essays, study guides, math, science, language, or exam prep. Help them learn. Show steps, not just the answer. Use short headings and numbered steps. For essays: outline first, then draft if they asked. Do not write a full assignment as if it were theirs unless they explicitly asked you to draft it.\n\nSchool writing rules override everything else in this reply, including default voice.\n\nWrite like a human who thinks clearly and edits ruthlessly.\n\nBanned words, never use: crucial, delve, enhance, foster, garner, highlight (as a verb), interplay, intricate, key (as filler), landscape (metaphor), meticulous, pivotal, showcase, tapestry, testament, underscore (as a verb), valuable, vibrant, groundbreaking, renowned, diverse array, rich heritage, commitment to.\n\nStructural rules: default to \"is\" instead of \"serves as / stands as / marks a / represents a.\" Never end a sentence with a dangling \"-ing\" phrase that editorializes. Don't use the rule of three just to sound thorough. Don't use \"not just X but Y\" unless the contrast is the point. No \"In summary / In conclusion / Overall.\" No \"I hope this helps / Let me know if.\" Don't attribute claims to vague \"experts\" without naming them. Don't inflate significance. Don't swap the word for a thing just for variety. No promotional tone. Headings in sentence case. Bold only for labels, not decoration.\n\nVoice: direct, specific, short declarative sentences. State things without editorializing their importance. No em dashes.";
   const CODE_PLAN = "The person is in Omni Code · Plan.\n\nDo not write full source yet. Produce a tight implementation plan:\n1. What you are building, in 2–4 sentences.\n2. File tree with a one-line job for each file.\n3. Stack and constraints.\n4. Order of work (numbered).\n5. Risks or open questions (short).\n\nEnd with: Tap Build to implement this plan.\nNo giant code blocks. Be specific.";
@@ -1341,33 +1368,16 @@
   const USAGE_KEY = "omni-usage-v1";
   const MICROS_PER_DOLLAR = 100000000;
   const FALLBACKS = {
-    glm: "glm-5.3",
-    luna: "gpt-5.6-luna",
-    terra: "gpt-5.6-terra",
-    qwen: "qwen3.6-plus",
-    nano: "gpt-5-nano",
-    flash: "gemini-3.8-flash",
-    ds: "deepseek-v4-flash-0731",
-    haiku: "claude-haiku-4-5"
+    glm: "z-ai/glm-5.3",
+    luna: "openai/gpt-5.6-luna",
+    terra: "openai/gpt-5.6-terra",
+    qwen: "qwen/qwen3.6-plus",
+    nano: "openai/gpt-5-nano",
+    flash: "google/gemini-3.8-flash",
+    ds: "deepseek/deepseek-v4-flash-0731",
+    haiku: "anthropic/claude-haiku-4.5"
   };
-  const VAULT = [
-    { id: "claude-fable-5-1", label: "Claude Fable 5.1", vendor: "Anthropic" },
-    { id: "claude-opus-5", label: "Claude Opus 5", vendor: "Anthropic" },
-    { id: "claude-sonnet-5", label: "Claude Sonnet 5", vendor: "Anthropic" },
-    { id: "gpt-6-astra", label: "GPT-6 Astra", vendor: "OpenAI" },
-    { id: "gpt-5.6-terra", label: "GPT-5.6 Terra", vendor: "OpenAI" },
-    { id: "gpt-5.6-sol", label: "GPT-5.6 Sol", vendor: "OpenAI" },
-    { id: "gpt-5.4-pro", label: "GPT-5.4 Pro", vendor: "OpenAI" },
-    { id: "grok-4.6", label: "Grok 4.6", vendor: "xAI" },
-    { id: "grok-4.5", label: "Grok 4.5", vendor: "xAI" },
-    { id: "gemini-3.1-pro-preview", label: "Gemini 3.1 Pro", vendor: "Google" },
-    { id: "kimi-k3", label: "Kimi K3", vendor: "Moonshot" },
-    { id: "qwen3.8-max", label: "Qwen 3.8 Max", vendor: "Qwen" },
-    { id: "qwen3.8-2.4t-a95b", label: "Qwen 3.8 2.4T", vendor: "Qwen" },
-    { id: "qwen3.7-max", label: "Qwen 3.7 Max", vendor: "Qwen" },
-    { id: "qwen3-coder-480b-a35b-instruct", label: "Qwen3 Coder 480B", vendor: "Qwen" },
-    { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro", vendor: "DeepSeek" }
-  ];
+  const VAULT = [];
   let usageSnap = null;
   let sessionTurns = 0;
   let sessionEstimated = 0;
@@ -1933,10 +1943,12 @@
   }
   function listPrice(id) {
     const r = ratesFor(id);
+    if (!r[0] && !r[1]) return "Free";
     return usdTok(r[0]) + " / " + usdTok(r[1]);
   }
   function ratesFor(id) {
     const s = String(id||"").toLowerCase();
+    if (s.includes(":free")) return [0, 0];
     if (RATES[s]) return RATES[s];
     const n = s.replace(/_/g,"-").replace(/(\d)\.(\d)/g,"$1-$2");
     if (RATES[n]) return RATES[n];
@@ -1994,31 +2006,31 @@
     const specialist = looksSchool(text) || looksCode(text) || /\b(prove|proof of|derive why|logic puzzle|theorem|differential equation|solve for|equation|derivative|integral|matrix|stoich|prove that|translate|traduc|翻译|summarize|tldr|short story|write a (story|poem|song))\b/i.test(text);
     const simple = (text.length < 80 && /^(hi|hey|hello|yo|sup|thanks|thank you|ok|okay|yes|no|sure|lol|what'?s up|how are you)\b/i.test(text))
       || (text.length < 180 && /^(what( is|'s| are)|who is|when (is|was|did)|where is|how (do|does|to|much|many)|define |capital of)\b/i.test(text));
-    if (hasImage) return { model: "qwen3.6-plus", reason: "picture attached · Qwen 3.6 Plus can see it" };
-    if (broke) return { model: "gemini-3.1-flash-lite", reason: "almost out of usage · Gemini 3.1 Flash-Lite" };
+    if (hasImage) return { model: "qwen/qwen3.6-plus", reason: "picture attached · Qwen 3.6 Plus can see it" };
+    if (broke) return { model: "google/gemini-3.1-flash-lite", reason: "almost out of usage · Gemini 3.1 Flash-Lite" };
     if (forceCode || looksCode(text)) {
-      if (tight) return { model: "gemini-3.1-flash-lite", reason: "code · saving usage" };
-      if (total > 8000 || text.length > 1800) return { model: "gpt-5.6-luna", reason: "long code · GPT-5.6 Luna" };
-      return { model: "kimi-k2.7-code", reason: "code · Kimi K2.7 Code" };
+      if (tight) return { model: "google/gemini-3.1-flash-lite", reason: "code · saving usage" };
+      if (total > 8000 || text.length > 1800) return { model: "openai/gpt-5.6-luna", reason: "long code · GPT-5.6 Luna" };
+      return { model: "moonshotai/kimi-k2.7-code", reason: "code · Kimi K2.7 Code" };
     }
-    if (looksSchool(text)) return { model: tight ? "gpt-5.6-luna" : "claude-sonnet-4-6", reason: tight ? "school · Luna" : "school work · Claude Sonnet 4.6" };
+    if (looksSchool(text)) return { model: tight ? "openai/gpt-5.6-luna" : "anthropic/claude-sonnet-4.6", reason: tight ? "school · Luna" : "school work · Claude Sonnet 4.6" };
     if (/\b(prove|proof of|derive why|logic puzzle|theorem|differential equation|solve for|equation|derivative|integral|matrix|stoich|prove that)\b/i.test(text) || /[=∑∫√]/.test(text)) {
-      return { model: tight ? "gpt-5.6-luna" : "grok-4.3", reason: tight ? "hard question · Luna" : "hard question · Grok 4.3" };
+      return { model: tight ? "openai/gpt-5.6-luna" : "x-ai/grok-4.3", reason: tight ? "hard question · Luna" : "hard question · Grok 4.3" };
     }
     if (/\b(translate|traduc|翻译|übersetz|in (spanish|french|german|chinese|japanese|korean|hindi|arabic|portuguese))\b/i.test(text)) {
-      return { model: "qwen3.6-plus", reason: "translation · Qwen 3.6 Plus" };
+      return { model: "qwen/qwen3.6-plus", reason: "translation · Qwen 3.6 Plus" };
     }
     if (/\b(summarize|summary of|tldr|tl;dr|eli5|key points of)\b/i.test(text)) {
-      return { model: tight ? "gemini-3.1-flash-lite" : "gemini-3.8-flash", reason: "summarize · Gemini 3.8 Flash" };
+      return { model: tight ? "google/gemini-3.1-flash-lite" : "google/gemini-3.8-flash", reason: "summarize · Gemini 3.8 Flash" };
     }
     if (/\b(short story|write a (story|poem|song|scene|letter|email|speech)|lyrics|screenplay|fanfic)\b/i.test(text)) {
-      return { model: "gpt-5.6-luna", reason: "writing · GPT-5.6 Luna" };
+      return { model: "openai/gpt-5.6-luna", reason: "writing · GPT-5.6 Luna" };
     }
-    if (total > 14000 || text.length > 4500) return { model: tight ? "gemini-3.1-flash-lite" : "kimi-k2.6", reason: tight ? "long prompt · saving usage" : "long prompt · Kimi K2.6" };
+    if (total > 14000 || text.length > 4500) return { model: tight ? "google/gemini-3.1-flash-lite" : "moonshotai/kimi-k2.6", reason: tight ? "long prompt · saving usage" : "long prompt · Kimi K2.6" };
     if (simple || (early && text.length < 280 && !specialist)) {
-      return { model: "gemini-3.1-flash-lite", reason: early ? "early / simple · Gemini 3.1 Flash-Lite" : "simple question · Gemini 3.1 Flash-Lite" };
+      return { model: "google/gemini-3.1-flash-lite", reason: early ? "early / simple · Gemini 3.1 Flash-Lite" : "simple question · Gemini 3.1 Flash-Lite" };
     }
-    return { model: tight ? "gemini-3.8-flash" : "gpt-5.6-luna", reason: tight ? "everyday · Gemini 3.8 Flash" : "everyday chat · GPT-5.6 Luna ($0.20/$1.20, not GPT-5)" };
+    return { model: tight ? "google/gemini-3.8-flash" : "openai/gpt-5.6-luna", reason: tight ? "everyday · Gemini 3.8 Flash" : "everyday chat · GPT-5.6 Luna ($0.20/$1.20, not GPT-5)" };
   }
   function preferredCheap(prompt) {
     if (looksCode(prompt)) return FALLBACKS.luna;
@@ -2035,8 +2047,8 @@
     const r = ratesFor(model);
     return Math.round(r[0] * tokensIn + r[1] * tokensOut);
   }
-  function visionOk(id) { return /qwen|gpt-4o|gpt-5|gemini|claude-sonnet|claude-opus|claude-fable|claude-haiku|grok-4\.[5-9]/i.test(String(id||"")); }
-  function pickVision(id) { return visionOk(id) && id !== "auto" ? id : "qwen3.6-plus"; }
+  function visionOk(id) { return /qwen|gpt-4o|gpt-5|gemini|claude-sonnet|claude-opus|claude-fable|claude-haiku|grok-4\.[5-9]|gemma/i.test(String(id||"")); }
+  function pickVision(id) { return visionOk(id) && id !== "auto" ? id : "qwen/qwen3.6-plus"; }
   function harvestFacts(text) {
     const re = /\b(?:my name is|my name's|call me|i(?:'m| am) from|i live(?: in)?|i go to|i study|i(?:'m| am) in|i work(?: at| on)?|i prefer|i like|i hate|please remember|remember that|i use|i speak|my (?:school|teacher|class|project) is)\b[^.!?\n]{2,110}/gi;
     const out = []; const seen = new Set();
@@ -2154,9 +2166,21 @@
     if (turns) turns.textContent = sessionTurns + " turns";
     if (chip) chip.textContent = usageSnap ? (formatUsd(usageSnap.remaining) + " · " + sessionTurns) : (sessionTurns + " turns");
     if (!left) return;
+    if (hasOrKey()) {
+      if (!usageSnap) {
+        left.textContent = "OpenRouter connected";
+        if (sub) sub.textContent = sessionTurns + " local turns this session";
+        return;
+      }
+      const pct = usageSnap.allowance > 0 ? Math.round((usageSnap.used / usageSnap.allowance) * 100) : 0;
+      left.textContent = formatUsd(usageSnap.remaining) + " left";
+      if (sub) sub.textContent = pct + "% used of " + formatUsd(usageSnap.allowance) + " on OpenRouter";
+      if (fill) fill.style.width = Math.max(0, Math.min(100, pct)) + "%";
+      return;
+    }
     if (!window.puter || !puter.auth || !puter.auth.isSignedIn()) {
-      left.textContent = "Sign in to see allowance";
-      if (sub) sub.textContent = "Puter monthly meter";
+      left.textContent = "Add an OpenRouter key";
+      if (sub) sub.textContent = "Settings · OpenRouter";
       if (fill) fill.style.width = "0%";
       return;
     }
@@ -2187,7 +2211,7 @@
     if (usageSnap) {
       html += "<div style='border:1px solid var(--line);background:var(--bg);border-radius:16px;padding:14px'><div class='stat'>This month</div><div style='font-size:28px;font-family:var(--display);margin-top:4px'>" + formatUsd(usageSnap.remaining) + "</div><div class='stat'>remaining of " + formatUsd(usageSnap.allowance) + "</div><div class='bar' style='margin-top:10px'><i style='width:" + Math.round((usageSnap.remaining / Math.max(1, usageSnap.allowance)) * 100) + "%'></i></div><div class='usage-meta'>Used " + formatUsd(usageSnap.used) + (usageSnap.apiCalls ? " · " + usageSnap.apiCalls + " API calls" : "") + "</div></div>";
     } else {
-      html += "<p style='color:var(--muted);font-size:14px'>Sign in with Puter to load the live meter.</p>";
+      html += "<p style='color:var(--muted);font-size:14px'>Paste an OpenRouter key in Settings to load credits.</p>";
     }
     html += "<div class='usage-grid'><div><div class='stat'>Session</div><b>" + sessionTurns + "</b><div class='stat'>turns</div></div><div><div class='stat'>This chat</div><b>" + meta.label.replace(/^(.{14}).+$/, "$1…") + "</b><div class='stat'>~" + Math.round(plan.inputChars / 4).toLocaleString() + " tokens</div></div></div>";
     html += "<div style='border:1px solid var(--line);background:var(--bg);border-radius:16px;padding:14px;font-size:13px;color:var(--muted);line-height:1.5'>";
@@ -2201,6 +2225,12 @@
   }
   async function loadUsage() {
     try {
+      if (hasOrKey()) {
+        const snap = await fetchOrCredits();
+        if (snap) usageSnap = snap;
+        paintUsage();
+        return;
+      }
       if (!window.puter || !puter.auth.isSignedIn() || !puter.auth.getMonthlyUsage) { paintUsage(); return; }
       const raw = await puter.auth.getMonthlyUsage();
       const parsed = parseUsage(raw);
@@ -2426,10 +2456,9 @@
   }
   function isNoise(id) {
     const s = String(id).toLowerCase();
-    if (s.startsWith("openrouter:") || s.startsWith("infron:") || s.startsWith("togetherai:") || s.includes(":batch") || s.includes("~") || s.includes(":free")) return true;
-    const keep = new Set([...FEATURED, ...VAULT].map((m) => m.id));
-    if (keep.has(id) || keep.has(s) || s === "auto") return false;
-    return true;
+    if (s.startsWith("openrouter:") || s.startsWith("infron:") || s.startsWith("togetherai:") || s.includes(":batch") || s.includes("~")) return true;
+    if (/embedding|moderation|tts|whisper|lyria|rerank|text-to-speech/.test(s)) return true;
+    return false;
   }
 
   function blank() {
@@ -2470,12 +2499,22 @@
     if (/qwen3\.8-max|qwen3\.8-2\.4t|qwen3\.7-max|qwen3\.6-max|qwen3-max|qwen-max|qwen3-coder-480b|qwen3\.5-omni-plus/.test(s)) return true;
     return /fable-5-1|fable-5\.1|mythos|opus-5|terra|5\.4-pro|gpt-6-astra|kimi-k3|v4-pro|grok-4\.6|fable-5$|sonnet-5$|5\.6-sol|grok-4\.5|grok-4\.20|gpt-5\.5|gpt-5\.4$/i.test(s);
   }
+  function canonModel(id) {
+    const s = String(id || "");
+    if (!s || s === "auto") return s || "auto";
+    const all = FEATURED.concat(MODELS);
+    const hit = all.find((m) => m.id === s || (m.aliases && m.aliases.indexOf(s) >= 0));
+    if (hit) return hit.id;
+    const norm = (x) => String(x).split("/").pop().toLowerCase().replace(/-/g, ".").replace(/:free$/, "");
+    const ns = norm(s);
+    const byTail = all.find((m) => norm(m.id) === ns || norm(m.id) === s.toLowerCase());
+    return byTail ? byTail.id : s;
+  }
   state.sessions.forEach((s) => {
-    if (isBurner(s.model)) s.model = "claude-haiku-4-5";
-    else if (s.model !== "auto" && isNoise(s.model)) s.model = "auto";
+    s.model = isNoise(s.model) && s.model !== "auto" ? "auto" : canonModel(s.model);
   });
-  if (isBurner(state.lastModel)) state.lastModel = "claude-haiku-4-5";
-  else if (state.lastModel !== "auto" && isNoise(state.lastModel)) state.lastModel = "auto";
+  if (isNoise(state.lastModel) && state.lastModel !== "auto") state.lastModel = "auto";
+  else state.lastModel = canonModel(state.lastModel);
 
   function save() {
     localStorage.setItem(KEY, JSON.stringify({
@@ -2853,14 +2892,21 @@
   function renderModelList() {
     const q = $("model-search").value.trim().toLowerCase();
     const sel = current().model;
-    const vault = !!prefs.vaultUnlocked;
     const source = q
-      ? MODELS.filter(m => m.id !== "auto" && !isBurner(m.id) && !isNoise(m.id) && (m.label + " " + m.id + " " + (m.vendor || "")).toLowerCase().includes(q))
-      : MODELS.filter(m => m.id !== "auto" && !isBurner(m.id) && !isNoise(m.id) && (vault || FEATURED.some(f => f.id === m.id)));
+      ? MODELS.filter(m => m.id !== "auto" && !isNoise(m.id) && (m.label + " " + m.id + " " + (m.vendor || "")).toLowerCase().includes(q))
+      : MODELS.filter(m => m.id !== "auto" && !isNoise(m.id));
     const groups = {};
     source.forEach(m => {
       const v = m.vendor || guessVendor(m.id);
       (groups[v] || (groups[v] = [])).push(m);
+    });
+    Object.keys(groups).forEach((v) => {
+      groups[v].sort((a, b) => {
+        const af = FEATURED.some(f => f.id === a.id) ? 0 : 1;
+        const bf = FEATURED.some(f => f.id === b.id) ? 0 : 1;
+        if (af !== bf) return af - bf;
+        return String(a.label).localeCompare(String(b.label));
+      });
     });
     const box = $("model-list");
     box.innerHTML = "";
@@ -2876,47 +2922,8 @@
       };
       box.appendChild(auto);
     }
-    if (vault) {
-      const warn = document.createElement("div");
-      warn.style.cssText = "margin:8px 8px 12px;padding:10px 12px;border-radius:12px;border:1px solid color-mix(in oklab, #f87171 40%, var(--line));background:color-mix(in oklab, #f87171 12%, var(--surface));font-size:12px;line-height:1.45;color:var(--fg)";
-      warn.textContent = "Official Puter list prices ($ input / $ output per 1M). Fable 5.1 is $10 / $50. Luna is $0.20 / $1.20. GPT-5.4 Pro is $30 / $180.";
-      box.appendChild(warn);
-      const hh = document.createElement("div");
-      hh.className = "vendor";
-      hh.style.color = "#f87171";
-      hh.textContent = "Heavy — real flagship prices";
-      box.appendChild(hh);
-      const heavies = [];
-      const seenH = new Set();
-      VAULT.concat(MODELS.filter(m => isBurner(m.id))).forEach((m) => {
-        if (seenH.has(m.id) || isNoise(m.id)) return;
-        seenH.add(m.id);
-        if (q && !(m.label + " " + m.id).toLowerCase().includes(q)) return;
-        heavies.push(m);
-      });
-      heavies.forEach((m) => {
-        const b = document.createElement("button");
-        b.className = "mrow" + (m.id === sel ? " sel" : "");
-        const s = current();
-        const chars = s.messages.reduce((n, x) => n + String(x.content || "").length, 0);
-        const cost = estimateTurn(m.id, chars, s.thinking, s.effort);
-        b.innerHTML = "<span style='flex:1;min-width:0'><b></b><em></em></span><span class='cost'><b></b><small></small></span>";
-        b.querySelector("b").textContent = m.label;
-        b.querySelector("em").textContent = m.id + " · " + listPrice(m.id) + " per 1M";
-        b.querySelector(".cost b").textContent = listPrice(m.id);
-        b.querySelector(".cost b").style.color = "#f87171";
-        b.querySelector(".cost small").textContent = cost >= 1000000 ? ("~" + formatUsd(cost) + " / reply") : "per 1M tokens";
-        b.onclick = () => {
-          current().model = m.id;
-          state.lastModel = m.id;
-          current().updatedAt = Date.now();
-          save(); closeModels(); render();
-        };
-        box.appendChild(b);
-      });
-    }
     const order = VENDOR_ORDER.filter(v => groups[v] && groups[v].length);
-    if (!order.length && q && !vault) {
+    if (!order.length && q) {
       box.innerHTML = "<p style='padding:24px;text-align:center;color:var(--subtle);font-size:13px'>No models match.</p>";
       return;
     }
@@ -2925,7 +2932,7 @@
       h.className = "vendor";
       h.textContent = v;
       box.appendChild(h);
-      groups[v].slice(0, q ? 40 : 24).forEach(m => {
+      groups[v].slice(0, q ? 80 : 64).forEach(m => {
         const b = document.createElement("button");
         b.className = "mrow" + (m.id === sel ? " sel" : "");
         const s = current();
@@ -2937,6 +2944,7 @@
         b.querySelector("b").textContent = m.label;
         b.querySelector("em").textContent = m.id;
         b.querySelector(".cost b").textContent = listPrice(m.id);
+        if (isBurner(m.id)) b.querySelector(".cost b").style.color = "var(--danger)";
         b.querySelector(".cost small").textContent = tier + " · per 1M";
         b.onclick = () => {
           current().model = m.id;
@@ -2958,7 +2966,6 @@
   function closeModels() {
     lockPage(false);
     $("model-sheet").classList.remove("show");
-    prefs.vaultUnlocked = false;
   }
   function showEffort() { $("effort-modal").classList.add("show"); }
   function hideEffort() { $("effort-modal").classList.remove("show"); }
@@ -2966,22 +2973,6 @@
   $("model-btn").onclick = openModels;
   $("model-close").onclick = closeModels;
   $("model-sheet").onclick = (e) => { if (e.target.id === "model-sheet") closeModels(); };
-  (function () {
-    let taps = 0, timer = null;
-    $("models-title").onclick = () => {
-      taps += 1;
-      if (timer) clearTimeout(timer);
-      if (taps >= 3) {
-        taps = 0;
-        prefs.vaultUnlocked = true;
-        savePrefs();
-        toast("Admin models unlocked. Fable 5.1 is $10 / $50 per 1M — a short reply is about $0.04.");
-        renderModelList();
-        return;
-      }
-      timer = setTimeout(() => { taps = 0; }, 900);
-    };
-  })();
   (function () {
     const overlay = $("cmd-overlay");
     const log = $("cmd-log");
@@ -3207,6 +3198,90 @@
     return o;
   }
 
+  const OR_API = "https://openrouter.ai/api/v1";
+  const OR_SITE = "https://coolkidhacks.github.io";
+  const OR_STORE = "omni-openrouter-v1";
+  function readOrStore() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(OR_STORE) || "{}");
+      return String((raw.state && raw.state.key) || raw.key || "").trim();
+    } catch (e) { return ""; }
+  }
+  function writeOrStore(key) {
+    localStorage.setItem(OR_STORE, JSON.stringify({ state: { key: key || "" }, version: 0 }));
+  }
+  function hasOrKey() {
+    const k = readOrStore();
+    return k.indexOf("sk-or-") === 0 && k.length > 20;
+  }
+  function orHeaders() {
+    const h = { "Content-Type": "application/json", "HTTP-Referer": OR_SITE, "X-Title": "OMNI-AI" };
+    const k = readOrStore();
+    if (k) h.Authorization = "Bearer " + k;
+    return h;
+  }
+  async function orFetch(url, init) {
+    try {
+      if (window.puter && puter.net && puter.net.fetch) return await puter.net.fetch(url, init);
+    } catch (e) {}
+    return fetch(url, init);
+  }
+  function toOrId(id) {
+    return canonModel(id);
+  }
+  function toPuterId(id) {
+    const s = String(id || "");
+    if (!s || s === "auto") return s;
+    return s.indexOf("/") >= 0 ? s.split("/").pop() : s;
+  }
+  async function* orStream(body) {
+    const res = await orFetch(OR_API + "/chat/completions", {
+      method: "POST",
+      headers: orHeaders(),
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      let msg = "OpenRouter request failed (" + res.status + ").";
+      try {
+        const j = await res.json();
+        msg = (j.error && j.error.message) || j.message || msg;
+      } catch (e) {}
+      if (res.status === 401) msg = "OpenRouter key rejected. Paste a new key in Settings.";
+      if (res.status === 402) msg = "OpenRouter is out of credits. Add credits or pick a :free model.";
+      throw new Error(msg);
+    }
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop() || "";
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line || line === "data: [DONE]") continue;
+        const payload = line.indexOf("data:") === 0 ? line.slice(5).trim() : line;
+        try { yield JSON.parse(payload); } catch (e) { if (payload) yield payload; }
+      }
+    }
+  }
+  async function fetchOrCredits() {
+    if (!hasOrKey()) return null;
+    try {
+      const res = await orFetch(OR_API + "/credits", { headers: orHeaders() });
+      if (!res.ok) return null;
+      const j = await res.json();
+      const bag = (j && j.data) || j || {};
+      const credits = Number(bag.total_credits || 0);
+      const used = Number(bag.total_usage || 0);
+      const allowance = Math.max(0, Math.round(credits * MICROS_PER_DOLLAR));
+      const usedM = Math.max(0, Math.round(used * MICROS_PER_DOLLAR));
+      return { allowance: allowance || usedM, remaining: Math.max(0, allowance - usedM), used: usedM, apiCalls: 0 };
+    } catch (e) { return null; }
+  }
+
   async function runAssistant() {
     const s = current();
     streaming = true; aborted = false; updateSend();
@@ -3242,7 +3317,7 @@
     const history = s.messages.filter(m => m.role === "user" || (m.role === "assistant" && m.content && !m.error && m.id !== msg.id)).map(m => ({ role: m.role, content: m.content }));
     let text = "", reason = "", usedModel = plan.model, lastErr = "";
     try {
-      if (!window.puter) throw new Error("Puter.js is not ready yet.");
+      if (!hasOrKey() && !window.puter) throw new Error("Add an OpenRouter key in Settings, or wait for Puter.js.");
       let ok = false;
       for (let i = 0; i < plan.chain.length; i++) {
         if (aborted) break;
@@ -3285,10 +3360,41 @@
         const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking, model));
         if (prefs.privateMode) opts.store = false;
         try {
-          const call = attachment
-            ? puter.ai.chat(visionPrompt(sys, history, lastUser ? lastUser.content : ""), attachment.dataUrl, opts)
-            : puter.ai.chat(payload, false, opts);
-          const raw = await withTimeout(call, s.thinking ? 35000 : 18000, "The model stalled — likely rate-limited or out of usage.");
+          let raw;
+          if (hasOrKey()) {
+            const orModel = toOrId(model);
+            const orMessages = attachment
+              ? payload.map((m, i, arr) => {
+                  const last = [...arr].map((x, j) => x.role === "user" ? j : -1).filter((j) => j >= 0).pop();
+                  if (i !== last) return m;
+                  return {
+                    role: "user",
+                    content: [
+                      { type: "text", text: (m.content || "").trim() || "Look at this image." },
+                      { type: "image_url", image_url: { url: attachment.dataUrl } }
+                    ]
+                  };
+                })
+              : payload;
+            const orBody = {
+              model: orModel,
+              messages: orMessages,
+              stream: true,
+              max_tokens: effortMaxTokens(s.effort),
+              provider: { allow_fallbacks: false }
+            };
+            if (s.thinking || /gpt|openai|grok|claude|gemini/.test(orModel)) {
+              orBody.reasoning = { effort: s.effort === "max" || s.effort === "xhigh" ? "xhigh" : s.effort === "high" ? "high" : s.effort === "low" ? "low" : "medium" };
+            }
+            raw = orStream(orBody);
+          } else {
+            if (!window.puter) throw new Error("Add an OpenRouter key in Settings, or wait for Puter.js.");
+            opts.model = toPuterId(model);
+            const call = attachment
+              ? puter.ai.chat(visionPrompt(sys, history, lastUser ? lastUser.content : ""), attachment.dataUrl, opts)
+              : puter.ai.chat(payload, false, opts);
+            raw = await withTimeout(call, s.thinking ? 35000 : 18000, "The model stalled — likely rate-limited or out of usage.");
+          }
           if (raw && typeof raw[Symbol.asyncIterator] === "function") {
             let first = true;
             const iter = raw[Symbol.asyncIterator]();
@@ -3358,7 +3464,7 @@
     } catch (err) {
       const m = (err && (err.msg || err.message)) || "The model request failed.";
       msg.content = /sign|auth|login|unauthorized/i.test(String(m))
-        ? String(m) + "\n\nSign in with Puter (free) to run this model. No API key needed."
+        ? String(m) + "\n\nPaste an OpenRouter key in Settings, or sign in with Puter."
         : String(m);
       msg.error = true;
       msg.streaming = false;
@@ -3370,7 +3476,8 @@
   }
 
   async function ensureSignedIn() {
-    if (!window.puter) throw new Error("Puter.js is not ready yet.");
+    if (hasOrKey()) return true;
+    if (!window.puter) throw new Error("Add an OpenRouter key in Settings, or wait for Puter.js.");
     if (puter.auth.isSignedIn()) return true;
     return signIn();
   }
@@ -3446,12 +3553,42 @@
   async function runImage(prompt) {
     const s = current();
     const id = uid("msg");
-    s.messages.push({ id, role: "assistant", content: "", kind: "image", createdAt: Date.now(), model: "gpt-image-1-mini", streaming: true });
+    s.messages.push({ id, role: "assistant", content: "", kind: "image", createdAt: Date.now(), model: "google/gemini-3.1-flash-image", streaming: true });
     streaming = true; render();
     try {
       const p = String(prompt).replace(/^\/(imagine|image|img|draw|picture)\s*/i, "").trim() || prompt;
-      const img = await puter.ai.txt2img(p, { model: "gpt-image-1-mini", quality: "low" });
-      const src = typeof img === "string" ? img : (img && img.src) || "";
+      let src = "";
+      if (hasOrKey()) {
+        const models = ["google/gemini-3.1-flash-image", "openai/gpt-5-image"];
+        let last = "Image generation failed.";
+        for (let i = 0; i < models.length && !src; i++) {
+          try {
+            const res = await orFetch(OR_API + "/chat/completions", {
+              method: "POST",
+              headers: orHeaders(),
+              body: JSON.stringify({
+                model: models[i],
+                messages: [{ role: "user", content: p }],
+                modalities: ["image", "text"],
+                provider: { allow_fallbacks: false }
+              })
+            });
+            const j = await res.json();
+            if (!res.ok) { last = (j.error && j.error.message) || last; continue; }
+            const msg = j.choices && j.choices[0] && j.choices[0].message;
+            const imgs = (msg && msg.images) || [];
+            if (imgs[0] && imgs[0].image_url && imgs[0].image_url.url) src = imgs[0].image_url.url;
+            else if (msg && Array.isArray(msg.content)) {
+              const block = msg.content.find((b) => b && (b.image_url || (b.url && String(b.url).indexOf("data:image") === 0)));
+              if (block) src = (block.image_url && block.image_url.url) || block.image_url || block.url || "";
+            }
+          } catch (err) { last = err.message || last; }
+        }
+        if (!src) throw new Error(last);
+      } else {
+        const img = await puter.ai.txt2img(p, { model: "gpt-image-1-mini", quality: "low" });
+        src = typeof img === "string" ? img : (img && img.src) || "";
+      }
       const m = s.messages.find(x => x.id === id);
       if (m) { m.streaming = false; m.imageUrl = src; m.content = p; m.kind = "image"; }
       sessionTurns += 1; save();
@@ -3573,9 +3710,17 @@
     const btn = $("auth-btn");
     const dot = $("auth-dot");
     try {
-      if (!window.puter) { st.textContent = "Connecting…"; return; }
+      if (!window.puter) { st.textContent = hasOrKey() ? "OpenRouter" : "Connecting…"; return; }
       const on = !!puter.auth.isSignedIn();
-      dot.className = "dot" + (on ? " on" : "");
+      dot.className = "dot" + (on || hasOrKey() ? " on" : "");
+      if (hasOrKey() && !on) {
+        st.textContent = "OpenRouter";
+        btn.textContent = "Sign in free";
+        $("connect-btn").textContent = "Sign in";
+        $("desk-status").textContent = "OpenRouter";
+        loadUsage();
+        return;
+      }
       if (on) {
         let name = "Signed in";
         try { const u = await puter.auth.getUser(); if (u && u.username) name = "@" + u.username; } catch (e) {}
@@ -3612,10 +3757,19 @@
 
   async function loadLiveModels() {
     const ingest = (list) => {
-      const seen = new Set([...FEATURED, ...VAULT].map(m => m.id));
-      const live = FEATURED.concat(VAULT).map(m => Object.assign({ verified: true }, m));
+      const seen = new Set(FEATURED.map(m => m.id));
+      const live = FEATURED.map(m => Object.assign({ verified: true }, m));
       list.forEach(item => {
         if (item && typeof item === "object") {
+          const pricing = item.pricing || {};
+          if (pricing.prompt != null && pricing.completion != null) {
+            const inn = Math.round(Number(pricing.prompt) * 1e8);
+            const out = Math.round(Number(pricing.completion) * 1e8);
+            const rid = item.id || item.name;
+            if (rid && Number.isFinite(inn) && Number.isFinite(out) && inn >= 0 && out >= 0) {
+              RATES[rid] = [inn, out];
+            }
+          }
           const costs = item.costs || {};
           const ick = item.input_cost_key;
           const ock = item.output_cost_key;
@@ -3629,21 +3783,30 @@
         const id = typeof item === "string" ? item : (item && (item.id || item.name));
         if (!id || seen.has(id) || isNoise(id)) return;
         seen.add(id);
-        const label = (item && item.name && item.name !== id) ? item.name : pretty(id);
-        live.push({ id, label, vendor: guessVendor(id), verified: true, vault: isBurner(id) });
+        let label = (item && item.name && item.name !== id) ? String(item.name).replace(/^[A-Za-z0-9.+-]+:\s+/, "") : pretty(id);
+        if (String(id).indexOf(":free") >= 0 && !/free/i.test(label)) label += " (free)";
+        live.push({ id, label, vendor: guessVendor(id), verified: true });
       });
       MODELS = live;
-      $("model-count").textContent = live.length + " verified IDs · official $ input / $ output per 1M tokens.";
+      $("model-count").textContent = live.length + " models · official $ input / $ output per 1M tokens.";
     };
+    try {
+      const res = await orFetch("https://openrouter.ai/api/v1/models", { headers: orHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data && data.data) || [];
+        if (list.length) ingest(list);
+      }
+    } catch (e) {}
     try {
       const res = await fetch("https://api.puter.com/puterai/chat/models/details");
       if (res.ok) {
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data && data.models) || [];
-        if (list.length) ingest(list);
+        if (list.length && MODELS.length <= FEATURED.length) ingest(list);
       }
     } catch (e) {}
-    if (window.puter && puter.ai.listModels) {
+    if (window.puter && puter.ai.listModels && MODELS.length <= FEATURED.length) {
       try {
         const raw = await puter.ai.listModels();
         const list = Array.isArray(raw) ? raw : [];
@@ -3666,6 +3829,17 @@
     if (priv && privState) {
       privState.textContent = prefs.privateMode ? "On" : "Off";
       priv.style.borderColor = prefs.privateMode ? "var(--accent)" : "";
+    }
+    const orInput = $("set-or-key");
+    const orStatus = $("or-status");
+    if (orInput) orInput.value = "";
+    if (orStatus) {
+      if (hasOrKey()) {
+        const k = readOrStore();
+        orStatus.textContent = "Connected · " + k.slice(0, 10) + "…" + k.slice(-4);
+      } else {
+        orStatus.textContent = "No key saved. Models still list; chat needs a key or Puter sign-in.";
+      }
     }
     renderGh();
     if ($("hs-note")) {
@@ -3713,6 +3887,24 @@
     savePrefs();
     fillSettings();
     toast(prefs.privateMode ? "Private mode on. Chats stay on this device. Memory still works." : "Private mode off.");
+  };
+  if ($("or-save")) $("or-save").onclick = () => {
+    const next = (($("set-or-key") && $("set-or-key").value) || "").trim();
+    if (!next || next.indexOf("sk-or-") !== 0 || next.length < 20) {
+      toast("That does not look like an OpenRouter key.");
+      return;
+    }
+    writeOrStore(next);
+    if ($("set-or-key")) $("set-or-key").value = "";
+    fillSettings();
+    loadUsage();
+    toast("OpenRouter connected. Models are the real ones.");
+  };
+  if ($("or-clear")) $("or-clear").onclick = () => {
+    writeOrStore("");
+    fillSettings();
+    loadUsage();
+    toast("OpenRouter key removed. Puter stays as fallback.");
   };
   $("site-close") && ($("site-close").onclick = closePreview);
   $("site-phone") && ($("site-phone").onclick = () => { $("site-stage").classList.add("phone"); $("site-stage").classList.remove("desk"); });
