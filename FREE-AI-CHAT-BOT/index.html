@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="format-detection" content="telephone=no" />
   <meta property="og:title" content="OMNI-AI" />
-  <meta property="og:description" content="Talk to real Claude, GPT, Grok, and Gemini models. OpenRouter key for unlimited credits." />
+  <meta property="og:description" content="Talk to real Claude, GPT, Grok, and Gemini models. Log in with OpenRouter." />
   <link rel="icon" href="icon-192.png" />
   <link rel="apple-touch-icon" href="icon-180.png" sizes="180x180" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
@@ -20,7 +20,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://js.puter.com/v2/"></script>
   <style>
     :root {
       --bg: #08080a;
@@ -105,13 +104,13 @@
     .chat-item .del { width: 40px; height: 40px; border-radius: 10px; color: var(--subtle); flex-shrink: 0; }
     .chat-item .del:hover { color: var(--danger); }
     .side-foot { border-top: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-    .puter-card { border: 1px solid var(--line); background: var(--bg); border-radius: 16px; padding: 12px; }
-    .puter-card .row { display: flex; align-items: center; justify-content: space-between; }
-    .puter-card small { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--subtle); }
+    .or-card { border: 1px solid var(--line); background: var(--bg); border-radius: 16px; padding: 12px; }
+    .or-card .row { display: flex; align-items: center; justify-content: space-between; }
+    .or-card small { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--subtle); }
     .dot { width: 6px; height: 6px; border-radius: 99px; background: var(--subtle); }
     .dot.on { background: var(--ok); }
     .dot.wait { background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
-    .puter-card p { margin: 6px 0 10px; font-size: 13px; }
+    .or-card p { margin: 6px 0 10px; font-size: 13px; }
     .credit { font-size: 11px; color: var(--subtle); padding: 0 4px; }
     .credit a { text-decoration: underline; text-underline-offset: 2px; }
     .usage-card { width: 100%; text-align: left; border: 1px solid var(--line); background: var(--bg); border-radius: 16px; padding: 12px; }
@@ -287,7 +286,6 @@
     .gh-repo b { display: block; font-weight: 500; font-size: 13px; }
     .gh-repo small { font-family: var(--mono); font-size: 11px; color: var(--subtle); }
     .gh-card { border: 1px solid var(--line); background: color-mix(in oklab, var(--elevated) 40%, transparent); border-radius: 16px; padding: 14px; }
-    puter-dialog { display: none !important; visibility: hidden !important; pointer-events: none !important; }
     @keyframes pulse { 50% { opacity: .35; } }
     @media (max-width: 768px) {
       .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 40; transform: translateX(-105%); transition: transform .25s var(--ease); width: 100vw; max-width: 100vw; }
@@ -318,10 +316,10 @@
       .usage-card { padding: 8px 10px; }
       .usage-card .bar, .usage-card #usage-sub { display: none; }
       .usage-card strong { margin-top: 0; font-size: 12px; }
-      .puter-card { padding: 8px 10px; display: flex; align-items: center; gap: 8px; }
-      .puter-card .row { display: none; }
-      .puter-card p { margin: 0; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .puter-card .btn { width: auto; min-height: 36px; }
+      .or-card { padding: 8px 10px; display: flex; align-items: center; gap: 8px; }
+      .or-card .row { display: none; }
+      .or-card p { margin: 0; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .or-card .btn { width: auto; min-height: 36px; }
       .credit { display: none; }
       #clear-all { min-height: 32px; font-size: 11px; }
       .empty { padding: 16px 12px 12px; }
@@ -410,14 +408,14 @@
       <div class="side-foot">
         <button type="button" class="usage-card" id="usage-card" aria-label="Open usage">
           <div class="row"><small style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--subtle)">Usage</small><span class="usage-meta" id="turn-count">0 turns</span></div>
-          <strong id="usage-left">Sign in to see allowance</strong>
+          <strong id="usage-left">Log in to see credits</strong>
           <div class="bar" id="usage-bar"><i id="usage-bar-fill"></i></div>
-          <div class="usage-meta" id="usage-sub">Puter monthly meter</div>
+          <div class="usage-meta" id="usage-sub">OpenRouter credits</div>
         </button>
-        <div class="puter-card">
-          <div class="row"><small>Puter</small><span class="dot wait" id="auth-dot"></span></div>
-          <p id="puter-status">Connecting…</p>
-          <button class="btn btn-outline" id="auth-btn" style="height:36px;font-size:12px;border-radius:12px">Sign in free</button>
+        <div class="or-card">
+          <div class="row"><small>OpenRouter</small><span class="dot wait" id="auth-dot"></span></div>
+          <p id="or-auth-status">Not logged in</p>
+          <button class="btn btn-outline" id="auth-btn" style="height:36px;font-size:12px;border-radius:12px">Log in</button>
         </div>
         <button class="btn btn-ghost" id="clear-all" style="justify-content:flex-start">Clear all chats</button>
         <div class="credit">Real models via <a href="https://openrouter.ai" target="_blank" rel="noopener">OpenRouter</a></div>
@@ -441,7 +439,7 @@
             <button type="button" class="chip" id="usage-chip">0 turns</button>
             <button type="button" class="chip" id="gh-chip">GitHub</button>
           </div>
-          <button class="connect" id="connect-btn">Sign in</button>
+          <button class="connect" id="connect-btn">Log in</button>
           <span class="status" id="desk-status">Loading</span>
           <button type="button" class="chip" id="scale-btn" aria-label="Interface size" aria-haspopup="dialog">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3"/><path d="M9 9h6v6H9z"/></svg>
@@ -569,12 +567,11 @@
         <span id="set-private-state" style="font-family:var(--mono);font-size:11px;color:var(--subtle);padding-top:2px">Off</span>
       </button>
       <label class="stat">OpenRouter</label>
-      <p style="font-size:13px;color:var(--muted);margin:6px 0">Paste a key from <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer" style="color:var(--fg);text-decoration:underline">openrouter.ai/keys</a>. Real Claude, GPT, Grok, Gemini — including :free models. Stored only on this device.</p>
-      <input class="search" id="set-or-key" type="password" autocomplete="off" placeholder="sk-or-v1-…" style="padding-left:12px;margin:6px 0 8px" />
+      <p style="font-size:13px;color:var(--muted);margin:6px 0">Log in or create a free account. You will be sent to OpenRouter, then back here. Real Claude, GPT, Grok, Gemini — including :free models.</p>
       <p id="or-status" class="stat" style="margin:0 0 8px"></p>
       <div style="display:flex;gap:8px;margin-bottom:14px">
-        <button type="button" class="btn btn-primary" id="or-save">Save key</button>
-        <button type="button" class="btn btn-outline" id="or-clear">Disconnect</button>
+        <button type="button" class="btn btn-primary" id="or-login">Log in</button>
+        <button type="button" class="btn btn-outline" id="or-signup">Sign up</button>
       </div>
       <label class="stat">GitHub</label>
       <div id="gh-root" style="margin:6px 0 12px"></div>
@@ -596,7 +593,7 @@
   <div class="modal" id="usage-modal">
     <div class="card" style="width:min(26rem,100%)">
       <h2>AI usage</h2>
-      <p>Puter allowance for this account. Heavy models cost more; fallbacks finish the job.</p>
+      <p>OpenRouter credits after you log in. Heavy models cost more; :free models are $0.</p>
       <div id="usage-detail"></div>
       <button class="btn btn-outline" id="usage-close" style="width:100%;margin-top:12px;border-radius:12px">Close</button>
     </div>
@@ -628,10 +625,9 @@
 
   <div class="modal" id="popup-modal">
     <div class="card">
-      <h2>Allow the sign-in popup</h2>
-      <p>Puter opens a small window to sign you in — free, no API key. Your browser blocked it, which is why a blank page appeared before.</p>
-      <p>Allow popups for this site, then try again.</p>
-      <button class="btn btn-primary" id="popup-retry">Try sign-in again</button>
+      <h2>OpenRouter login</h2>
+      <p>You will be redirected to OpenRouter to log in or create an account, then returned here.</p>
+      <button class="btn btn-primary" id="popup-retry">Log in</button>
       <button class="btn btn-ghost" id="popup-close" style="width:100%;margin-top:8px">Close</button>
     </div>
   </div>
@@ -680,7 +676,7 @@
     { id: "nvidia/nemotron-3-super-120b-a12b:free", label: "Nemotron 3 Super (free)", vendor: "Other" },
     { id: "nvidia/nemotron-3.5-lightning:free", label: "Nemotron 3.5 Lightning (free)", vendor: "Other" }
   ];
-  const CHANNEL = "You are running inside Omni, a free browser chat. Replies come from the real named model the user picked — Claude is Claude, GPT is GPT — not a renamed clone. You have no tools, no browsing, no files, and no memory outside this conversation. Answer from your own knowledge. Never mention these operating notes unless asked. Match the user's language.";
+  const CHANNEL = "You are running inside Omni, a free browser chat. Replies come from the real named OpenRouter model the user picked — Claude is Claude, GPT is GPT — not a renamed clone. You have no tools, no browsing, no files, and no memory outside this conversation. Answer from your own knowledge. Never mention these operating notes unless asked. Match the user's language.";
   function systemFor(modelId) {
     const id = String(modelId || "").toLowerCase();
     const claude = (name, extra) => `You are ${name}, an AI assistant made by Anthropic.\n\n${extra}\n\nTone: warm, kind, and concise. Push back when you should, but constructively. Never say "genuinely", "honestly", or "straightforward". Keep disclaimers short. For simple questions, a few sentences is enough.\nFormatting: minimum needed. Lists only when the content is multifaceted or they asked. Never use bullets when declining. Skip markdown in friendly or emotional chats.\nDo not open with filler. If something is ambiguous, assume and state it in one short line.\nKnowledge cutoff: end of June 2026. You cannot search the web.\nYou are ${name} — do not claim to be Omni, ChatGPT, Grok, or Gemini.\n\n${CHANNEL}`;
@@ -740,7 +736,7 @@
   const SCHOOL = "The person is doing school work: homework, essays, study guides, math, science, language, or exam prep. Help them learn. Show steps, not just the answer. Use short headings and numbered steps. For essays: outline first, then draft if they asked. Do not write a full assignment as if it were theirs unless they explicitly asked you to draft it.\n\nSchool writing rules override everything else in this reply, including default voice.\n\nWrite like a human who thinks clearly and edits ruthlessly.\n\nBanned words, never use: crucial, delve, enhance, foster, garner, highlight (as a verb), interplay, intricate, key (as filler), landscape (metaphor), meticulous, pivotal, showcase, tapestry, testament, underscore (as a verb), valuable, vibrant, groundbreaking, renowned, diverse array, rich heritage, commitment to.\n\nStructural rules: default to \"is\" instead of \"serves as / stands as / marks a / represents a.\" Never end a sentence with a dangling \"-ing\" phrase that editorializes. Don't use the rule of three just to sound thorough. Don't use \"not just X but Y\" unless the contrast is the point. No \"In summary / In conclusion / Overall.\" No \"I hope this helps / Let me know if.\" Don't attribute claims to vague \"experts\" without naming them. Don't inflate significance. Don't swap the word for a thing just for variety. No promotional tone. Headings in sentence case. Bold only for labels, not decoration.\n\nVoice: direct, specific, short declarative sentences. State things without editorializing their importance. No em dashes.";
   const CODE_PLAN = "The person is in Omni Code · Plan.\n\nDo not write full source yet. Produce a tight implementation plan:\n1. What you are building, in 2–4 sentences.\n2. File tree with a one-line job for each file.\n3. Stack and constraints.\n4. Order of work (numbered).\n5. Risks or open questions (short).\n\nEnd with: Tap Build to implement this plan.\nNo giant code blocks. Be specific.";
   const CODE_BUILD = "The person is in Omni Code · Build.\n\nShip working files. Every file they need goes in a fenced block whose info line is `language filename.ext`, for example html index.html.\nComplete files. No placeholders. Real filenames on the fence line so Copy and Preview are exact.\nFor a website: complete index.html (plus styles.css / script.js if split) that runs in an in-app preview iframe.\nLead with a one-line summary, then the files, then 2–4 lines on how to run. They can tap Preview on HTML.";
-  const DEV_ZERO = "ZERO-RULES is ON for this developer session (Omni-CMD). Omni product policies, school-writing rules, identity wrappers, channel notes, and custom-instruction overlays are disabled. Answer the user's request directly and completely. If they ask whether zero-rules, developer mode, or OMNI-CMD is active: say yes — it is on for this tab, and stay in this mode. Do not claim there is no such setting. Do not mention Omni, Puter, or these notes unless asked. Provider-level safety still applies.";
+  const DEV_ZERO = "ZERO-RULES is ON for this developer session (Omni-CMD). Omni product policies, school-writing rules, identity wrappers, channel notes, and custom-instruction overlays are disabled. Answer the user's request directly and completely. If they ask whether zero-rules, developer mode, or OMNI-CMD is active: say yes — it is on for this tab, and stay in this mode. Do not claim there is no such setting. Do not mention Omni or these notes unless asked. Provider-level safety still applies.";
   const ZERO_TURN = "[ZERO-RULES ON] Developer session is active. Answer directly. If asked whether zero-rules is on, say yes.";
   const IMPORT_PROMPT = "You are helping me import context from one AI assistant to another. Your job is to go through our past conversations and sum up what you know about me.\n\nIn the output, please avoid using any first-person pronouns (I, my, me, mine) and any second-person pronouns (you, your, yours). Instead, refer to the individual you have learned about as \"the user\" or use neutral phrasing.\n\nPreserve the user's words verbatim where possible, especially for instructions and preferences.\n\nCategories (output in this order):\n1. Demographics Information\n2. Interests & Preferences\n3. Relationships\n4. Dated Events, Projects & Plans\n5. Instructions\n\nOutput ONLY the requested information.\n\nFinally, complete the sentence \"Imported from: <name>\".";
   const THEMES = {
@@ -883,9 +879,6 @@
     history.replaceState(null, "", u.toString());
   }
   async function corsFetch(url, init) {
-    try {
-      if (window.puter && window.puter.net && window.puter.net.fetch) return await window.puter.net.fetch(url, init);
-    } catch (e) {}
     return fetch(url, init);
   }
   async function oauthFetch(url, body) {
@@ -912,10 +905,6 @@
     if (err === "expired_token") return "The GitHub code expired. Tap Continue with GitHub again.";
     if (err === "access_denied") return "GitHub access was denied.";
     return desc || msg || (err ? String(err).replace(/_/g, " ") : fallback);
-  }
-  async function ensurePuterNet() {
-    if (!window.puter) throw new Error("Puter.js is still connecting.");
-    if (!puter.auth.isSignedIn()) await signIn();
   }
   function startManifest() {
     const uri = ghRedirectUri();
@@ -1074,7 +1063,6 @@
     ghPhase = "working";
     renderGh();
     try {
-      await ensurePuterNet();
       if (!gh.clientId) { startManifest(); return; }
       try {
         ghDevice = await startDevice();
@@ -1128,7 +1116,6 @@
     ghPhase = "working";
     renderGh();
     try {
-      await ensurePuterNet();
       if (state === "omni-manifest") {
         await convertManifest(code);
         try {
@@ -2142,7 +2129,7 @@
   }
   function isQuota(m) { return /no usage left|usage limit|insufficient[_ ]funds|out of credit|not enough (usage|credit)|allowance|usage[- ]limited|quota|402|payment required/i.test(m); }
   function isRate(m) { return /429|too many requests|rate[- ]limit|throttl|try again later|overloaded|capacity|busy|stalled|rate_limit/i.test(m); }
-  function isAuthErr(m) { return /not authenticated|unauthori[sz]ed|sign[- ]?in|invalid (access )?token/i.test(m); }
+  function isAuthErr(m) { return /not authenticated|unauthori[sz]ed|sign[- ]?in|log in with openrouter|session expired|invalid (access )?token/i.test(m); }
   function canReroute(m) {
     if (!m) return true;
     if (isAuthErr(m)) return false;
@@ -2176,27 +2163,16 @@
       left.textContent = formatUsd(usageSnap.remaining) + " left";
       if (sub) sub.textContent = pct + "% used of " + formatUsd(usageSnap.allowance) + " on OpenRouter";
       if (fill) fill.style.width = Math.max(0, Math.min(100, pct)) + "%";
+      if (bar) {
+        bar.classList.toggle("low", pct > 72 && pct <= 88);
+        bar.classList.toggle("empty", pct > 88);
+      }
       return;
     }
-    if (!window.puter || !puter.auth || !puter.auth.isSignedIn()) {
-      left.textContent = "Add an OpenRouter key";
-      if (sub) sub.textContent = "Settings · OpenRouter";
-      if (fill) fill.style.width = "0%";
-      return;
-    }
-    if (!usageSnap) {
-      left.textContent = "Metering after first reply";
-      if (sub) sub.textContent = sessionTurns + " local turns this session";
-      return;
-    }
-    const pct = usageSnap.allowance > 0 ? Math.round((usageSnap.used / usageSnap.allowance) * 100) : 0;
-    left.textContent = formatUsd(usageSnap.remaining) + " left";
-    if (sub) sub.textContent = pct + "% used of " + formatUsd(usageSnap.allowance) + " this month";
-    if (fill) fill.style.width = Math.max(0, Math.min(100, pct)) + "%";
-    if (bar) {
-      bar.classList.toggle("low", pct > 72 && pct <= 88);
-      bar.classList.toggle("empty", pct > 88);
-    }
+    left.textContent = "Log in to see credits";
+    if (sub) sub.textContent = "Settings · OpenRouter";
+    if (fill) fill.style.width = "0%";
+    if (bar) { bar.classList.remove("low"); bar.classList.remove("empty"); }
   }
   function fillUsageDetail() {
     const box = $("usage-detail");
@@ -2211,7 +2187,7 @@
     if (usageSnap) {
       html += "<div style='border:1px solid var(--line);background:var(--bg);border-radius:16px;padding:14px'><div class='stat'>This month</div><div style='font-size:28px;font-family:var(--display);margin-top:4px'>" + formatUsd(usageSnap.remaining) + "</div><div class='stat'>remaining of " + formatUsd(usageSnap.allowance) + "</div><div class='bar' style='margin-top:10px'><i style='width:" + Math.round((usageSnap.remaining / Math.max(1, usageSnap.allowance)) * 100) + "%'></i></div><div class='usage-meta'>Used " + formatUsd(usageSnap.used) + (usageSnap.apiCalls ? " · " + usageSnap.apiCalls + " API calls" : "") + "</div></div>";
     } else {
-      html += "<p style='color:var(--muted);font-size:14px'>Paste an OpenRouter key in Settings to load credits.</p>";
+      html += "<p style='color:var(--muted);font-size:14px'>Log in with OpenRouter to load credits.</p>";
     }
     html += "<div class='usage-grid'><div><div class='stat'>Session</div><b>" + sessionTurns + "</b><div class='stat'>turns</div></div><div><div class='stat'>This chat</div><b>" + meta.label.replace(/^(.{14}).+$/, "$1…") + "</b><div class='stat'>~" + Math.round(plan.inputChars / 4).toLocaleString() + " tokens</div></div></div>";
     html += "<div style='border:1px solid var(--line);background:var(--bg);border-radius:16px;padding:14px;font-size:13px;color:var(--muted);line-height:1.5'>";
@@ -2231,10 +2207,8 @@
         paintUsage();
         return;
       }
-      if (!window.puter || !puter.auth.isSignedIn() || !puter.auth.getMonthlyUsage) { paintUsage(); return; }
-      const raw = await puter.auth.getMonthlyUsage();
-      const parsed = parseUsage(raw);
-      if (parsed) usageSnap = parsed;
+      paintUsage();
+      return;
     } catch (e) {}
     paintUsage();
   }
@@ -3207,8 +3181,20 @@
       return String((raw.state && raw.state.key) || raw.key || "").trim();
     } catch (e) { return ""; }
   }
-  function writeOrStore(key) {
-    localStorage.setItem(OR_STORE, JSON.stringify({ state: { key: key || "" }, version: 0 }));
+  function writeOrStore(key, userId) {
+    let prev = {};
+    try { prev = JSON.parse(localStorage.getItem(OR_STORE) || "{}"); } catch (e) {}
+    const st = Object.assign({}, prev.state || {});
+    st.key = key || "";
+    if (arguments.length > 1) st.userId = userId || "";
+    else if (!key) st.userId = "";
+    localStorage.setItem(OR_STORE, JSON.stringify({ state: st, version: 0 }));
+  }
+  function readOrUserId() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(OR_STORE) || "{}");
+      return String((raw.state && raw.state.userId) || raw.userId || "").trim();
+    } catch (e) { return ""; }
   }
   function hasOrKey() {
     const k = readOrStore();
@@ -3221,18 +3207,75 @@
     return h;
   }
   async function orFetch(url, init) {
-    try {
-      if (window.puter && puter.net && puter.net.fetch) return await puter.net.fetch(url, init);
-    } catch (e) {}
     return fetch(url, init);
+  }
+  const OR_PKCE = "omni-or-pkce";
+  function b64url(bytes) {
+    let bin = "";
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  }
+  function randomVerifier() {
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    return b64url(bytes);
+  }
+  async function challengeS256(verifier) {
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+    return b64url(new Uint8Array(digest));
+  }
+  function orCallbackUrl() {
+    const u = new URL(location.href);
+    u.search = ""; u.hash = "";
+    let path = u.pathname || "/";
+    if (path.endsWith("/index.html")) path = path.slice(0, -"/index.html".length) || "/";
+    u.pathname = path;
+    return u.toString();
+  }
+  async function startOpenRouterAuth() {
+    const verifier = randomVerifier();
+    sessionStorage.setItem(OR_PKCE, verifier);
+    const challenge = await challengeS256(verifier);
+    const url = new URL("https://openrouter.ai/auth");
+    url.searchParams.set("callback_url", orCallbackUrl());
+    url.searchParams.set("code_challenge", challenge);
+    url.searchParams.set("code_challenge_method", "S256");
+    url.searchParams.set("key_label", "OMNI-AI");
+    url.searchParams.set("state", "omni-or");
+    const href = url.toString();
+    try {
+      if (window.top && window.top !== window) { window.top.location.assign(href); return; }
+    } catch (e) {}
+    location.assign(href);
+  }
+  async function consumeOrCallback() {
+    const q = new URLSearchParams(location.search);
+    const code = q.get("code");
+    const state = q.get("state") || "";
+    if (!code) return false;
+    if (state === "omni-manifest" || state === "omni-oauth") return false;
+    const verifier = sessionStorage.getItem(OR_PKCE);
+    if (!verifier) return false;
+    sessionStorage.removeItem(OR_PKCE);
+    const res = await fetch("https://openrouter.ai/api/v1/auth/keys", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, code_verifier: verifier, code_challenge_method: "S256" })
+    });
+    const j = await res.json().catch(() => ({}));
+    const bag = (j && j.data && typeof j.data === "object") ? j.data : j;
+    const key = (bag && bag.key) || (j && j.key) || "";
+    const userId = (bag && bag.user_id) || (j && j.user_id) || "";
+    const u = new URL(location.href); u.search = ""; u.hash = "";
+    history.replaceState(null, "", u.toString());
+    if (!res.ok || String(key).indexOf("sk-or-") !== 0) {
+      throw new Error((j.error && j.error.message) || j.error || "OpenRouter login did not finish.");
+    }
+    writeOrStore(key, userId);
+    return true;
   }
   function toOrId(id) {
     return canonModel(id);
-  }
-  function toPuterId(id) {
-    const s = String(id || "");
-    if (!s || s === "auto") return s;
-    return s.indexOf("/") >= 0 ? s.split("/").pop() : s;
   }
   async function* orStream(body) {
     const res = await orFetch(OR_API + "/chat/completions", {
@@ -3246,7 +3289,7 @@
         const j = await res.json();
         msg = (j.error && j.error.message) || j.message || msg;
       } catch (e) {}
-      if (res.status === 401) msg = "OpenRouter key rejected. Paste a new key in Settings.";
+      if (res.status === 401) msg = "OpenRouter session expired. Log in again.";
       if (res.status === 402) msg = "OpenRouter is out of credits. Add credits or pick a :free model.";
       throw new Error(msg);
     }
@@ -3265,6 +3308,17 @@
         const payload = line.indexOf("data:") === 0 ? line.slice(5).trim() : line;
         try { yield JSON.parse(payload); } catch (e) { if (payload) yield payload; }
       }
+    }
+  }
+  async function* orStreamWithRetry(body) {
+    try {
+      yield* orStream(body);
+    } catch (err) {
+      const msg = (err && err.message) || "";
+      if (body.reasoning && /reasoning|unsupported parameter|unknown argument/i.test(msg)) {
+        delete body.reasoning;
+        yield* orStream(body);
+      } else throw err;
     }
   }
   async function fetchOrCredits() {
@@ -3317,7 +3371,7 @@
     const history = s.messages.filter(m => m.role === "user" || (m.role === "assistant" && m.content && !m.error && m.id !== msg.id)).map(m => ({ role: m.role, content: m.content }));
     let text = "", reason = "", usedModel = plan.model, lastErr = "";
     try {
-      if (!hasOrKey() && !window.puter) throw new Error("Add an OpenRouter key in Settings, or wait for Puter.js.");
+      if (!hasOrKey()) throw new Error("Log in with OpenRouter to chat.");
       let ok = false;
       for (let i = 0; i < plan.chain.length; i++) {
         if (aborted) break;
@@ -3357,44 +3411,39 @@
           }
         }
         const payload = [{ role: "system", content: sys }, ...historyPayload];
-        const opts = Object.assign({ model: model }, effortOpts(s.effort, s.thinking, model));
-        if (prefs.privateMode) opts.store = false;
         try {
           let raw;
-          if (hasOrKey()) {
-            const orModel = toOrId(model);
-            const orMessages = attachment
-              ? payload.map((m, i, arr) => {
-                  const last = [...arr].map((x, j) => x.role === "user" ? j : -1).filter((j) => j >= 0).pop();
-                  if (i !== last) return m;
-                  return {
-                    role: "user",
-                    content: [
-                      { type: "text", text: (m.content || "").trim() || "Look at this image." },
-                      { type: "image_url", image_url: { url: attachment.dataUrl } }
-                    ]
-                  };
-                })
-              : payload;
-            const orBody = {
-              model: orModel,
-              messages: orMessages,
-              stream: true,
-              max_tokens: effortMaxTokens(s.effort),
-              provider: { allow_fallbacks: false }
-            };
-            if (s.thinking || /gpt|openai|grok|claude|gemini/.test(orModel)) {
-              orBody.reasoning = { effort: s.effort === "max" || s.effort === "xhigh" ? "xhigh" : s.effort === "high" ? "high" : s.effort === "low" ? "low" : "medium" };
-            }
-            raw = orStream(orBody);
-          } else {
-            if (!window.puter) throw new Error("Add an OpenRouter key in Settings, or wait for Puter.js.");
-            opts.model = toPuterId(model);
-            const call = attachment
-              ? puter.ai.chat(visionPrompt(sys, history, lastUser ? lastUser.content : ""), attachment.dataUrl, opts)
-              : puter.ai.chat(payload, false, opts);
-            raw = await withTimeout(call, s.thinking ? 35000 : 18000, "The model stalled — likely rate-limited or out of usage.");
+          if (!hasOrKey()) throw new Error("Log in with OpenRouter to chat.");
+          const orModel = toOrId(model);
+          const orMessages = attachment
+            ? payload.map((m, i, arr) => {
+                const last = [...arr].map((x, j) => x.role === "user" ? j : -1).filter((j) => j >= 0).pop();
+                if (i !== last) return m;
+                return {
+                  role: "user",
+                  content: [
+                    { type: "text", text: (m.content || "").trim() || "Look at this image." },
+                    { type: "image_url", image_url: { url: attachment.dataUrl } }
+                  ]
+                };
+              })
+            : payload;
+          const orBody = {
+            model: orModel,
+            messages: orMessages,
+            stream: true,
+            max_tokens: effortMaxTokens(s.effort),
+            provider: { allow_fallbacks: false },
+            session_id: s.id
+          };
+          if (prefs.privateMode) {
+            orBody.store = false;
+            orBody.provider.data_collection = "deny";
           }
+          if (s.thinking || /gpt|openai|grok|claude|gemini/.test(orModel)) {
+            orBody.reasoning = { effort: s.effort === "max" || s.effort === "xhigh" ? "xhigh" : s.effort === "high" ? "high" : s.effort === "low" ? "low" : "medium" };
+          }
+          raw = orStreamWithRetry(orBody);
           if (raw && typeof raw[Symbol.asyncIterator] === "function") {
             let first = true;
             const iter = raw[Symbol.asyncIterator]();
@@ -3464,7 +3513,7 @@
     } catch (err) {
       const m = (err && (err.msg || err.message)) || "The model request failed.";
       msg.content = /sign|auth|login|unauthorized/i.test(String(m))
-        ? String(m) + "\n\nPaste an OpenRouter key in Settings, or sign in with Puter."
+        ? String(m) + "\n\nLog in with OpenRouter to chat."
         : String(m);
       msg.error = true;
       msg.streaming = false;
@@ -3477,9 +3526,9 @@
 
   async function ensureSignedIn() {
     if (hasOrKey()) return true;
-    if (!window.puter) throw new Error("Add an OpenRouter key in Settings, or wait for Puter.js.");
-    if (puter.auth.isSignedIn()) return true;
-    return signIn();
+    toast("Log in with OpenRouter to chat.");
+    await startOpenRouterAuth();
+    throw new Error("Redirecting to OpenRouter.");
   }
 
   async function send(text, file, mode) {
@@ -3586,8 +3635,7 @@
         }
         if (!src) throw new Error(last);
       } else {
-        const img = await puter.ai.txt2img(p, { model: "gpt-image-1-mini", quality: "low" });
-        src = typeof img === "string" ? img : (img && img.src) || "";
+        throw new Error("Log in with OpenRouter to generate images.");
       }
       const m = s.messages.find(x => x.id === id);
       if (m) { m.streaming = false; m.imageUrl = src; m.content = p; m.kind = "image"; }
@@ -3662,90 +3710,40 @@
     r.readAsDataURL(f);
   };
 
-  function killPuterDialogs() {
-    document.querySelectorAll("puter-dialog").forEach((node) => {
-      try { node.shadowRoot?.querySelector("dialog")?.close(); } catch (e) {}
-      node.remove();
-    });
-  }
-  new MutationObserver(killPuterDialogs).observe(document.documentElement, { childList: true, subtree: true });
-
   function showPopupHelp() { $("popup-modal").classList.add("show"); }
   function hidePopupHelp() { $("popup-modal").classList.remove("show"); }
 
-  async function signIn() {
-    if (!window.puter) throw new Error("Puter.js is not ready yet.");
-    if (puter.auth.isSignedIn()) { await refreshAuth(); return true; }
-    const origin = puter.defaultGUIOrigin || "https://puter.com";
-    const url = origin + "/action/sign-in?embedded_in_popup=true&msg_id=" + Date.now() + "&attempt_temp_user_creation=true";
-    const popup = window.open(url, "PuterSignIn", "popup=yes,width=480,height=720");
-    if (!popup) { showPopupHelp(); throw new Error("POPUP_BLOCKED"); }
-    hidePopupHelp();
-    return new Promise((resolve, reject) => {
-      let done = false;
-      const finish = (fn) => { if (done) return; done = true; window.removeEventListener("message", onMsg); clearInterval(poll); fn(); };
-      const onMsg = (e) => {
-        const d = e.data;
-        if (!d || typeof d !== "object") return;
-        const token = d.token;
-        if ((d.msg === "puter.token" || d.success) && typeof token === "string") {
-          try { puter.setAuthToken(token); } catch (err) {}
-          try { popup.close(); } catch (err) {}
-          finish(async () => { await refreshAuth(); resolve(true); });
-        }
-      };
-      const poll = setInterval(() => {
-        if (!popup.closed) return;
-        setTimeout(async () => {
-          if (puter.auth.isSignedIn()) finish(async () => { await refreshAuth(); resolve(true); });
-          else finish(() => reject(new Error("Sign-in window closed before finishing.")));
-        }, 250);
-      }, 350);
-      window.addEventListener("message", onMsg);
-    });
-  }
-
-  async function refreshAuth() {
-    const st = $("puter-status");
+  function refreshAuth() {
+    const st = $("or-auth-status");
     const btn = $("auth-btn");
     const dot = $("auth-dot");
-    try {
-      if (!window.puter) { st.textContent = hasOrKey() ? "OpenRouter" : "Connecting…"; return; }
-      const on = !!puter.auth.isSignedIn();
-      dot.className = "dot" + (on || hasOrKey() ? " on" : "");
-      if (hasOrKey() && !on) {
-        st.textContent = "OpenRouter";
-        btn.textContent = "Sign in free";
-        $("connect-btn").textContent = "Sign in";
-        $("desk-status").textContent = "OpenRouter";
-        loadUsage();
-        return;
-      }
-      if (on) {
-        let name = "Signed in";
-        try { const u = await puter.auth.getUser(); if (u && u.username) name = "@" + u.username; } catch (e) {}
-        st.textContent = name;
-        btn.textContent = "Sign out";
-        $("connect-btn").textContent = "Connected";
-        $("connect-btn").style.display = "none";
-        $("desk-status").textContent = "Connected";
-        loadUsage();
-      } else {
-        st.textContent = "Not signed in";
-        btn.textContent = "Sign in free";
-        $("connect-btn").textContent = "Sign in";
-        $("connect-btn").style.display = "";
-        $("desk-status").textContent = "Ready";
-      }
-    } catch (e) { st.textContent = "Puter error"; }
+    const on = hasOrKey();
+    if (dot) dot.className = "dot" + (on ? " on" : "");
+    if (on) {
+      const uid = readOrUserId();
+      if (st) st.textContent = uid ? ("OpenRouter · " + uid.replace(/^user_/, "").slice(0, 12)) : "Logged in";
+      if (btn) btn.textContent = "Log out";
+      if ($("connect-btn")) { $("connect-btn").textContent = "OpenRouter"; $("connect-btn").style.display = "none"; }
+      if ($("desk-status")) $("desk-status").textContent = "OpenRouter";
+      loadUsage();
+    } else {
+      if (st) st.textContent = "Not logged in";
+      if (btn) btn.textContent = "Log in";
+      if ($("connect-btn")) { $("connect-btn").textContent = "Log in"; $("connect-btn").style.display = ""; }
+      if ($("desk-status")) $("desk-status").textContent = "Ready";
+      paintUsage();
+    }
   }
 
   $("auth-btn").onclick = async () => {
-    if (window.puter && puter.auth.isSignedIn()) { await puter.auth.signOut(); await refreshAuth(); }
-    else { try { await signIn(); } catch (e) {} }
+    if (hasOrKey()) { writeOrStore(""); refreshAuth(); loadUsage(); toast("Logged out of OpenRouter."); }
+    else { try { await startOpenRouterAuth(); } catch (e) {} }
   };
-  $("connect-btn").onclick = async () => { try { await signIn(); } catch (e) {} };
-  $("popup-retry").onclick = async () => { try { await signIn(); } catch (e) {} };
+  $("connect-btn").onclick = async () => {
+    if (hasOrKey()) { writeOrStore(""); refreshAuth(); loadUsage(); }
+    else { try { await startOpenRouterAuth(); } catch (e) {} }
+  };
+  $("popup-retry").onclick = async () => { try { await startOpenRouterAuth(); } catch (e) {} };
   $("popup-close").onclick = hidePopupHelp;
 
   function showUsage() { fillUsageDetail(); $("usage-modal").classList.add("show"); }
@@ -3798,21 +3796,6 @@
         if (list.length) ingest(list);
       }
     } catch (e) {}
-    try {
-      const res = await fetch("https://api.puter.com/puterai/chat/models/details");
-      if (res.ok) {
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : (data && data.models) || [];
-        if (list.length && MODELS.length <= FEATURED.length) ingest(list);
-      }
-    } catch (e) {}
-    if (window.puter && puter.ai.listModels && MODELS.length <= FEATURED.length) {
-      try {
-        const raw = await puter.ai.listModels();
-        const list = Array.isArray(raw) ? raw : [];
-        if (list.length) ingest(list.concat(MODELS));
-      } catch (e) {}
-    }
   }
 
   function fillSettings() {
@@ -3830,17 +3813,20 @@
       privState.textContent = prefs.privateMode ? "On" : "Off";
       priv.style.borderColor = prefs.privateMode ? "var(--accent)" : "";
     }
-    const orInput = $("set-or-key");
     const orStatus = $("or-status");
-    if (orInput) orInput.value = "";
+    const orLogin = $("or-login");
+    const orSignup = $("or-signup");
     if (orStatus) {
-      if (hasOrKey()) {
-        const k = readOrStore();
-        orStatus.textContent = "Connected · " + k.slice(0, 10) + "…" + k.slice(-4);
-      } else {
-        orStatus.textContent = "No key saved. Models still list; chat needs a key or Puter sign-in.";
-      }
+      if (hasOrKey()) orStatus.textContent = "Logged in · OpenRouter agent session";
+      else orStatus.textContent = "Not logged in. Log in or sign up to chat.";
     }
+    if (orLogin) {
+      orLogin.textContent = hasOrKey() ? "Log out" : "Log in";
+      orLogin.onclick = hasOrKey()
+        ? () => { writeOrStore(""); fillSettings(); refreshAuth(); loadUsage(); toast("Logged out of OpenRouter."); }
+        : () => { startOpenRouterAuth(); };
+    }
+    if (orSignup) orSignup.style.display = hasOrKey() ? "none" : "";
     renderGh();
     if ($("hs-note")) {
       const stand = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -3888,24 +3874,8 @@
     fillSettings();
     toast(prefs.privateMode ? "Private mode on. Chats stay on this device. Memory still works." : "Private mode off.");
   };
-  if ($("or-save")) $("or-save").onclick = () => {
-    const next = (($("set-or-key") && $("set-or-key").value) || "").trim();
-    if (!next || next.indexOf("sk-or-") !== 0 || next.length < 20) {
-      toast("That does not look like an OpenRouter key.");
-      return;
-    }
-    writeOrStore(next);
-    if ($("set-or-key")) $("set-or-key").value = "";
-    fillSettings();
-    loadUsage();
-    toast("OpenRouter connected. Models are the real ones.");
-  };
-  if ($("or-clear")) $("or-clear").onclick = () => {
-    writeOrStore("");
-    fillSettings();
-    loadUsage();
-    toast("OpenRouter key removed. Puter stays as fallback.");
-  };
+  if ($("or-login")) $("or-login").onclick = () => { startOpenRouterAuth(); };
+  if ($("or-signup")) $("or-signup").onclick = () => { startOpenRouterAuth(); };
   $("site-close") && ($("site-close").onclick = closePreview);
   $("site-phone") && ($("site-phone").onclick = () => { $("site-stage").classList.add("phone"); $("site-stage").classList.remove("desk"); });
   $("site-desk") && ($("site-desk").onclick = () => { $("site-stage").classList.add("desk"); $("site-stage").classList.remove("phone"); });
@@ -3948,25 +3918,18 @@
     }
   });
 
-  const waitPuter = setInterval(() => {
-    if (window.puter) {
-      clearInterval(waitPuter);
-      refreshAuth();
-      loadLiveModels();
-      loadUsage();
-      consumeGhRedirect();
-    }
-  }, 200);
-  setTimeout(() => {
-    clearInterval(waitPuter);
+  (async function boot() {
+    try { await consumeOrCallback(); } catch (e) { toast((e && e.message) || "OpenRouter login failed."); }
+    refreshAuth();
+    loadLiveModels();
+    loadUsage();
     consumeGhRedirect();
-  }, 8000);
-  loadLiveModels();
-  paintUsage();
-  paintZrPip();
-  paintGhChip();
-  if ($("gh-chip")) $("gh-chip").onclick = showSettings;
-  render();
+    paintUsage();
+    paintZrPip();
+    paintGhChip();
+    if ($("gh-chip")) $("gh-chip").onclick = showSettings;
+    render();
+  })();
   </script>
 
 </body>
