@@ -1375,6 +1375,30 @@
     if (!paths.length) throw new Error("Nothing to publish.");
     return { paths: paths, url: "https://github.com/" + gh.owner + "/" + gh.repo + "/tree/" + encodeURIComponent(branch) };
   }
+  function mentionedFilenames(text) {
+    const out = [];
+    const re = /\b([A-Za-z0-9._\-]+(?:\/[A-Za-z0-9._\-]+)*\.[A-Za-z0-9]{1,12})\b/g;
+    let m;
+    while ((m = re.exec(text))) if (out.indexOf(m[1]) < 0) out.push(m[1]);
+    return out.slice(0, 8);
+  }
+  function looksLikeGithubish(text) {
+    return /\b(github|repo|repository)\b/i.test(text) || /\b(update|change|edit|fix)\b.{0,40}\b(file|code)\b/i.test(text);
+  }
+  async function githubGetFile(name) {
+    if (!ghConnected()) return null;
+    const path = safePath(gh.prefix, name);
+    if (!path) return null;
+    try {
+      const loc = "/repos/" + encodeURIComponent(gh.owner) + "/" + encodeURIComponent(gh.repo) + "/contents/" + path.split("/").map(encodeURIComponent).join("/") + "?ref=" + encodeURIComponent(gh.branch || "main");
+      const file = await ghApi(loc);
+      if (!file || !file.content) return null;
+      const bin = atob(String(file.content).replace(/\n/g, ""));
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return { path: file.path || path, content: new TextDecoder().decode(bytes) };
+    } catch (e) { return null; }
+  }
   function prefsBlock() {
     let s = "The assistant's display name is " + (prefs.botName || "Omni") + ".";
     if (prefs.personality) s += "\nCustom instructions (always follow):\n" + prefs.personality;
@@ -2445,6 +2469,7 @@
     };
     el.addEventListener("pointerup", end);
     el.addEventListener("pointercancel", end);
+    el.addEventListener("lostpointercapture", end);
     el.addEventListener("keydown", (e) => {
       const cur = prefs.sidebarWidth || SIDEBAR_DEFAULT;
       if (e.key === "ArrowLeft") { e.preventDefault(); prefs.sidebarWidth = clampSidebar(cur - 16); savePrefs(); applyScale(); }
@@ -2576,6 +2601,15 @@
     if (open) { think += (think ? "\n" : "") + open[1]; text = ""; }
     return { text: text.trimStart(), think: think.trim() };
   }
+  function parseSseLine(line) {
+    const trimmed = String(line || "").trim();
+    if (!trimmed || trimmed === "data: [DONE]") return undefined;
+    if (trimmed.charAt(0) === ":") return undefined;
+    if (trimmed.indexOf("data:") !== 0) return undefined;
+    const payload = trimmed.slice(5).trim();
+    if (!payload || payload === "[DONE]") return undefined;
+    try { return JSON.parse(payload); } catch (e) { return undefined; }
+  }
   function ingestChunk(part, acc) {
     if (part == null) return acc;
     if (typeof part === "string") {
@@ -2584,7 +2618,10 @@
     }
     if (typeof part !== "object") return acc;
     const type = part.type || "";
-    if (type === "error") return Object.assign({}, acc, { error: part.message || part.error || "Stream error" });
+    if (type === "error" || (part.error && typeof part.error === "object") || (typeof part.error === "string" && part.error)) {
+      const nested = part.error && typeof part.error === "object" ? part.error : null;
+      return Object.assign({}, acc, { error: (nested && (nested.message || nested.code)) || part.message || part.error || "Stream error" });
+    }
     if (type === "usage" || type === "compaction" || type === "tool_use" || type === "extra_content" || type === "image") return acc;
     let text = acc.text, reasoning = acc.reasoning;
     if (type === "reasoning") {
@@ -2710,10 +2747,11 @@
   }
   function timeAgo(ts) {
     const d = Date.now() - ts;
-    if (d < 60000) return "Just now";
+    if (d < 0 || d < 60000) return "Just now";
     if (d < 3600000) return Math.floor(d / 60000) + "m";
     if (d < 86400000) return Math.floor(d / 3600000) + "h";
-    return Math.floor(d / 86400000) + "d";
+    if (d < 365 * 86400000) return Math.floor(d / 86400000) + "d";
+    return Math.max(1, Math.floor(d / (365 * 86400000))) + "y";
   }
 
   function renderList() {
@@ -2759,8 +2797,18 @@
       if (m.role === "user") {
         const d = document.createElement("article");
         d.className = "bubble-user";
-        d.innerHTML = "<div class='body'></div>";
-        d.firstChild.textContent = m.content;
+        (m.attachments || []).forEach((a) => {
+          if (!a || !a.dataUrl) return;
+          const img = document.createElement("img");
+          img.src = a.dataUrl;
+          img.alt = a.name || "";
+          img.style.cssText = "max-height:12rem;border-radius:16px;margin-bottom:8px;display:block;border:1px solid var(--line)";
+          d.appendChild(img);
+        });
+        const body = document.createElement("div");
+        body.className = "body";
+        body.textContent = m.content || "";
+        d.appendChild(body);
         box.appendChild(d);
       } else {
         const d = document.createElement("article");
@@ -3195,6 +3243,25 @@
   let streaming = false;
   let aborted = false;
   let attachment = null;
+  let streamCtrl = null;
+  const PENDING_KEY = "omni-pending-send";
+  function savePending(text, file, mode) {
+    try { sessionStorage.setItem(PENDING_KEY, JSON.stringify({ text: text, file: file, mode: mode })); } catch (e) {}
+  }
+  function takePending() {
+    try {
+      const raw = sessionStorage.getItem(PENDING_KEY);
+      if (!raw) return null;
+      sessionStorage.removeItem(PENDING_KEY);
+      return JSON.parse(raw);
+    } catch (e) { return null; }
+  }
+  function requestStop() {
+    aborted = true;
+    if (streamCtrl) {
+      try { streamCtrl.abort(); } catch (e) {}
+    }
+  }
 
   function effortMaxTokens(effort) {
     if (effort === "low") return 700;
@@ -3305,20 +3372,27 @@
     const state = q.get("state") || "";
     if (!code) return false;
     if (state === "omni-manifest" || state === "omni-oauth") return false;
+    if (state && state !== "omni-or") return false;
     const verifier = sessionStorage.getItem(OR_PKCE);
-    if (!verifier) return false;
+    function stripOrQuery() {
+      const u = new URL(location.href); u.search = ""; u.hash = "";
+      history.replaceState(null, "", u.toString());
+    }
+    if (!verifier) {
+      stripOrQuery();
+      throw new Error("OpenRouter login expired. Tap Log in again.");
+    }
     sessionStorage.removeItem(OR_PKCE);
     const res = await fetch("https://openrouter.ai/api/v1/auth/keys", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, code_verifier: verifier, code_challenge_method: "S256" })
+      body: JSON.stringify({ code: code, code_verifier: verifier, code_challenge_method: "S256" })
     });
     const j = await res.json().catch(() => ({}));
     const bag = (j && j.data && typeof j.data === "object") ? j.data : j;
     const key = (bag && bag.key) || (j && j.key) || "";
     const userId = (bag && bag.user_id) || (j && j.user_id) || "";
-    const u = new URL(location.href); u.search = ""; u.hash = "";
-    history.replaceState(null, "", u.toString());
+    stripOrQuery();
     if (!res.ok || String(key).indexOf("sk-or-") !== 0) {
       throw new Error((j.error && j.error.message) || j.error || "OpenRouter login did not finish.");
     }
@@ -3329,40 +3403,54 @@
     return canonModel(id);
   }
   async function* orStream(body) {
-    const res = await orFetch(OR_API + "/chat/completions", {
-      method: "POST",
-      headers: orHeaders(),
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) {
-      let msg = "OpenRouter request failed (" + res.status + ").";
-      try {
-        const j = await res.json();
-        msg = (j.error && j.error.message) || j.message || msg;
-      } catch (e) {}
-      if (res.status === 401) msg = "OpenRouter session expired. Log in again.";
-      if (res.status === 402) {
-        const funds = /credit|fund|insufficient|payment|billing|balance|prepaid/i.test(msg);
-        if (funds) msg = msg || "OpenRouter is out of credits. Add credits or pick a :free model.";
-        else if (!msg || msg.indexOf("OpenRouter request failed") === 0) msg = "This model isn’t available on OpenRouter right now. Pick another.";
+    const ctrl = new AbortController();
+    streamCtrl = ctrl;
+    try {
+      const res = await orFetch(OR_API + "/chat/completions", {
+        method: "POST",
+        headers: orHeaders(),
+        body: JSON.stringify(body),
+        signal: ctrl.signal
+      });
+      if (!res.ok) {
+        let msg = "OpenRouter request failed (" + res.status + ").";
+        try {
+          const j = await res.json();
+          msg = (j.error && j.error.message) || j.message || msg;
+        } catch (e) {}
+        if (res.status === 401) msg = "OpenRouter session expired. Log in again.";
+        if (res.status === 402) {
+          const funds = /credit|fund|insufficient|payment|billing|balance|prepaid/i.test(msg);
+          if (funds) msg = msg || "OpenRouter is out of credits. Add credits or pick a :free model.";
+          else if (!msg || msg.indexOf("OpenRouter request failed") === 0) msg = "This model isn’t available on OpenRouter right now. Pick another.";
+        }
+        throw new Error(msg);
       }
-      throw new Error(msg);
-    }
-    const reader = res.body.getReader();
-    const dec = new TextDecoder();
-    let buf = "";
-    for (;;) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buf += dec.decode(value, { stream: true });
-      const lines = buf.split("\n");
-      buf = lines.pop() || "";
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line || line === "data: [DONE]") continue;
-        const payload = line.indexOf("data:") === 0 ? line.slice(5).trim() : line;
-        try { yield JSON.parse(payload); } catch (e) { if (payload) yield payload; }
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split("\n");
+        buf = lines.pop() || "";
+        for (let i = 0; i < lines.length; i++) {
+          const parsed = parseSseLine(lines[i]);
+          if (parsed !== undefined) yield parsed;
+        }
       }
+      buf += dec.decode();
+      if (buf.trim()) {
+        const parsed = parseSseLine(buf);
+        if (parsed !== undefined) yield parsed;
+      }
+    } catch (err) {
+      if (aborted) return;
+      if (err && err.name === "AbortError") throw new Error("The model stalled — likely rate-limited or out of usage.");
+      throw err;
+    } finally {
+      if (streamCtrl === ctrl) streamCtrl = null;
     }
   }
   async function* orStreamWithRetry(body) {
@@ -3396,10 +3484,11 @@
     streaming = true; aborted = false; updateSend();
     const lastUser = [...s.messages].reverse().find((m) => m.role === "user");
     const prompt = lastUser ? lastUser.content : "";
+    const imageDataUrl = (lastUser && lastUser.attachments && lastUser.attachments[0] && lastUser.attachments[0].dataUrl) || (attachment && attachment.dataUrl) || "";
     const remaining = budgetRemaining(usageSnap);
-    const autoPick = s.model === "auto" ? pickAuto(prompt, s.messages, remaining, !!attachment, !!(lastUser && lastUser.codePath)) : null;
+    const autoPick = s.model === "auto" ? pickAuto(prompt, s.messages, remaining, !!imageDataUrl, !!(lastUser && lastUser.codePath)) : null;
     let primary = autoPick ? autoPick.model : s.model;
-    if (attachment) {
+    if (imageDataUrl) {
       const vis = pickVision(primary);
       if (vis !== primary) {
         toast(modelMeta(primary).label + " cannot reliably see pictures. Using " + modelMeta(vis).label + ".");
@@ -3424,7 +3513,7 @@
     s.messages.push(msg); save(); render();
     if (autoNotice) toast(autoNotice);
     else if (plan.notice) toast(plan.notice);
-    const history = s.messages.filter(m => m.role === "user" || (m.role === "assistant" && m.content && !m.error && m.id !== msg.id)).map(m => ({ role: m.role, content: m.content }));
+    const history = s.messages.filter(m => m.role === "user" || (m.role === "assistant" && m.content && !m.error && m.id !== msg.id)).map(m => ({ role: m.role, content: (m.role === "user" && m.modelContent) ? m.modelContent : m.content }));
     let text = "", reason = "", usedModel = plan.model, lastErr = "";
     try {
       if (!hasOrKey()) throw new Error("Log in with OpenRouter to chat.");
@@ -3471,7 +3560,7 @@
           let raw;
           if (!hasOrKey()) throw new Error("Log in with OpenRouter to chat.");
           const orModel = toOrId(model);
-          const orMessages = attachment
+          const orMessages = imageDataUrl
             ? payload.map((m, i, arr) => {
                 const last = [...arr].map((x, j) => x.role === "user" ? j : -1).filter((j) => j >= 0).pop();
                 if (i !== last) return m;
@@ -3479,7 +3568,7 @@
                   role: "user",
                   content: [
                     { type: "text", text: (m.content || "").trim() || "Look at this image." },
-                    { type: "image_url", image_url: { url: attachment.dataUrl } }
+                    { type: "image_url", image_url: { url: imageDataUrl } }
                   ]
                 };
               })
@@ -3505,11 +3594,18 @@
             const iter = raw[Symbol.asyncIterator]();
             for (;;) {
               if (aborted) break;
-              const raced = await Promise.race([
-                iter.next().then((n) => ({ k: "n", n })),
-                sleep(first ? 22000 : 120000).then(() => ({ k: "t" }))
-              ]);
+              let raced;
+              try {
+                raced = await Promise.race([
+                  iter.next().then((n) => ({ k: "n", n })),
+                  sleep(first ? 22000 : 120000).then(() => ({ k: "t" }))
+                ]);
+              } catch (err) {
+                if (aborted) break;
+                throw err;
+              }
               if (raced.k === "t") {
+                if (aborted) break;
                 if (first) throw new Error("The model stalled — likely rate-limited or out of usage.");
                 break;
               }
@@ -3529,7 +3625,7 @@
           break;
         } catch (err) {
           lastErr = (err && (err.msg || err.message)) || "The model request failed.";
-          if (aborted) break;
+          if (aborted || (err && err.name === "AbortError")) { aborted = true; break; }
           if (isAuthErr(lastErr) || !canReroute(lastErr) || i === plan.chain.length - 1) throw err;
         }
       }
@@ -3580,8 +3676,9 @@
     }
   }
 
-  async function ensureSignedIn() {
+  async function ensureSignedIn(text, file, mode) {
     if (hasOrKey()) return true;
+    savePending(text, file, mode);
     toast("Log in with OpenRouter to chat.");
     await startOpenRouterAuth();
     throw new Error("Redirecting to OpenRouter.");
@@ -3592,7 +3689,7 @@
     if (m === "coding") m = (codePath === "plan" ? "coding-plan" : "coding-build");
     const t = (text || "").trim();
     if ((!t && !file) || streaming) return;
-    try { await ensureSignedIn(); } catch (e) { return; }
+    try { await ensureSignedIn(t, file, m); } catch (e) { return; }
     const s = current();
     const coding = m === "coding-plan" || m === "coding-build";
     const asImage = m === "image" || ((m === "chat" || !m) && looksImg(t) && !file);
@@ -3619,14 +3716,29 @@
       save(); render();
       return;
     }
+    const displayText = asImage ? (String(t).replace(/^\/(imagine|image|img|draw|picture)\s*/i, "").trim() || t) : (t || "What's in this image?");
+    let modelText = displayText;
+    if (!asImage && ghConnected() && looksLikeGithubish(t)) {
+      const names = mentionedFilenames(t);
+      if (names.length) {
+        const fetched = [];
+        for (let i = 0; i < Math.min(4, names.length); i++) {
+          const fileNow = await githubGetFile(names[i]);
+          if (fileNow) fetched.push("Current GitHub file `" + fileNow.path + "`:\n```" + (fileNow.path.split(".").pop() || "txt") + " " + fileNow.path + "\n" + fileNow.content + "\n```");
+        }
+        if (fetched.length) modelText = displayText + "\n\n" + fetched.join("\n\n");
+      }
+    }
     if (!s.messages.length) s.title = t.slice(0, 42) || (asImage ? "Image" : "New chat");
     s.messages.push({
       id: uid("msg"),
       role: "user",
-      content: asImage ? String(t).replace(/^\/(imagine|image|img|draw|picture)\s*/i, "").trim() || t : (t || "What's in this image?"),
+      content: displayText,
       createdAt: Date.now(),
       school: m === "school" || undefined,
-      codePath: m === "coding-plan" ? "plan" : m === "coding-build" ? "build" : undefined
+      codePath: m === "coding-plan" ? "plan" : m === "coding-build" ? "build" : undefined,
+      attachments: file ? [{ name: file.name, type: file.type || "image", dataUrl: file.dataUrl }] : undefined,
+      modelContent: modelText !== displayText ? modelText : undefined
     });
     save(); $("input").value = ""; $("input").style.height = "auto"; render();
     if (asImage) { await runImage(t); return; }
@@ -3659,7 +3771,9 @@
     const s = current();
     const id = uid("msg");
     s.messages.push({ id, role: "assistant", content: "", kind: "image", createdAt: Date.now(), model: "google/gemini-3.1-flash-image", streaming: true });
-    streaming = true; render();
+    streaming = true; aborted = false; updateSend();
+    const imgCtrl = new AbortController();
+    streamCtrl = imgCtrl;
     try {
       const p = String(prompt).replace(/^\/(imagine|image|img|draw|picture)\s*/i, "").trim() || prompt;
       let src = "";
@@ -3667,6 +3781,7 @@
         const models = ["google/gemini-3.1-flash-image", "openai/gpt-5-image"];
         let last = "Image generation failed.";
         for (let i = 0; i < models.length && !src; i++) {
+          if (aborted) break;
           try {
             const res = await orFetch(OR_API + "/chat/completions", {
               method: "POST",
@@ -3676,7 +3791,8 @@
                 messages: [{ role: "user", content: p }],
                 modalities: ["image", "text"],
                 provider: { allow_fallbacks: false }
-              })
+              }),
+              signal: imgCtrl.signal
             });
             const j = await res.json();
             if (!res.ok) { last = (j.error && j.error.message) || last; continue; }
@@ -3687,8 +3803,12 @@
               const block = msg.content.find((b) => b && (b.image_url || (b.url && String(b.url).indexOf("data:image") === 0)));
               if (block) src = (block.image_url && block.image_url.url) || block.image_url || block.url || "";
             }
-          } catch (err) { last = err.message || last; }
+          } catch (err) {
+            if (aborted || (err && err.name === "AbortError")) { aborted = true; break; }
+            last = err.message || last;
+          }
         }
+        if (aborted) throw new Error("Stopped.");
         if (!src) throw new Error(last);
       } else {
         throw new Error("Log in with OpenRouter to generate images.");
@@ -3698,9 +3818,19 @@
       sessionTurns += 1; save();
     } catch (e) {
       const m = s.messages.find(x => x.id === id);
-      if (m) { m.streaming = false; m.error = true; m.content = (e && e.message) || String(e); }
+      if (m) {
+        m.streaming = false;
+        if (aborted || (e && e.name === "AbortError") || (e && e.message === "Stopped.")) {
+          m.content = "Stopped.";
+        } else {
+          m.error = true;
+          m.content = (e && e.message) || String(e);
+        }
+      }
     }
-    streaming = false; render();
+    streaming = false;
+    if (streamCtrl === imgCtrl) streamCtrl = null;
+    render();
   }
   async function regenerate() {
     const s = current();
@@ -3711,7 +3841,7 @@
 
   $("form").onsubmit = (e) => {
     e.preventDefault();
-    if (streaming) { aborted = true; return; }
+    if (streaming) { requestStop(); return; }
     send($("input").value, attachment, composerMode);
   };
   $("input").oninput = function () {
@@ -3940,6 +4070,7 @@
   $("site-phone") && ($("site-phone").onclick = () => { $("site-stage").classList.add("phone"); $("site-stage").classList.remove("desk"); });
   $("site-desk") && ($("site-desk").onclick = () => { $("site-stage").classList.add("desk"); $("site-stage").classList.remove("phone"); });
   $("site-fix") && ($("site-fix").onclick = () => {
+    if (streaming) { toast("Wait for the current reply, or tap Stop."); return; }
     const notes = ($("site-notes").value || "").trim();
     closePreview();
     const ask = notes
@@ -3974,7 +4105,7 @@
         return;
       }
       closeModels(); hideEffort(); closeSide(); hidePopupHelp(); hideUsage(); hideSettings();
-      if (streaming) aborted = true;
+      if (streaming) requestStop();
     }
   });
 
@@ -3989,6 +4120,10 @@
     paintGhChip();
     if ($("gh-chip")) $("gh-chip").onclick = showSettings;
     render();
+    const pending = takePending();
+    if (pending && hasOrKey()) {
+      send(pending.text || "", pending.file || null, pending.mode);
+    }
   })();
   </script>
 
