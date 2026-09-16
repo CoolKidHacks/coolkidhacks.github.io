@@ -907,6 +907,7 @@
   let ghError = "";
   let ghPatOpen = false;
   let ghPollTimer = 0;
+  let ghListing = false;
   const GH_PKCE = "omni-gh-pkce";
   function ghRedirectUri() {
     const u = new URL(location.href);
@@ -928,8 +929,22 @@
   }
   async function oauthFetch(url, body) {
     const init = { method: "POST", headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" }, body: body.toString() };
-    const res = await corsFetch(url, init);
-    return res.text();
+    const tries = [
+      function () { return fetch(url, init); },
+      function () { return fetch("https://corsproxy.io/?" + encodeURIComponent(url), init); },
+      function () { return fetch("https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(url), init); }
+    ];
+    let last = "Could not reach GitHub. Try again, or use a token instead.";
+    for (let i = 0; i < tries.length; i++) {
+      try {
+        const res = await tries[i]();
+        const text = await res.text();
+        if (text && String(text).trim()) return text;
+      } catch (e) {
+        last = (e && e.message) || last;
+      }
+    }
+    throw new Error(last);
   }
   function parseGhJson(text) {
     const t = (text || "").trim();
@@ -963,12 +978,13 @@
       setup_url: uri,
       public: false,
       request_oauth_on_install: true,
-      default_permissions: { contents: "write", metadata: "read" },
-      hook_attributes: { url: url.replace(/\/$/, "") + "/github-webhook", active: false }
+      default_permissions: { contents: "write", metadata: "read" }
     });
     const form = document.createElement("form");
     form.method = "POST";
     form.action = "https://github.com/settings/apps/new?state=omni-manifest";
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    form.target = ios ? "_blank" : "omni_github_app";
     form.style.display = "none";
     const input = document.createElement("input");
     input.type = "hidden";
@@ -976,7 +992,18 @@
     input.value = manifest;
     form.appendChild(input);
     document.body.appendChild(form);
+    let popup = null;
+    if (!ios) {
+      try { popup = window.open("about:blank", "omni_github_app", "popup,width=1100,height=900"); } catch (e) { popup = null; }
+    }
     form.submit();
+    setTimeout(function () { try { form.remove(); } catch (e) {} }, 4000);
+    if (!ios && (!popup || popup.closed)) {
+      form.target = "_blank";
+      document.body.appendChild(form);
+      form.submit();
+      setTimeout(function () { try { form.remove(); } catch (e) {} }, 4000);
+    }
   }
   async function convertManifest(code) {
     const res = await corsFetch("https://api.github.com/app-manifests/" + encodeURIComponent(code) + "/conversions", {
@@ -1057,21 +1084,46 @@
   }
   async function listRepos(token) {
     const out = [];
+    const seen = {};
+    function push(r) {
+      if (!r || !r.owner || !r.name) return;
+      const full = r.fullName || (r.owner + "/" + r.name);
+      if (seen[full]) return;
+      seen[full] = true;
+      out.push({ owner: r.owner, name: r.name, fullName: full, branch: r.branch || "main", private: !!r.private });
+    }
     const prev = gh.token;
     gh.token = token;
     try {
+      try {
+        const inst = await ghApi("/user/installations?per_page=100");
+        const list = (inst && inst.installations) || [];
+        for (let i = 0; i < list.length; i++) {
+          if (!list[i] || !list[i].id) continue;
+          for (let page = 1; page <= 4; page++) {
+            const batch = await ghApi("/user/installations/" + list[i].id + "/repositories?per_page=100&page=" + page);
+            const repos = (batch && batch.repositories) || [];
+            repos.forEach((r) => push({
+              owner: r.owner && r.owner.login,
+              name: r.name,
+              fullName: r.full_name,
+              branch: r.default_branch || "main",
+              private: !!r.private
+            }));
+            if (repos.length < 100) break;
+          }
+        }
+      } catch (e) {}
       for (let page = 1; page <= 4; page++) {
         const batch = await ghApi("/user/repos?per_page=100&page=" + page + "&sort=updated&affiliation=owner,collaborator,organization_member");
         if (!Array.isArray(batch) || !batch.length) break;
-        batch.forEach((r) => {
-          out.push({
-            owner: r.owner && r.owner.login,
-            name: r.name,
-            fullName: r.full_name,
-            branch: r.default_branch || "main",
-            private: !!r.private
-          });
-        });
+        batch.forEach((r) => push({
+          owner: r.owner && r.owner.login,
+          name: r.name,
+          fullName: r.full_name,
+          branch: r.default_branch || "main",
+          private: !!r.private
+        }));
         if (batch.length < 100) break;
       }
     } finally {
@@ -1108,7 +1160,13 @@
     ghPhase = "working";
     renderGh();
     try {
-      if (!gh.clientId) { startManifest(); return; }
+      if (!gh.clientId) {
+        startManifest();
+        ghPhase = "idle";
+        toast("A GitHub tab should open. Finish there, then come back. If nothing opened, allow popups or paste a token below.");
+        renderGh();
+        return;
+      }
       try {
         ghDevice = await startDevice();
         ghPhase = "device";
@@ -1154,14 +1212,18 @@
     const q = new URLSearchParams(location.search);
     const state = q.get("state") || "";
     const code = q.get("code") || "";
-    if (!code || (state !== "omni-manifest" && state !== "omni-oauth")) return;
+    const installationId = q.get("installation_id") || "";
+    const manifest = state === "omni-manifest";
+    const oauth = state === "omni-oauth" || (!!code && !!gh.clientId && !manifest);
+    if (!code && !installationId) return;
+    if (!manifest && !oauth && !installationId) return;
     ghConsumeOnce = true;
     ghStripQuery();
     showSettings();
     ghPhase = "working";
     renderGh();
     try {
-      if (state === "omni-manifest") {
+      if (manifest && code) {
         await convertManifest(code);
         try {
           ghDevice = await startDevice();
@@ -1169,12 +1231,19 @@
           renderGh();
           startGhPoll();
         } catch (e) {
+          if (gh.slug) {
+            try { window.open("https://github.com/apps/" + encodeURIComponent(gh.slug) + "/installations/new", "omni_github_app", "popup,width=1100,height=900"); } catch (err) {}
+          }
           await startWebOauth();
         }
         return;
       }
-      const token = await exchangeCode(code);
-      await finishToken(token, "oauth");
+      if (code) {
+        const token = await exchangeCode(code);
+        await finishToken(token, "oauth");
+        return;
+      }
+      if (installationId && gh.token) await finishToken(gh.token, "oauth");
     } catch (e) {
       ghError = (e && e.message) || "GitHub connect failed.";
       ghPhase = "idle";
@@ -1190,6 +1259,7 @@
     const root = $("gh-root");
     if (!root) return;
     paintGhChip();
+    if (ghPhase === "idle" && gh.token && !(gh.owner && gh.repo)) ghPhase = "repos";
     if (ghPhase === "device" && ghDevice) {
       root.innerHTML = "<div class='gh-card'><p class='stat'>CONTINUE ON GITHUB</p><p style='font-size:13px;color:var(--muted);margin:8px 0'>Open GitHub, confirm this code, then come back.</p><button type='button' class='gh-code' id='gh-copy-code'></button><a class='btn btn-primary' id='gh-open' target='_blank' rel='noopener' style='margin-top:4px'>Open GitHub</a><p class='stat' style='margin-top:10px'>Waiting for GitHub…</p><button type='button' class='btn btn-ghost' id='gh-cancel' style='width:100%'>Cancel</button></div>";
       $("gh-copy-code").textContent = ghDevice.user_code;
@@ -1201,14 +1271,41 @@
       return;
     }
     if (ghPhase === "repos") {
+      if (!ghRepos.length && gh.token && !ghListing) {
+        ghListing = true;
+        listRepos(gh.token).then(function (list) {
+          ghListing = false;
+          ghRepos = list || [];
+          if (ghPhase === "repos") renderGh();
+        }).catch(function () { ghListing = false; });
+      }
       const q = ghQuery.trim().toLowerCase();
       const list = ghRepos.filter((r) => !q || (r.fullName || "").toLowerCase().indexOf(q) >= 0);
-      let html = "<p style='font-size:13px;color:var(--muted);margin:0 0 8px'>Pick the repo OMNI-AI should write to.</p><input class='search' id='gh-repo-q' placeholder='Search repos' style='padding-left:12px' /><div class='gh-repos' id='gh-repo-list'></div>";
+      let html = "<p style='font-size:13px;color:var(--muted);margin:0 0 8px'>Pick the repo OMNI-AI should write to, or create one.</p><div style='display:flex;gap:8px;margin-bottom:8px'><input class='search' id='gh-new-name' placeholder='New repo name' style='padding-left:12px;flex:1;min-width:0' /><button type='button' class='btn btn-outline' id='gh-create' style='width:auto;flex-shrink:0'>Create</button></div><input class='search' id='gh-repo-q' placeholder='Search repos' style='padding-left:12px' /><div class='gh-repos' id='gh-repo-list'></div>";
       if (gh.slug) html += "<a href='https://github.com/apps/" + encodeURIComponent(gh.slug) + "/installations/new' target='_blank' rel='noopener' class='btn btn-ghost' style='width:100%;margin-top:8px'>Install OMNI-AI on a repo</a>";
       html += "<button type='button' class='btn btn-ghost' id='gh-back' style='width:100%'>Back</button>";
       root.innerHTML = html;
       $("gh-repo-q").value = ghQuery;
       $("gh-repo-q").oninput = () => { ghQuery = $("gh-repo-q").value; renderGh(); };
+      $("gh-create").onclick = async () => {
+        const name = ($("gh-new-name").value || "").trim().replace(/\s+/g, "-").replace(/[^A-Za-z0-9._-]/g, "");
+        if (!name) { toast("Name the repository first."); return; }
+        if (!gh.token) { toast("Connect GitHub first."); return; }
+        try {
+          const created = await ghApi("/user/repos", { method: "POST", body: JSON.stringify({ name: name, auto_init: true, description: "Published from OMNI-AI" }) });
+          const row = { owner: created.owner && created.owner.login, name: created.name, fullName: created.full_name, branch: created.default_branch || "main", private: !!created.private };
+          ghRepos = ghRepos.filter((r) => r.fullName !== row.fullName).concat([row]);
+          gh.owner = row.owner;
+          gh.repo = row.name;
+          gh.branch = row.branch;
+          saveGh();
+          ghPhase = "idle";
+          toast("Writing to " + row.fullName);
+          renderGh();
+        } catch (err) {
+          toast((err && err.message) || "Could not create that repo.");
+        }
+      };
       const box = $("gh-repo-list");
       if (!list.length) {
         box.innerHTML = "<p class='stat' style='padding:16px;text-align:center'>No repos yet.</p>";
@@ -1232,7 +1329,18 @@
           box.appendChild(b);
         });
       }
-      $("gh-back").onclick = () => { ghPhase = "idle"; renderGh(); };
+      $("gh-back").onclick = () => {
+        if (gh.owner && gh.repo) { ghPhase = "idle"; renderGh(); }
+        else {
+          gh.token = ""; gh.owner = ""; gh.repo = ""; gh.login = ""; gh.method = "";
+          ghRepos = [];
+          saveGh();
+          ghPhase = "idle";
+          toast("GitHub disconnected.");
+          renderGh();
+        }
+      };
+      $("gh-back").textContent = (gh.owner && gh.repo) ? "Back" : "Disconnect";
       return;
     }
     if (ghConnected()) {
@@ -1245,7 +1353,10 @@
         renderGh();
         toast(gh.autoApply === false ? "Won’t write to GitHub until you turn this back on." : "Will apply repo changes when you ask.");
       };
-      $("gh-change").onclick = () => {
+      $("gh-change").onclick = async () => {
+        if (!ghRepos.length && gh.token) {
+          try { ghRepos = await listRepos(gh.token); } catch (e) { ghRepos = []; }
+        }
         if (ghRepos.length) { ghPhase = "repos"; renderGh(); }
         else beginConnect();
       };
@@ -1257,7 +1368,7 @@
       };
       return;
     }
-    root.innerHTML = "<p style='font-size:13px;color:var(--muted);margin:0 0 10px'>Sign in with GitHub the same way you connect it to an AI. OMNI-AI can then commit files when you ask.</p><button type='button' class='btn btn-primary' id='gh-continue'>" + (ghPhase === "working" ? "Opening GitHub…" : "Continue with GitHub") + "</button>" + (ghError ? ("<p style='color:var(--danger);font-size:12px;margin:8px 0 0'>" + ghError + "</p>") : "") + "<details id='gh-pat' style='margin-top:14px'" + (ghPatOpen ? " open" : "") + "><summary style='font-size:12px;color:var(--subtle);cursor:pointer'>Use a token instead</summary><div style='margin-top:10px'><input class='search' id='gh-token' type='password' autocomplete='off' placeholder='ghp_… or github_pat_…' style='padding-left:12px;margin-bottom:8px' /><div style='display:grid;grid-template-columns:1fr 1fr;gap:8px'><input class='search' id='gh-owner' placeholder='Owner' style='padding-left:12px' /><input class='search' id='gh-repo' placeholder='Repo' style='padding-left:12px' /><input class='search' id='gh-branch' placeholder='Branch (main)' style='padding-left:12px' /><input class='search' id='gh-prefix' placeholder='Folder (optional)' style='padding-left:12px' /></div><button class='btn btn-outline' id='gh-test' style='width:100%;margin-top:8px'>Save token</button></div></details>";
+    root.innerHTML = "<p style='font-size:13px;color:var(--muted);margin:0 0 10px'>Sign in with GitHub the same way you connect it to an AI. OMNI-AI can then commit files when you ask.</p><button type='button' class='btn btn-primary' id='gh-continue'>" + (ghPhase === "working" ? "Opening GitHub…" : "Continue with GitHub") + "</button>" + (ghError ? ("<p style='color:var(--danger);font-size:12px;margin:8px 0 0'>" + ghError + "</p>") : "") + "<details id='gh-pat' style='margin-top:14px'" + (ghPatOpen ? " open" : "") + "><summary style='font-size:12px;color:var(--subtle);cursor:pointer'>Use a token instead</summary><div style='margin-top:10px'><p style='font-size:12px;color:var(--subtle);margin:0 0 8px;line-height:1.45'>Token only is enough — Omni lists your repos next. Classic tokens need the <span style='font-family:var(--mono)'>repo</span> scope. Fine-grained tokens need Contents: Read and write.</p><a href='https://github.com/settings/tokens/new?description=OMNI-AI&scopes=repo' target='_blank' rel='noopener' style='display:inline-flex;align-items:center;min-height:40px;font-size:12px;color:var(--muted)'>Create a token on GitHub</a><input class='search' id='gh-token' type='password' autocomplete='off' placeholder='ghp_… or github_pat_…' style='padding-left:12px;margin:8px 0' /><div style='display:grid;grid-template-columns:1fr 1fr;gap:8px'><input class='search' id='gh-owner' placeholder='Owner (optional)' style='padding-left:12px' /><input class='search' id='gh-repo' placeholder='Repo (optional)' style='padding-left:12px' /><input class='search' id='gh-branch' placeholder='Branch (main)' style='padding-left:12px' /><input class='search' id='gh-prefix' placeholder='Folder (optional)' style='padding-left:12px' /></div><button class='btn btn-outline' id='gh-test' style='width:100%;margin-top:8px'>Save token</button></div></details>";
     $("gh-continue").disabled = ghPhase === "working";
     $("gh-continue").onclick = () => beginConnect();
     $("gh-pat").ontoggle = () => { ghPatOpen = $("gh-pat").open; };
@@ -1267,19 +1378,33 @@
     $("gh-branch").value = gh.branch || "main";
     $("gh-prefix").value = gh.prefix || "";
     $("gh-test").onclick = async () => {
-      gh.token = $("gh-token").value.trim();
-      gh.owner = $("gh-owner").value.trim();
-      gh.repo = $("gh-repo").value.trim();
+      const token = $("gh-token").value.trim();
+      const typedOwner = $("gh-owner").value.trim();
+      const typedRepo = $("gh-repo").value.trim();
       gh.branch = $("gh-branch").value.trim() || "main";
       gh.prefix = $("gh-prefix").value.replace(/^\/+|\/+$/g, "");
-      if (!gh.token) { toast("Paste a GitHub token first."); return; }
+      if (!token) { toast("Paste a GitHub token first."); return; }
+      gh.token = token;
       try {
         const me = await ghApi("/user");
         gh.login = me.login || "";
-        if (!gh.owner) gh.owner = gh.login;
         gh.method = "pat";
+        try { ghRepos = await listRepos(token); } catch (e) { ghRepos = []; }
+        gh.owner = typedOwner || gh.login;
+        gh.repo = typedRepo;
+        if (!gh.repo && ghRepos.length === 1) {
+          gh.owner = ghRepos[0].owner;
+          gh.repo = ghRepos[0].name;
+          gh.branch = ghRepos[0].branch || gh.branch;
+        }
         saveGh();
-        toast("Connected as " + gh.login);
+        if (gh.repo) {
+          toast("Connected as " + gh.login);
+          ghPhase = "idle";
+        } else {
+          ghPhase = "repos";
+          toast("Pick a repo to write to.");
+        }
         renderGh();
       } catch (err) {
         toast((err && err.message) || "Could not connect.");
@@ -1333,6 +1458,13 @@
     }
     return out;
   }
+  function collectPublishable(src) {
+    const files = collectFiles(src);
+    if (files.length) return files;
+    const text = String(src || "").trim();
+    if (!text) return [];
+    return [{ filename: "omni.md", code: text + "\n" }];
+  }
   function utf8ToB64(text) {
     const bytes = new TextEncoder().encode(text);
     let bin = "";
@@ -1355,7 +1487,9 @@
       let detail = "";
       try { const j = await res.json(); detail = j.message || ""; } catch (e) {}
       if (res.status === 401) throw new Error("GitHub sign-in expired. Connect GitHub again in Settings.");
+      if (res.status === 403) throw new Error(detail || "GitHub refused this write. The token needs repo access (classic: repo scope, fine-grained: Contents read and write).");
       if (res.status === 404) throw new Error("Repo or path not found.");
+      if (res.status === 409) throw new Error(detail || "GitHub file conflict. Try Publish again.");
       throw new Error(detail || ("GitHub error " + res.status));
     }
     if (res.status === 204) return {};
@@ -1370,11 +1504,28 @@
       const path = safePath(gh.prefix, files[i].filename);
       if (!path) continue;
       const loc = "/repos/" + encodeURIComponent(gh.owner) + "/" + encodeURIComponent(gh.repo) + "/contents/" + path.split("/").map(encodeURIComponent).join("/");
-      let sha;
-      try { const existing = await ghApi(loc + "?ref=" + encodeURIComponent(branch)); sha = existing.sha; } catch (e) {}
-      const body = { message: message, content: utf8ToB64(files[i].code), branch: branch };
-      if (sha) body.sha = sha;
-      const saved = await ghApi(loc, { method: "PUT", body: JSON.stringify(body) });
+      async function readSha() {
+        try { const existing = await ghApi(loc + "?ref=" + encodeURIComponent(branch)); return existing.sha; }
+        catch (e) { return undefined; }
+      }
+      async function send(sha) {
+        const body = { message: message, content: utf8ToB64(files[i].code), branch: branch };
+        if (sha) body.sha = sha;
+        return ghApi(loc, { method: "PUT", body: JSON.stringify(body) });
+      }
+      let sha = await readSha();
+      let saved;
+      try {
+        saved = await send(sha);
+      } catch (err) {
+        const msg = (err && err.message) || "";
+        if (/409|sha/i.test(msg)) {
+          sha = await readSha();
+          saved = await send(sha);
+        } else if (/not found/i.test(msg)) {
+          throw new Error("GitHub could not write " + gh.owner + "/" + gh.repo + ". The repo may not exist, or this login cannot push to it. Pick or create the repo in Settings.");
+        } else throw err;
+      }
       paths.push((saved.content && saved.content.path) || path);
     }
     if (!paths.length) throw new Error("Nothing to publish.");
@@ -2865,8 +3016,9 @@
         d.querySelector("[data-regen]")?.addEventListener("click", regenerate);
         d.querySelector("[data-build]")?.addEventListener("click", () => send("Build the plan. Write every file complete, no placeholders.", null, "coding-build"));
         d.querySelector("[data-pub]")?.addEventListener("click", async () => {
-          const files = collectFiles(m.content || "");
-          if (!ghConnected()) { toast("Connect GitHub in Settings first."); return; }
+          if (!ghConnected()) { showSettings(); toast("Connect GitHub in Settings, pick a repo, then tap Publish."); return; }
+          const files = collectPublishable(m.content || "");
+          if (!files.length) { toast("Nothing to publish."); return; }
           try {
             const result = await publishFiles(files, s.title || "Omni code");
             toast("Published " + result.paths.length + " files.");
@@ -3654,10 +3806,9 @@
     const coding = m === "coding-plan" || m === "coding-build";
     const asImage = m === "image" || ((m === "chat" || !m) && looksImg(t) && !file);
     if (!asImage && isGithubWriteCommand(t)) {
-      if (!ghConnected()) { toast("Connect GitHub in Settings first."); return; }
-      if (gh.autoApply === false) { toast("Turn on Apply changes when I ask in Settings."); return; }
+      if (!ghConnected()) { showSettings(); toast("Connect GitHub in Settings, pick a repo, then ask again."); return; }
       const lastAsst = [...s.messages].reverse().find(x => x.role === "assistant" && x.content && !x.error);
-      const files = lastAsst ? collectFiles(lastAsst.content) : [];
+      const files = lastAsst ? collectPublishable(lastAsst.content) : [];
       if (!files.length) { toast("No files in the last reply to publish."); return; }
       s.messages.push({ id: uid("msg"), role: "user", content: t, createdAt: Date.now() });
       const nid = uid("msg");
@@ -4079,7 +4230,13 @@
     refreshAuth();
     loadLiveModels();
     loadUsage();
-    consumeGhRedirect();
+    consumeGhRedirect().then(async function () {
+      if (gh.token && !(gh.owner && gh.repo)) {
+        try { ghRepos = await listRepos(gh.token); } catch (e) { ghRepos = []; }
+        ghPhase = "repos";
+        renderGh();
+      }
+    });
     paintUsage();
     paintZrPip();
     paintGhChip();
