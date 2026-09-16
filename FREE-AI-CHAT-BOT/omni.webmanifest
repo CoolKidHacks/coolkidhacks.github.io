@@ -1,7 +1,7 @@
 {
   "name": "OMNI-AI",
   "short_name": "OMNI-AI",
-  "description": "Free multi-model AI chat. Real Claude, GPT, Grok, Gemini via Puter.js.",
+  "description": "Free multi-model AI chat. Real Claude, GPT, Grok, Gemini via OpenRouter.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
